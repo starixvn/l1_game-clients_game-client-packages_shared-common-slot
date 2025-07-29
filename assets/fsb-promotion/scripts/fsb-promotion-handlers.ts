@@ -1,13 +1,13 @@
 import gc from "@sg/game-client-base";
 import inversify from "inversify";
 import { GameClientMessageSlot, GameServiceMessageSlot } from "../../game-message-slot";
-import { FSBPromotionInGameStore } from "./fsb-promotion-ingame-store";
+import { FSBPromotionStore } from "./fsb-promotion-store";
 
 const { injectable, inject } = inversify;
 
 @injectable()
-export class FsbPromotionInGameHandlers implements gc.Shared.IMultipleHandlers {
-    @inject(FSBPromotionInGameStore) protected readonly promotionStore: FSBPromotionInGameStore;
+export class FsbPromotionHandlers implements gc.Shared.IMultipleHandlers {
+    @inject(FSBPromotionStore) protected readonly promotionStore: FSBPromotionStore;
     @inject(gc.Connection.ConnectionStore) protected readonly connectionStore: gc.Connection.ConnectionStore;
 
     handlePromotion(data: GameServiceMessageSlot.Promotion) {

@@ -1,10 +1,10 @@
 import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
 import { _decorator, EditBox, Label, Node, sys, tween, UIOpacity, v3 } from "cc";
 import Observer from "observer";
-import { FsbPromotionInGameHandlers } from "../fsb-promotion-ingame-handlers";
+import { FsbPromotionHandlers } from "../fsb-promotion-handlers";
 import { Dialog } from "db://shared-components/shared/common-components/dialogs/dialog";
 import gc from "@sg/game-client-base";
-import { FSBPromotionInGameStore } from "../fsb-promotion-ingame-store";
+import { FSBPromotionStore } from "../fsb-promotion-store";
 import { GameServiceMessageSlot } from "../../../game-message-slot";
 
 const { ccclass, property } = _decorator;
@@ -34,7 +34,7 @@ export class RedeemGiftCodePopup extends ObserverComponent {
         this.giftCodeInput.node.off("editing-did-ended", this.onInputFinalized, this);
     }
 
-    @handle(FsbPromotionInGameHandlers, (handle, giftCode: string) => handle.redeemGifCode(giftCode))
+    @handle(FsbPromotionHandlers, (handle, giftCode: string) => handle.redeemGifCode(giftCode))
     onClickRedeemGifCode() {
         return this.giftCodeInput.string.trim().toUpperCase();
     }
@@ -44,12 +44,12 @@ export class RedeemGiftCodePopup extends ObserverComponent {
         this.node.getComponent(Dialog)?.hide();
     }
 
-    @render(FSBPromotionInGameStore, (store) => store.redemptionNotice)
+    @render(FSBPromotionStore, (store) => store.redemptionNotice)
     renderRedemptionNotice(redemptionNotice: GameServiceMessageSlot.RedemptionNotice) {
         this.errorLabel.string = redemptionNotice.errorCode;
     }
 
-    @render(FSBPromotionInGameStore, (store) => store.isRedeemSuccess)
+    @render(FSBPromotionStore, (store) => store.isRedeemSuccess)
     renderRedeemSuccess(isRedeemSuccess: boolean) {
         if (isRedeemSuccess) {
             this.onCloseClicked();

@@ -1,14 +1,13 @@
 import { _decorator, Component } from 'cc';
-import { FreeSpinsPromotionEvents, endpointConstants, FSBPromotionStore } from './fsb-promotion-store';
+import { FreeSpinsPromotionEvents, endpointConstants, FSBPromotionUIStore } from './fsb-promotion-ui-store';
 import gc, { Shared } from "@sg/game-client-base";
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 const { ccclass } = _decorator;
 
-
-@ccclass('fsb_promotion_handler')
-export class FSBPromotionHandler {
+@injectable()
+export class FSBPromotionUIHandler {
     @inject(gc.Connection.ConnectionStore) protected readonly connectionStore: gc.Connection.ConnectionStore;
-    @inject(FSBPromotionStore) protected readonly fsbPromotionStore: FSBPromotionStore;
+    @inject(FSBPromotionUIStore) protected readonly fsbPromotionStore: FSBPromotionUIStore;
     @inject(gc.Configs.SiteConfigs) protected readonly siteConfigs: gc.Configs.SiteConfigs;
 
     /** ========== PROMOTION FLOW ========== */

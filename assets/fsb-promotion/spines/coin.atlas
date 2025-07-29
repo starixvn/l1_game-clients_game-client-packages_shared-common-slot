@@ -1,0 +1,153 @@
+
+coin.png
+size: 1286,86
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+ui/coin/mc_coin_215_000
+  rotate: false
+  xy: 248, 4
+  size: 77, 80
+  orig: 100, 100
+  offset: 13, 10
+  index: -1
+ui/coin/mc_coin_215_001
+  rotate: false
+  xy: 84, 4
+  size: 80, 80
+  orig: 100, 100
+  offset: 10, 10
+  index: -1
+ui/coin/mc_coin_215_002
+  rotate: false
+  xy: 166, 4
+  size: 80, 80
+  orig: 100, 100
+  offset: 10, 10
+  index: -1
+ui/coin/mc_coin_215_003
+  rotate: false
+  xy: 2, 2
+  size: 80, 82
+  orig: 100, 100
+  offset: 10, 8
+  index: -1
+ui/coin/mc_coin_215_004
+  rotate: false
+  xy: 327, 5
+  size: 76, 79
+  orig: 100, 100
+  offset: 10, 11
+  index: -1
+ui/coin/mc_coin_215_005
+  rotate: false
+  xy: 405, 5
+  size: 74, 79
+  orig: 100, 100
+  offset: 10, 11
+  index: -1
+ui/coin/mc_coin_215_006
+  rotate: false
+  xy: 557, 5
+  size: 70, 79
+  orig: 100, 100
+  offset: 11, 11
+  index: -1
+ui/coin/mc_coin_215_007
+  rotate: false
+  xy: 769, 5
+  size: 64, 79
+  orig: 100, 100
+  offset: 13, 11
+  index: -1
+ui/coin/mc_coin_215_008
+  rotate: false
+  xy: 896, 4
+  size: 58, 80
+  orig: 100, 100
+  offset: 16, 10
+  index: -1
+ui/coin/mc_coin_215_009
+  rotate: false
+  xy: 1010, 4
+  size: 50, 80
+  orig: 100, 100
+  offset: 20, 10
+  index: -1
+ui/coin/mc_coin_215_010
+  rotate: false
+  xy: 1062, 4
+  size: 43, 80
+  orig: 100, 100
+  offset: 24, 10
+  index: -1
+ui/coin/mc_coin_215_011
+  rotate: false
+  xy: 1189, 4
+  size: 34, 80
+  orig: 100, 100
+  offset: 30, 10
+  index: -1
+ui/coin/mc_coin_215_012
+  rotate: false
+  xy: 1256, 4
+  size: 28, 80
+  orig: 100, 100
+  offset: 35, 10
+  index: -1
+ui/coin/mc_coin_215_013
+  rotate: false
+  xy: 1225, 4
+  size: 29, 80
+  orig: 100, 100
+  offset: 37, 10
+  index: -1
+ui/coin/mc_coin_215_014
+  rotate: false
+  xy: 1152, 4
+  size: 35, 80
+  orig: 100, 100
+  offset: 36, 10
+  index: -1
+ui/coin/mc_coin_215_015
+  rotate: false
+  xy: 1107, 4
+  size: 43, 80
+  orig: 100, 100
+  offset: 33, 10
+  index: -1
+ui/coin/mc_coin_215_016
+  rotate: false
+  xy: 956, 4
+  size: 52, 80
+  orig: 100, 100
+  offset: 29, 10
+  index: -1
+ui/coin/mc_coin_215_017
+  rotate: false
+  xy: 835, 5
+  size: 59, 79
+  orig: 100, 100
+  offset: 26, 10
+  index: -1
+ui/coin/mc_coin_215_018
+  rotate: false
+  xy: 701, 5
+  size: 66, 79
+  orig: 100, 100
+  offset: 22, 10
+  index: -1
+ui/coin/mc_coin_215_019
+  rotate: false
+  xy: 629, 5
+  size: 70, 79
+  orig: 100, 100
+  offset: 19, 10
+  index: -1
+ui/coin/mc_coin_215_020
+  rotate: false
+  xy: 481, 5
+  size: 74, 79
+  orig: 100, 100
+  offset: 16, 10
+  index: -1

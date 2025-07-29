@@ -1,0 +1,83 @@
+
+icon voucher -anim.png
+size: 203,237
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+Layer 6
+  rotate: true
+  xy: 134, 57
+  size: 178, 67
+  orig: 182, 74
+  offset: 1, 2
+  index: -1
+hop-qua
+  rotate: false
+  xy: 2, 9
+  size: 99, 95
+  orig: 101, 97
+  offset: 1, 1
+  index: -1
+light
+  rotate: false
+  xy: 2, 106
+  size: 130, 129
+  orig: 136, 133
+  offset: 3, 3
+  index: -1
+no
+  rotate: false
+  xy: 134, 21
+  size: 54, 34
+  orig: 60, 36
+  offset: 4, 0
+  index: -1
+spark copy 2
+  rotate: false
+  xy: 190, 29
+  size: 9, 9
+  orig: 11, 12
+  offset: 1, 2
+  index: -1
+spark copy 3
+  rotate: false
+  xy: 190, 19
+  size: 8, 8
+  orig: 11, 11
+  offset: 2, 1
+  index: -1
+voucher
+  rotate: true
+  xy: 103, 41
+  size: 26, 29
+  orig: 28, 31
+  offset: 1, 1
+  index: -1
+voucher copy
+  rotate: false
+  xy: 103, 69
+  size: 25, 35
+  orig: 27, 37
+  offset: 1, 1
+  index: -1
+voucher copy 2
+  rotate: false
+  xy: 103, 2
+  size: 19, 18
+  orig: 21, 20
+  offset: 1, 1
+  index: -1
+voucher copy 3
+  rotate: false
+  xy: 190, 40
+  size: 11, 15
+  orig: 13, 17
+  offset: 1, 1
+  index: -1
+voucher copy 4
+  rotate: true
+  xy: 103, 22
+  size: 17, 24
+  orig: 19, 26
+  offset: 1, 1
+  index: -1

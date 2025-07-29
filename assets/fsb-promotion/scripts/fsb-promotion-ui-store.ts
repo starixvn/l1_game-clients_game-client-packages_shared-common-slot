@@ -49,7 +49,7 @@ export class FSBPromotionUIStore{
     public fsbConsumedThisRound = false;
 
     // UI Events state
-    private pendingUIEvents: Array<{ event: string; data?: any }> = [];
+    private pendingUIEvent: { event: string; data?: any } = null;
 
     // Getters and Setters
     getStorageKey() {
@@ -174,15 +174,21 @@ export class FSBPromotionUIStore{
 
     // UI Events management
     addPendingUIEvent(event: string, data?: any) {
-        this.pendingUIEvents.push({ event, data });
+        this.pendingUIEvent = { event, data };
     }
 
-    getPendingUIEvents(): Array<{ event: string; data?: any }> {
-        return this.pendingUIEvents;
+    getPendingUIEvent(): { event: string; data?: any } | null {
+        return this.pendingUIEvent;
+    }
+
+    removePendingUIEvent(event: string) {
+        if (this.pendingUIEvent?.event === event) {
+            this.pendingUIEvent = null;
+        }
     }
 
     clearPendingUIEvents() {
-        this.pendingUIEvents = [];
+        this.pendingUIEvent = null;
     }
 }
 

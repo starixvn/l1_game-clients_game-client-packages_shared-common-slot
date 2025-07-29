@@ -188,13 +188,13 @@ export class FSBPromotionStore extends Component {
     shouldSkipPromo(): boolean {
         const storageData = gc.StorageManager.get(this.storageKey) as any;
         const skipPromo = storageData?.dontShowAgain;
-        const isSC1 = this.siteConfigs.systemType.toUpperCase() === "SC1";
+        const isSC = this.siteConfigs.systemType.toUpperCase() === "SC";
         const isGiftCode = this.promotionData?.promotion?.isGiftCode;
         if (skipPromo && !isGiftCode) {
             return true;
         }
 
-        return isSC1;
+        return isSC;
     }
 
     isPromotionInProgress(): boolean {

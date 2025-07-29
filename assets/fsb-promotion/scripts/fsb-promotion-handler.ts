@@ -9,6 +9,7 @@ const { ccclass } = _decorator;
 export class FSBPromotionHandler {
     @inject(gc.Connection.ConnectionStore) protected readonly connectionStore: gc.Connection.ConnectionStore;
     @inject(FSBPromotionStore) protected readonly fsbPromotionStore: FSBPromotionStore;
+    @inject(gc.Configs.SiteConfigs) protected readonly siteConfigs: gc.Configs.SiteConfigs;
 
     /** ========== PROMOTION FLOW ========== */
     public handlePromotionDisplay() {
@@ -55,13 +56,29 @@ export class FSBPromotionHandler {
 
 
     /** ========== URL HELPERS ========== */
+
+    private buildPromotionSiteUrl() {
+        if (this.siteConfigs.subPromotionDomain) {
+            const ssl = this.siteConfigs.ssl;
+            const rootDomain = gc.UrlUtils.getRootDomain(this.siteConfigs);
+            const subPromotionDomainText = `${this.siteConfigs.subPromotionDomain}.`;
+            return `${"http"}${ssl ? "s" : ""}://${subPromotionDomainText}${rootDomain}`;
+        }
+        return this.buildProxyUrl(`/promotion`);
+    }
+
+    private buildProxyUrl(path) {
+        const envPath = this.siteConfigs.env === "" ? "" : `/${this.siteConfigs.env}`;
+        const fullPath = `${envPath}${path}`;    
+        return gc.UrlUtils.buildUrl("http", fullPath, this.siteConfigs);
+    }
+
     getPromoUrl() {
         const promotionId = this.fsbPromotionStore.promotionData?.promotion?.promotionId || this.fsbPromotionStore.promotionIdFromTO;
         const gameOffers = this.fsbPromotionStore.getGameOffered();
         const queryString = this.getQueryString(promotionId, gameOffers);
         const endpoint = this.fsbPromotionStore.activeDetailPromo ? endpointConstants.announcementDetails : endpointConstants.bannerPromotion;
-        // return `${buildPromotionSiteUrl()}/${endpoint}?${queryString}`;
-         return `$/${endpoint}?${queryString}`;
+        return `${this.buildPromotionSiteUrl()}/${endpoint}?${queryString}`;
     }
 
     private buildParams() {

@@ -1,12 +1,14 @@
-import { _decorator } from 'cc';
+import { _decorator } from "cc";
 import gc from "@sg/game-client-base";
-import { injectable, inject } from 'inversify';
 import mobx from "mobx";
-import { FSBPromotionStore } from './fsb-promotion-store';
+import { FSBPromotionStore } from "./fsb-promotion-store";
+import inversify from "inversify";
+
+const { injectable, inject } = inversify;
 
 export const endpointConstants = {
     bannerPromotion: "banner-promotions",
-    announcementDetails: "announcement-detail"
+    announcementDetails: "announcement-detail",
 };
 
 export const FreeSpinsPromotionEvents = {
@@ -25,18 +27,20 @@ export const FreeSpinsPromotionEvents = {
     EXPIRE_CLAIM_BONUS: "EXPIRE_CLAIM_BONUS",
     SHOW_NOTICE_ERROR: "SHOW_NOTICE_ERROR",
     CLAIMED_BONUS_SUCCESS: "CLAIMED_BONUS_SUCCESS",
-    REDEEM_GIFT_CODE_ERROR: "REDEEM_GIFT_CODE_ERROR"
+    REDEEM_GIFT_CODE_ERROR: "REDEEM_GIFT_CODE_ERROR",
 };
 
 @injectable()
-export class FSBPromotionUIStore{
-    constructor() {
+export class FSBPromotionUIStore {
+    constructor(
+        @inject(gc.Configs.SiteConfigs) protected readonly siteConfigs: gc.Configs.SiteConfigs,
+        @inject(FSBPromotionStore) protected readonly fsbPromotionStore: FSBPromotionStore
+    ) {
         mobx.makeAutoObservable(this);
     }
-    @inject(gc.Configs.SiteConfigs) protected readonly siteConfigs: gc.Configs.SiteConfigs;
-    @inject(FSBPromotionStore) protected readonly fsbPromotionStore: FSBPromotionStore;
+
     private readonly storageKey = "free-spins-promotion-dont-show-again";
-    
+
     // State properties
     public receivedPromotionInGame = false;
     private _skipGiftCode = false;
@@ -191,5 +195,3 @@ export class FSBPromotionUIStore{
         this.pendingUIEvent = null;
     }
 }
-
-

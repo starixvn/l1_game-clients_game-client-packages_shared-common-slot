@@ -1,10 +1,12 @@
-import { _decorator } from 'cc';
-import { FreeSpinsPromotionEvents, endpointConstants, FSBPromotionUIStore } from './fsb-promotion-ui-store';
+import { _decorator } from "cc";
+import { FreeSpinsPromotionEvents, endpointConstants, FSBPromotionUIStore } from "./fsb-promotion-ui-store";
 import gc, { Shared } from "@sg/game-client-base";
-import { inject, injectable } from 'inversify';
-import { FSBPromotionStore } from './fsb-promotion-store';
-import GatewayGameItem from 'db://shared-components/game-baccarat/gateway-panel/scripts/gateway-game-item';
-import { GameClientMessageSlot } from '../../game-message-slot';
+import inversify from "inversify";
+import { FSBPromotionStore } from "./fsb-promotion-store";
+import GatewayGameItem from "db://shared-components/game-baccarat/gateway-panel/scripts/gateway-game-item";
+import { GameClientMessageSlot } from "../../game-message-slot";
+
+const { injectable, inject } = inversify;
 
 @injectable()
 export class FSBPromotionUIHandler {
@@ -71,7 +73,7 @@ export class FSBPromotionUIHandler {
 
     private buildProxyUrl(path) {
         const envPath = this.siteConfigs.env === "" ? "" : `/${this.siteConfigs.env}`;
-        const fullPath = `${envPath}${path}`;    
+        const fullPath = `${envPath}${path}`;
         return gc.UrlUtils.buildUrl("http", fullPath, this.siteConfigs);
     }
 
@@ -79,7 +81,9 @@ export class FSBPromotionUIHandler {
         const promotionId = this.fsbPromotionStore.promotion?.promotionId || this.fsbPromotionStore.promotionTOProgress?.promotionId;
         const gameOffers = [{ gameId: this.gatewayGameItem.gameId, name: this.gatewayGameItem.gameName }];
         const queryString = this.getQueryString(promotionId, gameOffers);
-        const endpoint = this.fsbPromotionUIStore.activeDetailPromo ? endpointConstants.announcementDetails : endpointConstants.bannerPromotion;
+        const endpoint = this.fsbPromotionUIStore.activeDetailPromo
+            ? endpointConstants.announcementDetails
+            : endpointConstants.bannerPromotion;
         return `${this.buildPromotionSiteUrl()}/${endpoint}?${queryString}`;
     }
 
@@ -88,7 +92,7 @@ export class FSBPromotionUIHandler {
         return {
             sessionId: gc.GameUtils.base64Encode(sessionInfo?.session || ""),
             username: sessionInfo?.username,
-            language: sessionInfo?.language
+            language: sessionInfo?.language,
         };
     }
 
@@ -122,13 +126,19 @@ export class FSBPromotionUIHandler {
 
     public tryConsumeFSB() {
         if (this.fsbPromotionUIStore.tryConsumeFSB()) {
-            this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.UPDATE_FSB_COUNT, this.fsbPromotionUIStore.currentSpinCount);
+            this.fsbPromotionUIStore.addPendingUIEvent(
+                FreeSpinsPromotionEvents.UPDATE_FSB_COUNT,
+                this.fsbPromotionUIStore.currentSpinCount
+            );
         }
     }
 
     public revertLastFSB() {
         if (this.fsbPromotionUIStore.revertLastFSB()) {
-            this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.UPDATE_FSB_COUNT, this.fsbPromotionUIStore.currentSpinCount);
+            this.fsbPromotionUIStore.addPendingUIEvent(
+                FreeSpinsPromotionEvents.UPDATE_FSB_COUNT,
+                this.fsbPromotionUIStore.currentSpinCount
+            );
         }
     }
 

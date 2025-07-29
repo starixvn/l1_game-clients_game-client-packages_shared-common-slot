@@ -2,56 +2,59 @@ import { _decorator } from 'cc';
 import { FreeSpinsPromotionEvents, endpointConstants, FSBPromotionUIStore } from './fsb-promotion-ui-store';
 import gc, { Shared } from "@sg/game-client-base";
 import { inject, injectable } from 'inversify';
+import { FSBPromotionStore } from './fsb-promotion-store';
+import GatewayGameItem from 'db://shared-components/game-baccarat/gateway-panel/scripts/gateway-game-item';
 
 @injectable()
 export class FSBPromotionUIHandler {
     @inject(gc.Connection.ConnectionStore) protected readonly connectionStore: gc.Connection.ConnectionStore;
-    @inject(FSBPromotionUIStore) protected readonly fsbPromotionStore: FSBPromotionUIStore;
     @inject(gc.Configs.SiteConfigs) protected readonly siteConfigs: gc.Configs.SiteConfigs;
+    @inject(FSBPromotionStore) protected readonly fsbPromotionStore: FSBPromotionStore;
+    @inject(FSBPromotionUIStore) protected readonly fsbPromotionUIStore: FSBPromotionUIStore;
+    @inject(GatewayGameItem) protected readonly gatewayGameItem: GatewayGameItem;
 
     /** ========== PROMOTION FLOW ========== */
     public handlePromotionDisplay() {
         try {
-            if (this.fsbPromotionStore.activeTransitionEffect || !this.fsbPromotionStore.hasPromo()) {
+            if (this.fsbPromotionUIStore.activeTransitionEffect || !this.fsbPromotionUIStore.hasPromo()) {
                 return;
             }
-            if (this.fsbPromotionStore.shouldSkipPromo()) {
+            if (this.fsbPromotionUIStore.shouldSkipPromo()) {
                 return;
             }
 
-            if (this.fsbPromotionStore.receivedPromotionInGame) {
+            if (this.fsbPromotionUIStore.receivedPromotionInGame) {
                 this.handleDirectOpen();
                 return;
             }
 
-            this.fsbPromotionStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_FREE_SPINS_PROMOTION);
+            this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_FREE_SPINS_PROMOTION);
         } catch (error) {
             gc.sentryLogger.logError(`handlePromotionDisplay error: ${error.message}`);
         }
     }
 
     private handleDirectOpen() {
-        const promotion = this.fsbPromotionStore.promotionData?.promotion;
+        const promotion = this.fsbPromotionStore.promotion;
         const isGiftCode = promotion?.isGiftCode;
         const isClaimed = promotion?.isClaimed;
         const remaining = promotion?.remainingBonusItems;
         const initial = promotion?.initialBonusItem;
 
-        if (this.fsbPromotionStore.skipGiftCode) {
-            this.fsbPromotionStore.skipGiftCode = false;
-            this.fsbPromotionStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_DETAILS_PANEL, true);
+        if (this.fsbPromotionUIStore.skipGiftCode) {
+            this.fsbPromotionUIStore.skipGiftCode = false;
+            this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_DETAILS_PANEL, true);
             return;
         }
 
         if (isGiftCode && !isClaimed) {
-            this.fsbPromotionStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_GIFT_CODE);
+            this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_GIFT_CODE);
         } else if (isClaimed && remaining === initial) {
-            this.fsbPromotionStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_FREE_SPINS_PROMOTION);
+            this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_FREE_SPINS_PROMOTION);
         } else {
-            this.fsbPromotionStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_DETAILS_PANEL);
+            this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_DETAILS_PANEL);
         }
     }
-
 
     /** ========== URL HELPERS ========== */
 
@@ -72,10 +75,10 @@ export class FSBPromotionUIHandler {
     }
 
     getPromoUrl() {
-        const promotionId = this.fsbPromotionStore.promotionData?.promotion?.promotionId || this.fsbPromotionStore.promotionIdFromTO;
-        const gameOffers = this.fsbPromotionStore.getGameOffered();
+        const promotionId = this.fsbPromotionStore.promotion?.promotionId || this.fsbPromotionStore.promotionTOProgress?.promotionId;
+        const gameOffers = [{ gameId: this.gatewayGameItem.gameId, name: this.gatewayGameItem.gameName }];
         const queryString = this.getQueryString(promotionId, gameOffers);
-        const endpoint = this.fsbPromotionStore.activeDetailPromo ? endpointConstants.announcementDetails : endpointConstants.bannerPromotion;
+        const endpoint = this.fsbPromotionUIStore.activeDetailPromo ? endpointConstants.announcementDetails : endpointConstants.bannerPromotion;
         return `${this.buildPromotionSiteUrl()}/${endpoint}?${queryString}`;
     }
 
@@ -110,31 +113,31 @@ export class FSBPromotionUIHandler {
 
     /** ========== PROMOTION STATE MANAGEMENT ========== */
     public tryShowEndedPopup() {
-        if (this.fsbPromotionStore.hasServerFinishPromotion) {
-            this.fsbPromotionStore.addPendingUIEvent(FreeSpinsPromotionEvents.CLOSE_PROMOTION_DETAILS_PANEL);
-            this.fsbPromotionStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_ENDED_POPUP);
+        if (this.fsbPromotionUIStore.hasServerFinishPromotion) {
+            this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.CLOSE_PROMOTION_DETAILS_PANEL);
+            this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_ENDED_POPUP);
         }
     }
 
     public tryConsumeFSB() {
-        if (this.fsbPromotionStore.tryConsumeFSB()) {
-            this.fsbPromotionStore.addPendingUIEvent(FreeSpinsPromotionEvents.UPDATE_FSB_COUNT, this.fsbPromotionStore.currentSpinCount);
+        if (this.fsbPromotionUIStore.tryConsumeFSB()) {
+            this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.UPDATE_FSB_COUNT, this.fsbPromotionUIStore.currentSpinCount);
         }
     }
 
     public revertLastFSB() {
-        if (this.fsbPromotionStore.revertLastFSB()) {
-            this.fsbPromotionStore.addPendingUIEvent(FreeSpinsPromotionEvents.UPDATE_FSB_COUNT, this.fsbPromotionStore.currentSpinCount);
+        if (this.fsbPromotionUIStore.revertLastFSB()) {
+            this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.UPDATE_FSB_COUNT, this.fsbPromotionUIStore.currentSpinCount);
         }
     }
 
     public commitFSB() {
-        this.fsbPromotionStore.commitFSB();
+        this.fsbPromotionUIStore.commitFSB();
     }
 
     public markServerConfirmedEnd() {
-        this.fsbPromotionStore.markServerConfirmedEnd();
-        if (!this.fsbPromotionStore.fsbConsumedThisRound) {
+        this.fsbPromotionUIStore.markServerConfirmedEnd();
+        if (!this.fsbPromotionUIStore.fsbConsumedThisRound) {
             this.tryShowEndedPopup();
         }
     }

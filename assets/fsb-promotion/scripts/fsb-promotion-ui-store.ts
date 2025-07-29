@@ -1,6 +1,8 @@
 import { _decorator } from 'cc';
 import gc from "@sg/game-client-base";
 import { injectable, inject } from 'inversify';
+import mobx from "mobx";
+import { FSBPromotionStore } from './fsb-promotion-store';
 
 export const endpointConstants = {
     bannerPromotion: "banner-promotions",
@@ -26,47 +28,22 @@ export const FreeSpinsPromotionEvents = {
     REDEEM_GIFT_CODE_ERROR: "REDEEM_GIFT_CODE_ERROR"
 };
 
-interface GameOfferPromotion {
-    gameId: number;
-    name: string;
-}
-
-interface StandardPromotionInfo {
-    promotionId: string;
-    isGiftCode?: boolean;
-    isClaimed?: boolean;
-    remainingBonusItems?: number;
-    initialBonusItem?: number;
-    betLevel?: number;
-    isActive?: boolean;
-    totalWin?: number;
-}
-
-interface PromotionData {
-    promotion: StandardPromotionInfo;
-    gameOfferPromotion?: GameOfferPromotion[];
-}
-
-interface FinishPromotion {
-    endPromotion: boolean;
-    totalWin: number;
-}
-
 @injectable()
 export class FSBPromotionUIStore{
+    constructor() {
+        mobx.makeAutoObservable(this);
+    }
     @inject(gc.Configs.SiteConfigs) protected readonly siteConfigs: gc.Configs.SiteConfigs;
+    @inject(FSBPromotionStore) protected readonly fsbPromotionStore: FSBPromotionStore;
     private readonly storageKey = "free-spins-promotion-dont-show-again";
     
     // State properties
     public receivedPromotionInGame = false;
     private _skipGiftCode = false;
-    private _finishPromotion: FinishPromotion;
     private _activeTransitionEffect = false;
     private _activeDetailPromo = false;
     private _currentSpinCount = -1;
-    private _promotionIdFromTO = "";
     private readonly fallbackGameOffers: { name: string; gameId: number }[] = [];
-    public promotionData: PromotionData;
     public resumedFSBPromotion = false;
     public hasServerFinishPromotion = false;
     public fsbConsumedThisRound = false;
@@ -126,60 +103,27 @@ export class FSBPromotionUIStore{
         return this._skipGiftCode;
     }
 
-    set finishPromotion(promotion: FinishPromotion) {
-        this._finishPromotion = promotion;
-    }
-
-    get finishPromotion() {
-        return this._finishPromotion;
-    }
-
-    set promotionIdFromTO(promotionId: string) {
-        this._promotionIdFromTO = promotionId;
-    }
-
-    get promotionIdFromTO() {
-        return this._promotionIdFromTO;
-    }
-
     // State management methods
     public reset() {
-        this.finishPromotion = null;
         this.receivedPromotionInGame = false;
         this.skipGiftCode = false;
         this.resumedFSBPromotion = false;
         this.activeTransitionEffect = false;
         this.activeDetailPromo = false;
-        this.promotionData = null;
         this.hasServerFinishPromotion = false;
         this.fsbConsumedThisRound = false;
         this.currentSpinCount = -1;
     }
 
-    setPromotionData(rawData: PromotionData, isDirectly = false) {
-        this.promotionData = rawData;
-        this.receivedPromotionInGame = isDirectly;
-    }
-
-    // Helper methods for data access
-    getGameId() {
-        const offers = this.getGameOffered();
-        return offers?.[0]?.gameId;
-    }
-
-    getGameOffered() {
-        return this.promotionData?.gameOfferPromotion?.length > 0 ? this.promotionData.gameOfferPromotion : this.fallbackGameOffers;
-    }
-
     hasPromo(): boolean {
-        return !!this.promotionData?.promotion;
+        return !!this.fsbPromotionStore.promotion;
     }
 
     shouldSkipPromo(): boolean {
         const storageData = gc.StorageManager.get(this.storageKey) as any;
         const skipPromo = storageData?.dontShowAgain;
         const isSC = this.siteConfigs.systemType.toUpperCase() === "SC";
-        const isGiftCode = this.promotionData?.promotion?.isGiftCode;
+        const isGiftCode = this.fsbPromotionStore.promotion?.isGiftCode;
         if (skipPromo && !isGiftCode) {
             return true;
         }
@@ -196,7 +140,7 @@ export class FSBPromotionUIStore{
     }
 
     isEligibleForTurnOverPanel() {
-        return this.finishPromotion?.totalWin > 0 && this.currentSpinCount === 0;
+        return this.fsbPromotionStore.finishPromotion?.totalWin > 0 && this.currentSpinCount === 0;
     }
 
     // FSB consumption methods

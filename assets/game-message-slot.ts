@@ -16,6 +16,7 @@ export namespace GameServiceMessageSlot {
         progress: number;
         canClaim: boolean;
         expire: string;
+        promotionId?: string;
         static eventName = "promotionTOProgress";
     }
 

@@ -4,6 +4,7 @@ import gc, { Shared } from "@sg/game-client-base";
 import { inject, injectable } from 'inversify';
 import { FSBPromotionStore } from './fsb-promotion-store';
 import GatewayGameItem from 'db://shared-components/game-baccarat/gateway-panel/scripts/gateway-game-item';
+import { GameClientMessageSlot } from '../../game-message-slot';
 
 @injectable()
 export class FSBPromotionUIHandler {
@@ -144,10 +145,10 @@ export class FSBPromotionUIHandler {
 
     /** ========== SOCKET COMMUNICATION ========== */
     claimBonusWin() {
-        this.connectionStore.send("claim-bonus-win", {});
+        this.connectionStore.send(GameClientMessageSlot.ClaimBonusWin.eventName, null);
     }
 
     redeemGiftCode(giftCode: string) {
-        this.connectionStore.send("redeem", { giftCode: giftCode });
+        this.connectionStore.send(GameClientMessageSlot.RedeemGifCode.eventName, { giftCode: giftCode });
     }
 }

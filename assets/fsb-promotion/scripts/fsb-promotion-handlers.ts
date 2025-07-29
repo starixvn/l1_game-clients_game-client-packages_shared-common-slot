@@ -1,12 +1,12 @@
 import gc from "@sg/game-client-base";
 import inversify from "inversify";
-import { GameClientMessageSlot, GameServiceMessageSlot } from "../../game-message-slot";
+import { GameServiceMessageSlot } from "../../game-message-slot";
 import { FSBPromotionStore } from "./fsb-promotion-store";
 
 const { injectable, inject } = inversify;
 
 @injectable()
-export class FsbPromotionHandlers implements gc.Shared.IMultipleHandlers {
+export class FSBPromotionHandlers implements gc.Shared.IMultipleHandlers {
     @inject(FSBPromotionStore) protected readonly promotionStore: FSBPromotionStore;
     @inject(gc.Connection.ConnectionStore) protected readonly connectionStore: gc.Connection.ConnectionStore;
 
@@ -32,14 +32,6 @@ export class FsbPromotionHandlers implements gc.Shared.IMultipleHandlers {
 
     handleRedemptionNotice(data: GameServiceMessageSlot.RedemptionNotice) {
         this.promotionStore.redemptionNotice = data;
-    }
-
-    redeemGifCode(giftCode: string) {
-        this.connectionStore.send(GameClientMessageSlot.RedeemGifCode.eventName, { giftCode });
-    }
-
-    claimBonusWin() {
-        this.connectionStore.send(GameClientMessageSlot.ClaimBonusWin.eventName, null);
     }
 
     eventHandleList = [

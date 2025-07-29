@@ -1,11 +1,11 @@
 import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
 import { _decorator, EditBox, Label, Node, sys, tween, UIOpacity, v3 } from "cc";
 import Observer from "observer";
-import { FsbPromotionHandlers } from "../fsb-promotion-handlers";
 import { Dialog } from "db://shared-components/shared/common-components/dialogs/dialog";
 import gc from "@sg/game-client-base";
 import { FSBPromotionStore } from "../fsb-promotion-store";
 import { GameServiceMessageSlot } from "../../../game-message-slot";
+import { FSBPromotionUIHandler } from "../fsb-promotion-ui-handler";
 
 const { ccclass, property } = _decorator;
 const { observer, render, handle } = Observer;
@@ -34,7 +34,7 @@ export class RedeemGiftCodePopup extends ObserverComponent {
         this.giftCodeInput.node.off("editing-did-ended", this.onInputFinalized, this);
     }
 
-    @handle(FsbPromotionHandlers, (handle, giftCode: string) => handle.redeemGifCode(giftCode))
+    @handle(FSBPromotionUIHandler, (handle, giftCode: string) => handle.redeemGiftCode(giftCode))
     onClickRedeemGifCode() {
         return this.giftCodeInput.string.trim().toUpperCase();
     }

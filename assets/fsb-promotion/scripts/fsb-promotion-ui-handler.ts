@@ -1,8 +1,7 @@
-import { _decorator, Component } from 'cc';
+import { _decorator } from 'cc';
 import { FreeSpinsPromotionEvents, endpointConstants, FSBPromotionUIStore } from './fsb-promotion-ui-store';
 import gc, { Shared } from "@sg/game-client-base";
 import { inject, injectable } from 'inversify';
-const { ccclass } = _decorator;
 
 @injectable()
 export class FSBPromotionUIHandler {

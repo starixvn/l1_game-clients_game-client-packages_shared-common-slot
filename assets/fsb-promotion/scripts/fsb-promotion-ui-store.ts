@@ -1,8 +1,6 @@
-import { _decorator, Component } from 'cc';
+import { _decorator } from 'cc';
 import gc from "@sg/game-client-base";
 import { injectable, inject } from 'inversify';
-
-const { ccclass } = _decorator;
 
 export const endpointConstants = {
     bannerPromotion: "banner-promotions",
@@ -55,7 +53,7 @@ interface FinishPromotion {
 }
 
 @injectable()
-export class FSBPromotionUIStore extends Component {
+export class FSBPromotionUIStore{
     @inject(gc.Configs.SiteConfigs) protected readonly siteConfigs: gc.Configs.SiteConfigs;
     private readonly storageKey = "free-spins-promotion-dont-show-again";
     
@@ -72,13 +70,6 @@ export class FSBPromotionUIStore extends Component {
     public resumedFSBPromotion = false;
     public hasServerFinishPromotion = false;
     public fsbConsumedThisRound = false;
-
-    // Additional properties for event handlers
-    public promotionTOProgress: any;
-    public redeemResult: any;
-    public redemptionNotice: any;
-    public claimedAmount: any;
-    public promotion: any;
 
     // UI Events state
     private pendingUIEvents: Array<{ event: string; data?: any }> = [];

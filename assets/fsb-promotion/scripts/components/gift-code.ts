@@ -17,11 +17,6 @@ export class GiftCode extends ObserverComponent {
         this.dragGiftCode();
     }
 
-    @render(FSBPromotionUIStore, (store) => store.getPendingUIEvent()?.event === FreeSpinsPromotionEvents.OPEN_GIFT_CODE)
-    onOpenGiftCodeRedeem() {
-        this.node.active = true;
-    }
-
     dragGiftCode() {
         const draggableItem = this.getComponent(DraggableItem);
         if (draggableItem) {
@@ -33,7 +28,7 @@ export class GiftCode extends ObserverComponent {
         }
     }
 
-    @handle(FSBPromotionUIStore, (store) => store.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_GIFT_CODE_REDEEM_POPUP))
+    @handle(FSBPromotionUIStore, (store) => store.emitEvent(FreeSpinsPromotionEvents.OPEN_GIFT_CODE_REDEEM_POPUP))
     onClickGiftCode() {
         if (this.isProcessing) {
             return;

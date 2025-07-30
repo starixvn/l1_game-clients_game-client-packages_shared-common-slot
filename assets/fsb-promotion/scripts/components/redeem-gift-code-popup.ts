@@ -8,7 +8,9 @@ import { GameServiceMessageSlot } from "../../../game-message-slot";
 import { FSBPromotionUIHandler } from "../fsb-promotion-ui-handler";
 
 const { ccclass, property } = _decorator;
-const { observer, render, handle } = Observer;
+const { render, handle } = Observer;
+
+@ccclass()
 export class RedeemGiftCodePopup extends ObserverComponent {
     @property(EditBox)
     giftCodeInput: EditBox = null;

@@ -3,7 +3,7 @@ import { bundleManager } from "db://shared-components/shared/common-components/b
 const { ccclass, property } = _decorator;
 
 // Constants
-const BUNDLE_NAME = "fsb-promotion";
+const BUNDLE_NAME = "fsb-promotion-resource";
 const PREFAB_GIFT_CODE_PATH = "prefabs/gift-code";
 const CONTAINER_NAME = "fsb-promotion-container";
 const NODE_NAMES = {

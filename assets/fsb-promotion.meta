@@ -5,5 +5,8 @@
   "uuid": "5b073508-1129-4ec1-bf5a-ea19ac744ae1",
   "files": [],
   "subMetas": {},
-  "userData": {}
+  "userData": {
+    "isBundle": true,
+    "bundleName": "fsb-promotion"
+  }
 }

@@ -28,7 +28,7 @@ export class GiftCode extends ObserverComponent {
         }
     }
 
-    @handle(FSBPromotionUIStore, (store) => store.emitEvent(FreeSpinsPromotionEvents.OPEN_GIFT_CODE_REDEEM_POPUP))
+    @handle(FSBPromotionUIStore, (store) => store.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_GIFT_CODE_REDEEM_POPUP))
     onClickGiftCode() {
         if (this.isProcessing) {
             return;

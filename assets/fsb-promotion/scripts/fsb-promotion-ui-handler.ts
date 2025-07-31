@@ -31,7 +31,7 @@ export class FSBPromotionUIHandler {
                 return;
             }
 
-            this.fsbPromotionUIStore.emitEvent(FreeSpinsPromotionEvents.OPEN_FREE_SPINS_PROMOTION);
+            this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_FREE_SPINS_PROMOTION);
         } catch (error) {
             gc.sentryLogger.logError(`handlePromotionDisplay error: ${error.message}`);
         }
@@ -46,16 +46,16 @@ export class FSBPromotionUIHandler {
 
         if (this.fsbPromotionUIStore.skipGiftCode) {
             this.fsbPromotionUIStore.skipGiftCode = false;
-            this.fsbPromotionUIStore.emitEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_DETAILS_PANEL, true);
+            this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_DETAILS_PANEL, true);
             return;
         }
 
         if (isGiftCode && !isClaimed) {
-            this.fsbPromotionUIStore.emitEvent(FreeSpinsPromotionEvents.OPEN_GIFT_CODE);
+            this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_GIFT_CODE);
         } else if (isClaimed && remaining === initial) {
-            this.fsbPromotionUIStore.emitEvent(FreeSpinsPromotionEvents.OPEN_FREE_SPINS_PROMOTION);
+            this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_FREE_SPINS_PROMOTION);
         } else {
-            this.fsbPromotionUIStore.emitEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_DETAILS_PANEL);
+            this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_DETAILS_PANEL);
         }
     }
 
@@ -119,14 +119,14 @@ export class FSBPromotionUIHandler {
     /** ========== PROMOTION STATE MANAGEMENT ========== */
     public tryShowEndedPopup() {
         if (this.fsbPromotionUIStore.hasServerFinishPromotion) {
-            this.fsbPromotionUIStore.emitEvent(FreeSpinsPromotionEvents.CLOSE_PROMOTION_DETAILS_PANEL);
-            this.fsbPromotionUIStore.emitEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_ENDED_POPUP);
+            this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.CLOSE_PROMOTION_DETAILS_PANEL);
+            this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_ENDED_POPUP);
         }
     }
 
     public tryConsumeFSB() {
         if (this.fsbPromotionUIStore.tryConsumeFSB()) {
-            this.fsbPromotionUIStore.emitEvent(
+            this.fsbPromotionUIStore.addPendingUIEvent(
                 FreeSpinsPromotionEvents.UPDATE_FSB_COUNT,
                 this.fsbPromotionUIStore.currentSpinCount
             );
@@ -135,7 +135,7 @@ export class FSBPromotionUIHandler {
 
     public revertLastFSB() {
         if (this.fsbPromotionUIStore.revertLastFSB()) {
-            this.fsbPromotionUIStore.emitEvent(
+            this.fsbPromotionUIStore.addPendingUIEvent(
                 FreeSpinsPromotionEvents.UPDATE_FSB_COUNT,
                 this.fsbPromotionUIStore.currentSpinCount
             );

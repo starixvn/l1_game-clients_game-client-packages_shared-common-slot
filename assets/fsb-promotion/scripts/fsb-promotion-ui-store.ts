@@ -1,6 +1,5 @@
 import { _decorator } from "cc";
 import gc from "@sg/game-client-base";
-import { StoreBase } from "db://shared-components/game-baccarat/gateway-panel/scripts/models/definitions";
 import mobx from "mobx";
 import { FSBPromotionStore } from "./fsb-promotion-store";
 import inversify from "inversify";
@@ -32,12 +31,11 @@ export const FreeSpinsPromotionEvents = {
 };
 
 @injectable()
-export class FSBPromotionUIStore extends StoreBase{
+export class FSBPromotionUIStore{
     constructor(
         @inject(gc.Configs.SiteConfigs) protected readonly siteConfigs: gc.Configs.SiteConfigs,
         @inject(FSBPromotionStore) protected readonly fsbPromotionStore: FSBPromotionStore
     ) {
-        super();
         mobx.makeAutoObservable(this);
     }
 
@@ -53,6 +51,9 @@ export class FSBPromotionUIStore extends StoreBase{
     public resumedFSBPromotion = false;
     public hasServerFinishPromotion = false;
     public fsbConsumedThisRound = false;
+
+    // UI Events state
+    public pendingUIEvent: { event: string; data?: any } = null;
 
     // Getters and Setters
     getStorageKey() {
@@ -175,7 +176,12 @@ export class FSBPromotionUIStore extends StoreBase{
         this.hasServerFinishPromotion = true;
     }
 
-    emitEvent(event: string, data?: any) {
-        this.emit(event, data);
+    addPendingUIEvent(event: string, data?: any) {
+        this.pendingUIEvent = { event, data };
     }
+
+    removePendingUIEvent() {
+        this.pendingUIEvent = null;
+    }
+    
 }

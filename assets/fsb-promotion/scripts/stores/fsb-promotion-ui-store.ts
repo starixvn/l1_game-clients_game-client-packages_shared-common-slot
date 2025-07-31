@@ -30,7 +30,7 @@ export const FreeSpinsPromotionEvents = {
 };
 
 @injectable()
-export class FSBPromotionUIStore{
+export class FSBPromotionUIStore {
     @inject(gc.Configs.SiteConfigs) protected readonly siteConfigs: gc.Configs.SiteConfigs;
     @inject(FSBPromotionStore) protected readonly fsbPromotionStore: FSBPromotionStore;
     constructor() {
@@ -42,7 +42,7 @@ export class FSBPromotionUIStore{
     // State properties
     public receivedPromotionInGame = false;
     private _skipGiftCode = false;
-    private _activeTransitionEffect = false; 
+    private _activeTransitionEffect = false;
     private _activeDetailPromo = false;
     private _currentSpinCount = -1;
     private readonly fallbackGameOffers: { name: string; gameId: number }[] = [];
@@ -178,7 +178,9 @@ export class FSBPromotionUIStore{
         this.pendingUIEvent = { event, data };
     }
 
-    removePendingUIEvent() {
-        this.pendingUIEvent = null;
+    removePendingUIEvent(event: string) {
+        if (this.pendingUIEvent?.event === event) {
+            this.pendingUIEvent = null;
+        }
     }
 }

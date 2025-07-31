@@ -6,6 +6,7 @@ import gc from "@sg/game-client-base";
 import { FSBPromotionStore } from "../stores/fsb-promotion-store";
 import { GameServiceMessageSlot } from "../../../game-message-slot";
 import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
+import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
 
 const { ccclass, property } = _decorator;
 const { render, handle } = Observer;
@@ -42,6 +43,7 @@ export class RedeemGiftCodePopup extends ObserverComponent {
     }
 
     @handle(gc.Audios.AudioHandler, (handle) => handle.playSFX(gc.Audios.AudioIds.CLICK))
+    @handle(FSBPromotionUIStore, (store) => store.removePendingUIEvent(FreeSpinsPromotionEvents.OPEN_GIFT_CODE_REDEEM_POPUP))
     onClosePopup() {
         this.node.getComponent(Dialog)?.hide();
     }
@@ -54,7 +56,7 @@ export class RedeemGiftCodePopup extends ObserverComponent {
     @render(FSBPromotionStore, (store) => store.isRedeemSuccess)
     renderRedeemSuccess(isRedeemSuccess: boolean) {
         if (isRedeemSuccess) {
-            this.onCloseClicked();
+            this.onClosePopup();
         }
     }
 
@@ -107,14 +109,5 @@ export class RedeemGiftCodePopup extends ObserverComponent {
         } catch (e) {
             console.warn("Clipboard read failed", e);
         }
-    }
-
-    onCloseClicked() {
-        const uiOpacity = this.node.getComponent(UIOpacity);
-
-        tween(uiOpacity)
-            .to(0.3, { opacity: 0 }, { easing: "backIn" })
-            .call(() => this.node.destroy())
-            .start();
     }
 }

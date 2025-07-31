@@ -9,7 +9,9 @@ const { ccclass, property } = _decorator;
 // Constants
 const BUNDLE_NAME = "fsb-promotion-resource";
 const PREFAB_GIFT_CODE_PATH = "prefabs/gift-code";
+const PREFAB_REDEEM_GIFT_CODE_POPUP_PATH = "prefabs/redeem-gift-code-popup";
 const CONTAINER_NAME = "fsb-promotion-container";
+const POPUP_CONTAINER_NAME = "fsb-promotion-popup-container";
 const NODE_NAMES = {
     CENTER: "center",
     AUTO_SCALE_WIDGET: "auto-scale-widget",
@@ -19,10 +21,13 @@ const NODE_NAMES = {
 @ccclass("FSBPromotionUIManager")
 export class FSBPromotionUIManager extends ObserverComponent {
     public fsbPromotionContainer: Node = null;
+    public fsbPromotionPopupContainer: Node = null;
     private giftCodeNode: Node = null;
+    private redeemGiftCodePopupNode: Node = null;
 
     onLoad() {
         this.createFsbPromotionContainer();
+        this.createFsbPromotionPopupContainer();
         super.onLoad();
     }
 
@@ -30,6 +35,13 @@ export class FSBPromotionUIManager extends ObserverComponent {
     initGiftCode(isOpenGiftCode: boolean) {
         if (isOpenGiftCode) {
             this.loadAndShowGiftCode();
+        }
+    }
+
+    @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.OPEN_GIFT_CODE_REDEEM_POPUP)
+    initRedeemGiftCodePopup(isOpenRedeemGiftCodePopup: boolean) {
+        if (isOpenRedeemGiftCodePopup) {
+            this.loadAndShowRedeemGiftCodePopup();
         }
     }
     
@@ -51,6 +63,23 @@ export class FSBPromotionUIManager extends ObserverComponent {
         this.positionContainer(fsbPromotionContainer, autoScaleWidget);
         this.fsbPromotionContainer = fsbPromotionContainer;
         
+    }
+
+    createFsbPromotionPopupContainer(): void {
+        const autoScaleWidget = this.findAutoScaleWidget();
+        if (!autoScaleWidget) {
+            throw new Error("Auto-scale widget not found");
+        }
+
+        const existingContainer = autoScaleWidget.getChildByName(POPUP_CONTAINER_NAME);
+        if (existingContainer) {
+            this.fsbPromotionPopupContainer = existingContainer;
+            return;
+        }
+
+        const fsbPromotionPopupContainer = new Node(POPUP_CONTAINER_NAME);
+        autoScaleWidget.addChild(fsbPromotionPopupContainer);
+        this.fsbPromotionPopupContainer = fsbPromotionPopupContainer;
     }
 
     private findAutoScaleWidget(): Node | null {
@@ -84,6 +113,13 @@ export class FSBPromotionUIManager extends ObserverComponent {
         const giftCodeNode = instantiate(prefab);
         this.fsbPromotionContainer.addChild(giftCodeNode);
         this.giftCodeNode = giftCodeNode;
+    }
+
+    async loadAndShowRedeemGiftCodePopup() {
+        const prefab = await this.loadPrefab(PREFAB_REDEEM_GIFT_CODE_POPUP_PATH);
+        const redeemGiftCodePopupNode = instantiate(prefab);
+        this.fsbPromotionPopupContainer.addChild(redeemGiftCodePopupNode);
+        this.redeemGiftCodePopupNode = redeemGiftCodePopupNode;
     }
 
     private async loadPrefab(prefabPath: string): Promise<Prefab | null> {

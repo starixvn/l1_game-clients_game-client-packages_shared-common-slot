@@ -6,7 +6,7 @@ const { ccclass } = _decorator;
 @ccclass()
 export class LocalizedUTMSwissFont extends LocalizedFont {
     initData() {
-        const utmSwiss = "UTM-Swiss-721-Black-Condensed";
+        const utmSwiss = "utm-swiss-721-black-condensed";
         this.fontBases = {
             vi: utmSwiss,
             id: utmSwiss,

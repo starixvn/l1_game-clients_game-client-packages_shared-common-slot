@@ -1,4 +1,5 @@
-import { _decorator } from "cc";
+import { _decorator, Font } from "cc";
+import { bundleManager } from "db://shared-components/shared/common-components/bundle-manager/bundle-manager";
 import { FontMapping, LocalizedFont } from "db://shared-components/shared/common-components/localization/localized-font";
 
 const { ccclass } = _decorator;
@@ -6,7 +7,8 @@ const { ccclass } = _decorator;
 @ccclass()
 export class LocalizedUTMBryantLGFont extends LocalizedFont {
     initData() {
-        const utmBryantLG = "UTM-BryantLG";
+        const utmBryantLG = "utm-bryantlg";
+        this.loadFont(utmBryantLG);
         this.fontBases = {
             vi: utmBryantLG,
             id: utmBryantLG,

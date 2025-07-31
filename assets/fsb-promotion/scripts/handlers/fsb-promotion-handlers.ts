@@ -13,7 +13,6 @@ export class FSBPromotionHandlers implements gc.Shared.IMultipleHandlers {
     @inject(FSBPromotionUIHandler) protected readonly fsbPromotionUIHandler: FSBPromotionUIHandler;
 
     handlePromotion(data: GameServiceMessageSlot.Promotion) {
-        debugger;
         this.promotionStore.promotion = data;
         this.fsbPromotionUIHandler.handlePromotionDisplay();
     }

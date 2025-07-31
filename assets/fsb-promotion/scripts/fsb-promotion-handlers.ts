@@ -11,6 +11,7 @@ export class FSBPromotionHandlers implements gc.Shared.IMultipleHandlers {
     @inject(gc.Connection.ConnectionStore) protected readonly connectionStore: gc.Connection.ConnectionStore;
 
     handlePromotion(data: GameServiceMessageSlot.Promotion) {
+        debugger;
         this.promotionStore.promotion = data;
     }
 

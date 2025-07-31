@@ -1,9 +1,9 @@
 import { _decorator } from "cc";
-import { FreeSpinsPromotionEvents, endpointConstants, FSBPromotionUIStore } from "./fsb-promotion-ui-store";
+import { FreeSpinsPromotionEvents, endpointConstants, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
 import gc, { Shared } from "@sg/game-client-base";
 import inversify from "inversify";
-import { FSBPromotionStore } from "./fsb-promotion-store";
-import { GameClientMessageSlot } from "../../game-message-slot";
+import { FSBPromotionStore } from "../stores/fsb-promotion-store";
+import { GameClientMessageSlot } from "../../../game-message-slot";
 
 const { injectable, inject } = inversify;
 
@@ -30,12 +30,7 @@ export class FSBPromotionUIHandler {
                 return;
             }
 
-            if (this.fsbPromotionUIStore.receivedPromotionInGame) {
-                this.handleDirectOpen();
-                return;
-            }
-
-            this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_FREE_SPINS_PROMOTION);
+            this.handleDirectOpen();
         } catch (error) {
             gc.sentryLogger.logError(`handlePromotionDisplay error: ${error.message}`);
         }

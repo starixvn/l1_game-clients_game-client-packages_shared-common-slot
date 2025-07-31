@@ -1,5 +1,9 @@
-import { _decorator, Node, instantiate, Prefab } from "cc";
+import { _decorator, Node, instantiate, Prefab, Component } from "cc";
 import { bundleManager } from "db://shared-components/shared/common-components/bundle-manager/bundle-manager";
+import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
+import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
+import Observer from "observer";
+const { handle, render } = Observer;
 const { ccclass, property } = _decorator;
 
 // Constants
@@ -13,20 +17,23 @@ const NODE_NAMES = {
 } as const;
 
 @ccclass("FSBPromotionUIManager")
-export class FSBPromotionUIManager {
-    private readonly game: any;
+export class FSBPromotionUIManager extends ObserverComponent {
     public fsbPromotionContainer: Node = null;
     private giftCodeNode: Node = null;
 
-    constructor(game: any) {
-        this.game = game;
-    }
-
-    init() {
+    onLoad() {
         this.createFsbPromotionContainer();
+        super.onLoad();
     }
 
-     private createFsbPromotionContainer(): void {
+    @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.OPEN_GIFT_CODE)
+    initGiftCode(isOpenGiftCode: boolean) {
+        if (isOpenGiftCode) {
+            this.loadAndShowGiftCode();
+        }
+    }
+    
+    private createFsbPromotionContainer(): void {
         const autoScaleWidget = this.findAutoScaleWidget();
         if (!autoScaleWidget) {
             throw new Error("Auto-scale widget not found");
@@ -43,10 +50,11 @@ export class FSBPromotionUIManager {
 
         this.positionContainer(fsbPromotionContainer, autoScaleWidget);
         this.fsbPromotionContainer = fsbPromotionContainer;
+        
     }
 
     private findAutoScaleWidget(): Node | null {
-        const center = this.game.node.getChildByName(NODE_NAMES.CENTER);
+        const center = this.node.getChildByName(NODE_NAMES.CENTER);
         if (!center) {
             return null;
         }

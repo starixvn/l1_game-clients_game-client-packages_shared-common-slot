@@ -3,7 +3,6 @@ import gc from "@sg/game-client-base";
 import mobx from "mobx";
 import { FSBPromotionStore } from "./fsb-promotion-store";
 import inversify from "inversify";
-
 const { injectable, inject } = inversify;
 
 export const endpointConstants = {
@@ -43,7 +42,7 @@ export class FSBPromotionUIStore{
     // State properties
     public receivedPromotionInGame = false;
     private _skipGiftCode = false;
-    private _activeTransitionEffect = false;
+    private _activeTransitionEffect = false; 
     private _activeDetailPromo = false;
     private _currentSpinCount = -1;
     private readonly fallbackGameOffers: { name: string; gameId: number }[] = [];
@@ -182,5 +181,4 @@ export class FSBPromotionUIStore{
     removePendingUIEvent() {
         this.pendingUIEvent = null;
     }
-    
 }

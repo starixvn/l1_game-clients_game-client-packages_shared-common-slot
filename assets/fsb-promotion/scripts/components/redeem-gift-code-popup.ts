@@ -3,9 +3,9 @@ import { _decorator, EditBox, Label, Node, sys, tween, UIOpacity, v3 } from "cc"
 import Observer from "observer";
 import { Dialog } from "db://shared-components/shared/common-components/dialogs/dialog";
 import gc from "@sg/game-client-base";
-import { FSBPromotionStore } from "../fsb-promotion-store";
+import { FSBPromotionStore } from "../stores/fsb-promotion-store";
 import { GameServiceMessageSlot } from "../../../game-message-slot";
-import { FSBPromotionUIHandler } from "../fsb-promotion-ui-handler";
+import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
 
 const { ccclass, property } = _decorator;
 const { render, handle } = Observer;

@@ -1,6 +1,6 @@
 import inversify from "inversify";
 import mobx from "mobx";
-import { GameServiceMessageSlot } from "../../game-message-slot";
+import { GameServiceMessageSlot } from "../../../game-message-slot";
 const { injectable } = inversify;
 
 @injectable()

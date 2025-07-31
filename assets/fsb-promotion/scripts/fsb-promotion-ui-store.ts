@@ -32,10 +32,9 @@ export const FreeSpinsPromotionEvents = {
 
 @injectable()
 export class FSBPromotionUIStore{
-    constructor(
-        @inject(gc.Configs.SiteConfigs) protected readonly siteConfigs: gc.Configs.SiteConfigs,
-        @inject(FSBPromotionStore) protected readonly fsbPromotionStore: FSBPromotionStore
-    ) {
+    @inject(gc.Configs.SiteConfigs) protected readonly siteConfigs: gc.Configs.SiteConfigs;
+    @inject(FSBPromotionStore) protected readonly fsbPromotionStore: FSBPromotionStore;
+    constructor() {
         mobx.makeAutoObservable(this);
     }
 

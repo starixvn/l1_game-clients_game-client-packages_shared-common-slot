@@ -3,7 +3,6 @@ import { FreeSpinsPromotionEvents, endpointConstants, FSBPromotionUIStore } from
 import gc, { Shared } from "@sg/game-client-base";
 import inversify from "inversify";
 import { FSBPromotionStore } from "./fsb-promotion-store";
-import GatewayGameItem from "db://shared-components/game-baccarat/gateway-panel/scripts/gateway-game-item";
 import { GameClientMessageSlot } from "../../game-message-slot";
 
 const { injectable, inject } = inversify;
@@ -14,7 +13,12 @@ export class FSBPromotionUIHandler {
     @inject(gc.Configs.SiteConfigs) protected readonly siteConfigs: gc.Configs.SiteConfigs;
     @inject(FSBPromotionStore) protected readonly fsbPromotionStore: FSBPromotionStore;
     @inject(FSBPromotionUIStore) protected readonly fsbPromotionUIStore: FSBPromotionUIStore;
-    @inject(GatewayGameItem) protected readonly gatewayGameItem: GatewayGameItem;
+    
+    // Mock gateway game item for slot games
+    protected readonly gatewayGameItem = {
+        gameId: 1, // Default game ID
+        gameName: "Cascading Slot" // Default game name
+    };
 
     /** ========== PROMOTION FLOW ========== */
     public handlePromotionDisplay() {

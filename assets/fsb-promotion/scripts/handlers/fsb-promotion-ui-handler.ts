@@ -115,6 +115,11 @@ export class FSBPromotionUIHandler {
         return searchParams.toString();
     }
 
+    /** ========== GAME INFO HELPERS ========== */
+    getGameId() {
+        return this.gatewayGameItem.gameId;
+    }
+
     /** ========== PROMOTION STATE MANAGEMENT ========== */
     public tryShowEndedPopup() {
         if (this.fsbPromotionUIStore.hasServerFinishPromotion) {

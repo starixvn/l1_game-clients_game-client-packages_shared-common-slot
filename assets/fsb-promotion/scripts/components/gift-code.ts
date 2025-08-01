@@ -33,7 +33,7 @@ export class GiftCode extends ObserverComponent {
             return;
         }
         this.isProcessing = true;
-        this.changeUIState();
+        this.openGiftCodeRedeemPopup();
 
         this.scheduleOnce(() => {
             this.isProcessing = false;
@@ -41,8 +41,6 @@ export class GiftCode extends ObserverComponent {
     }
 
     @handle(FSBPromotionUIStore, (store) => store.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_GIFT_CODE_REDEEM_POPUP))
-    private changeUIState() {
+    private openGiftCodeRedeemPopup() {
     }
 }
-
-

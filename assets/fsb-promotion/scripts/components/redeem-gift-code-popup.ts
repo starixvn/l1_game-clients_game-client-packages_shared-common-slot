@@ -1,5 +1,5 @@
 import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
-import { _decorator, EditBox, Label, Node, sys } from "cc";
+import { _decorator, EditBox, Label, Node, sys, tween, Vec3 } from "cc";
 import Observer from "observer";
 import gc from "@sg/game-client-base";
 import { FSBPromotionStore } from "../stores/fsb-promotion-store";
@@ -27,21 +27,21 @@ export class RedeemGiftCodePopup extends ObserverComponent {
         this.giftCodeInput.node.on("editing-did-began", this.onEditBoxFocus, this);
         this.giftCodeInput.node.on("editing-did-ended", this.onInputFinalized, this);
     }
-
     onDisable() {
         this.giftCodeInput.node.off("editing-did-began", this.onEditBoxFocus, this);
         this.giftCodeInput.node.off("editing-did-ended", this.onInputFinalized, this);
     }
 
     @handle(FSBPromotionUIHandler, (handle, giftCode: string) => handle.redeemGiftCode(giftCode))
-    @handle(FSBPromotionUIStore, (store) => store.removePendingUIEvent(FreeSpinsPromotionEvents.REDEMPTION_NOTICE))
+    @handle(FSBPromotionUIHandler, (handle) => handle.removeEvent(FreeSpinsPromotionEvents.REDEMPTION_NOTICE))
     @handle(FSBPromotionUIHandler, (handle) => handle.resetRedeemResult())
     onClickRedeemGifCode() {
         return this.giftCodeInput.string.trim().toUpperCase();
     }
 
     @handle(gc.Audios.AudioHandler, (handle) => handle.playSFX(gc.Audios.AudioIds.CLICK))
-    @handle(FSBPromotionUIStore, (store) => store.removePendingUIEvent(FreeSpinsPromotionEvents.OPEN_GIFT_CODE_REDEEM_POPUP))
+    @handle(FSBPromotionUIHandler, (handle) => handle.removeEvent(FreeSpinsPromotionEvents.OPEN_GIFT_CODE_REDEEM_POPUP))
+    @handle(FSBPromotionUIHandler, (handle) => handle.addEvent(FreeSpinsPromotionEvents.REDEMPTION_NOTICE))
     onClosePopup() {
         this.node.getComponent(CustomTransitionDialog)?.hide();
     }
@@ -61,7 +61,8 @@ export class RedeemGiftCodePopup extends ObserverComponent {
         }
     }
 
-    @handle(FSBPromotionUIStore, (store) => store.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_FREE_SPINS_PROMOTION))
+    @handle(FSBPromotionUIHandler, (handle) => handle.addEvent(FreeSpinsPromotionEvents.CLOSE_GIFT_CODE_ICON))
+    @handle(FSBPromotionUIHandler, (handle) => handle.addEvent(FreeSpinsPromotionEvents.OPEN_FREE_SPINS_PROMOTION))
     openBannerPromotion() {}
 
     onInputFinalized(editBox: EditBox) {

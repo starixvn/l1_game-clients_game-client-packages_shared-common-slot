@@ -1,7 +1,9 @@
 import { _decorator } from 'cc';
-import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
 import LoadWebView from "db://shared-components/shared/common-components/web-view/load-web-view";
 import { FsbPromotionDialog } from "./fsb-promotion-dialog";
+import { FSBPromotionUIStore } from '../stores/fsb-promotion-ui-store';
+import Observer from "observer";
+const { handle, render } = Observer;
 const CLOSE_FREE_SPINS_PROMOTION_EVENT = "closeFreeSpinsPromotionPopup";
 
 const { ccclass, property } = _decorator;
@@ -10,16 +12,10 @@ export class FsbWebView extends LoadWebView {
     @property(FsbPromotionDialog)
     freeSpinsPromotionDialog: FsbPromotionDialog = null;
 
-    @property(FSBPromotionUIHandler)
-    fsbPromotionUIHandler: FSBPromotionUIHandler = null;
-
     onLoad(): void {
-        this.loadFreeSpinsPromotionSite();
-        if (this.freeSpinsPromotionDialog) {
-            this.node.destroy();
-        }
         window.addEventListener("message", this.handleEvent, false);
         super.onLoad();
+        this.node.setPosition(0, 0, 0);
     }
 
     public onDestroy(): void {
@@ -32,16 +28,20 @@ export class FsbWebView extends LoadWebView {
         }
     };
 
-    loadFreeSpinsPromotionSite() {
+    @render(FSBPromotionUIStore, (store) => store.promotionUrl)
+    loadFreeSpinsPromotionSite(promotionUrl: string) {
+        if (!promotionUrl) {
+            return;
+        }
         this.showLoading();
         this.hideWebView();
-        const url = this.fsbPromotionUIHandler.getPromoUrl();
-        this.webView && (this.webView.url = url);
+        this.webView && (this.webView.url = promotionUrl);
     }
 
     showWebView() {
         this.setOpacity(255);
         this.onWebViewLoaded();
+        this.node.setPosition(0, 0, 0);
     }
 }
 

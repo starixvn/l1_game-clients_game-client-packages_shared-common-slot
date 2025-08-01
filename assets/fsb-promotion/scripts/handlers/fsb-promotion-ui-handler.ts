@@ -1,6 +1,6 @@
 import { _decorator } from "cc";
 import { FreeSpinsPromotionEvents, endpointConstants, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
-import gc, { Shared } from "@sg/game-client-base";
+import gc from "@sg/game-client-base";
 import inversify from "inversify";
 import { FSBPromotionStore } from "../stores/fsb-promotion-store";
 import { GameClientMessageSlot } from "../../../game-message-slot";
@@ -13,12 +13,7 @@ export class FSBPromotionUIHandler {
     @inject(gc.Configs.SiteConfigs) protected readonly siteConfigs: gc.Configs.SiteConfigs;
     @inject(FSBPromotionStore) protected readonly fsbPromotionStore: FSBPromotionStore;
     @inject(FSBPromotionUIStore) protected readonly fsbPromotionUIStore: FSBPromotionUIStore;
-    
-    // Mock gateway game item for slot games
-    protected readonly gatewayGameItem = {
-        gameId: 1, // Default game ID
-        gameName: "Cascading Slot" // Default game name
-    };
+    @inject(gc.Auth.AuthStore) protected readonly authStore: gc.Auth.AuthStore;
 
     /** ========== PROMOTION FLOW ========== */
     public handlePromotionDisplay() {
@@ -53,6 +48,7 @@ export class FSBPromotionUIHandler {
             this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_GIFT_CODE);
         } else if (isClaimed && remaining === initial) {
             this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_FREE_SPINS_PROMOTION);
+            this.fsbPromotionUIStore.promotionUrl = this.getPromoUrl();
         } else {
             this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_DETAILS_PANEL);
         }
@@ -78,8 +74,7 @@ export class FSBPromotionUIHandler {
 
     getPromoUrl() {
         const promotionId = this.fsbPromotionStore.promotion?.promotionId || this.fsbPromotionStore.promotionTOProgress?.promotionId;
-        const gameOffers = [{ gameId: this.gatewayGameItem.gameId, name: this.gatewayGameItem.gameName }];
-        const queryString = this.getQueryString(promotionId, gameOffers);
+        const queryString = this.getQueryString(promotionId, this.fsbPromotionUIStore.gameOffers);
         const endpoint = this.fsbPromotionUIStore.activeDetailPromo
             ? endpointConstants.announcementDetails
             : endpointConstants.bannerPromotion;
@@ -87,11 +82,10 @@ export class FSBPromotionUIHandler {
     }
 
     private buildParams() {
-        const sessionInfo = Shared.utils.StorageManager.get(Shared.utils.localStorageKeys.session) as gc.Auth.ISessionInfo;
         return {
-            sessionId: gc.GameUtils.base64Encode(sessionInfo?.session || ""),
-            username: sessionInfo?.username,
-            language: sessionInfo?.language,
+            sessionId: gc.GameUtils.base64Encode(this.authStore.session || ""),
+            username: this.authStore.username,
+            language: this.authStore.language,
         };
     }
 
@@ -113,11 +107,6 @@ export class FSBPromotionUIHandler {
         }
 
         return searchParams.toString();
-    }
-
-    /** ========== GAME INFO HELPERS ========== */
-    getGameId() {
-        return this.gatewayGameItem.gameId;
     }
 
     /** ========== PROMOTION STATE MANAGEMENT ========== */

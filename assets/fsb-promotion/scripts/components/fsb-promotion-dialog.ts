@@ -4,13 +4,12 @@ import gc from "@sg/game-client-base";
 const { Shared } = gc;
 const { utils } = Shared;
 import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
-import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
-import { Dialog } from "db://shared-components/shared/common-components/dialogs/dialog";
 import Observer from "observer";
 const { handle, render } = Observer;
+import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
 
 @ccclass("FsbPromotionDialog")
-export class FsbPromotionDialog extends Dialog {
+export class FsbPromotionDialog extends ObserverComponent{
     @property(Node)
     playNow: Node = null;
 
@@ -23,18 +22,13 @@ export class FsbPromotionDialog extends Dialog {
     @property(Node)
     background: Node = null;
 
+    
+
     private readonly TRACKING_OBJECT_NAME = "Free spins promotion";
     private _bgTween: Tween<Node> = null;
+    public gameOffers: { name: string; gameId: number }[] = [];
 
-    @property(FSBPromotionUIHandler)
-    fsbPromotionUIHandler: FSBPromotionUIHandler = null;
-
-    async start() {
-        this.show();
-    }
-
-    onDisable(): void {
-        super.onDisable();
+    onLoad(): void {
         if (this._bgTween) {
             this._bgTween.stop();
             this._bgTween = null;
@@ -42,13 +36,13 @@ export class FsbPromotionDialog extends Dialog {
     }
 
     closeDialog() {
-        super.hide();
+        this.background.active = false;
     }
 
     playGameNow() {
         this.closeDialog();
         this.openPromotionDetailsPanel();
-        const gameId = this.fsbPromotionUIHandler.getGameId();
+        const gameId = this.gameOffers[0].gameId;
         if (!gameId) {
             return;
         }
@@ -58,6 +52,11 @@ export class FsbPromotionDialog extends Dialog {
             action: utils.TrackingAction.Click,
             object_name: this.TRACKING_OBJECT_NAME,
         });
+    }
+
+    @render(FSBPromotionUIStore, (store) => store.gameOffers)
+    setGameOffers(gameOffers: { name: string; gameId: number }[]) {
+        this.gameOffers = gameOffers;
     }
 
     @handle(FSBPromotionUIStore, (store) => store.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_DETAILS_PANEL))

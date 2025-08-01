@@ -3,6 +3,8 @@ import gc from "@sg/game-client-base";
 import mobx from "mobx";
 import { FSBPromotionStore } from "./fsb-promotion-store";
 import inversify from "inversify";
+import { settings } from "db://assets/game/scripts/game-settings";
+
 const { injectable, inject } = inversify;
 
 export const endpointConstants = {
@@ -50,6 +52,8 @@ export class FSBPromotionUIStore {
     public resumedFSBPromotion = false;
     public hasServerFinishPromotion = false;
     public fsbConsumedThisRound = false;
+    public promotionUrl = "";
+    public gameOffers: { name: string; gameId: number }[] = [{ name: settings.name, gameId: settings.id }];
 
     // UI Events state
     public pendingUIEvent: { event: string; data?: any } = null;

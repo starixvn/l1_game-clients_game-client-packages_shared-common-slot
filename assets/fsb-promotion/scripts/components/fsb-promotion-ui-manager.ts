@@ -12,6 +12,7 @@ const BUNDLE_NAME = "fsb-promotion-resource";
 const PREFAB_GIFT_CODE_PATH = "prefabs/gift-code";
 const PREFAB_REDEEM_GIFT_CODE_POPUP_PATH = "prefabs/redeem-gift-code-popup";
 const PREFAB_EFFECT_UNBOX_GIFT_PATH = "prefabs/effect-unbox-gift";
+const PREFAB_FSB_BANNER_PATH = "prefabs/fsb-banner";
 const CONTAINER_NAME = "fsb-promotion-container";
 const POPUP_CONTAINER_NAME = "fsb-promotion-popup-container";
 const NODE_NAMES = {
@@ -27,6 +28,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
     private giftCodeNode: Node = null;
     private redeemGiftCodePopupNode: Node = null;
     private effectUnboxGiftNode: Node = null;
+    private fsbBannerNode: Node = null;
     private UNIT_SECOND_EFFECT_UNBOX_GIFT = 2000;
     onLoad() {
         this.createFsbPromotionContainer();
@@ -45,6 +47,13 @@ export class FSBPromotionUIManager extends ObserverComponent {
     initEffectUnboxGift(shouldPlayEffect: boolean) {
         if (shouldPlayEffect) {
             this.loadAndPlayEffectUnboxGift();
+        }
+    }
+    
+    @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.OPEN_FREE_SPINS_PROMOTION)
+    initFsbBanner(isOpenFsbBanner: boolean) {
+        if (isOpenFsbBanner) {
+            this.loadAndShowFsbBanner();
         }
     }
 
@@ -152,6 +161,13 @@ export class FSBPromotionUIManager extends ObserverComponent {
         const redeemGiftCodePopupNode = instantiate(prefab);
         this.fsbPromotionPopupContainer.addChild(redeemGiftCodePopupNode);
         this.redeemGiftCodePopupNode = redeemGiftCodePopupNode;
+    }
+
+    async loadAndShowFsbBanner() {
+        const prefab = await this.loadPrefab(PREFAB_FSB_BANNER_PATH);
+        const fsbBannerNode = instantiate(prefab);
+        this.fsbPromotionPopupContainer.addChild(fsbBannerNode);
+        this.fsbBannerNode = fsbBannerNode;
     }
 
     private async loadPrefab(prefabPath: string): Promise<Prefab | null> {

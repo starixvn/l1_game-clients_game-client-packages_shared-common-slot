@@ -50,7 +50,9 @@ export class RedeemGiftCodePopup extends ObserverComponent {
 
     @render(FSBPromotionStore, (store) => store.redemptionNotice)
     renderRedemptionNotice(redemptionNotice: GameServiceMessageSlot.RedemptionNotice) {
-        this.errorLabel.string = redemptionNotice.errorCode;
+        if (redemptionNotice) {
+            this.errorLabel.string = redemptionNotice.errorCode;
+        }
     }
 
     @render(FSBPromotionStore, (store) => store.isRedeemSuccess)

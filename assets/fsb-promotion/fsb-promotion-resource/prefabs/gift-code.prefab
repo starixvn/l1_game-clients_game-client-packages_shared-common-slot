@@ -187,7 +187,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 271.1591796875,
+      "width": 186.61279296875,
       "height": 75.6
     },
     "_anchorPoint": {
@@ -223,7 +223,7 @@
       "b": 255,
       "a": 255
     },
-    "_string": "DATA NULL: ",
+    "_string": "REDEEM",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_actualFontSize": 53,
@@ -284,7 +284,7 @@
     "__prefab": {
       "__id__": 9
     },
-    "key": "",
+    "key": "FreeSpinBonus.gift_code_redeem",
     "format": 1,
     "prefix": "",
     "suffix": "",

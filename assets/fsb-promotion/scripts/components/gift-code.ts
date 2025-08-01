@@ -1,7 +1,8 @@
 import { _decorator, Node } from 'cc';
 import DraggableItem from 'db://shared-components/shared/common-components/draggable/draggable-item';
 import { ObserverComponent } from 'db://shared-components/shared/common-components/observer-component/scripts/observer-component';
-import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from '../stores/fsb-promotion-ui-store';
+import { FreeSpinsPromotionEvents } from '../stores/fsb-promotion-ui-store';
+import { FSBPromotionUIHandler } from '../handlers/fsb-promotion-ui-handler';
 import Observer from 'observer';
 const { ccclass, property } = _decorator;
 const { handle, render } = Observer;
@@ -40,7 +41,7 @@ export class GiftCode extends ObserverComponent {
         }, 1);
     }
 
-    @handle(FSBPromotionUIStore, (store) => store.addPendingUIEvent(FreeSpinsPromotionEvents.EFFECT_UNBOX_GIFT))
+    @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.EFFECT_UNBOX_GIFT))
     private openGiftCodeRedeemPopup() {
     }
 }

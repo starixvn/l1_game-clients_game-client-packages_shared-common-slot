@@ -146,6 +146,10 @@ export class FSBPromotionUIHandler {
         }
     }
 
+    public changeUIPendingEvent(event: string, data?: any) {
+        this.fsbPromotionUIStore.addPendingUIEvent(event, data);
+    }
+
     /** ========== SOCKET COMMUNICATION ========== */
     claimBonusWin() {
         this.connectionStore.send(GameClientMessageSlot.ClaimBonusWin.eventName, null);

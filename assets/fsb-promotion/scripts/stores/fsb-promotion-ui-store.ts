@@ -23,6 +23,7 @@ export const FreeSpinsPromotionEvents = {
     COLLAPSE_MENU: "COLLAPSE_MENU",
     DESTROY_GIFT_CODE_NODE: "DESTROY_GIFT_CODE_NODE",
     CLOSE_PROMOTION_DETAILS_PANEL: "CLOSE_PROMOTION_DETAILS_PANEL",
+    CLOSE_FREE_SPINS_PROMOTION: "CLOSE_FREE_SPINS_PROMOTION",
     UPDATE_FSB_COUNT: "UPDATE_FSB_COUNT",
     UPDATE_TOTAL_WIN: "UPDATE_TOTAL_WIN",
     EXPIRE_CLAIM_BONUS: "EXPIRE_CLAIM_BONUS",
@@ -55,7 +56,7 @@ export class FSBPromotionUIStore {
     public hasServerFinishPromotion = false;
     public fsbConsumedThisRound = false;
     public promotionUrl = "";
-    public gameOffers: { name: string; gameId: number }[] = [{ name: settings.name, gameId: settings.id }];
+    public gameOffers: { name: string; gameId: number }[] = [{ name: settings.name.toLowerCase(), gameId: settings.id }];
 
     // UI Events state
     public pendingUIEvent: { event: string; data?: any } = null;

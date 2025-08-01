@@ -57,6 +57,13 @@ export class FSBPromotionUIManager extends ObserverComponent {
         }
     }
 
+    @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.CLOSE_FREE_SPINS_PROMOTION)
+    closePromotionBanner(isClosePromotionBanner: boolean) {
+        if (isClosePromotionBanner) {
+            this.fsbBannerNode.destroy();
+        }
+    }
+
     private async loadAndPlayEffectUnboxGift() {
         if (this.effectUnboxGiftNode && this.effectUnboxGiftNode.isValid) {
             this.effectUnboxGiftNode.destroy();

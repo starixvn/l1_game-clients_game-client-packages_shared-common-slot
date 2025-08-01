@@ -1,12 +1,13 @@
-import { _decorator, Component, Node, Toggle, Label, Tween, tween, director } from "cc";
-const { ccclass, property } = _decorator;
 import gc from "@sg/game-client-base";
+import { _decorator, Node, director } from "cc";
+import { ObserverComponent } from 'db://shared-components/shared/common-components/observer-component/scripts/observer-component';
+import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from '../stores/fsb-promotion-ui-store';
+import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
+import Observer from 'observer';
 const { Shared } = gc;
 const { utils } = Shared;
-import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
-import Observer from "observer";
+const { ccclass, property } = _decorator;
 const { handle, render } = Observer;
-import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
 
 @ccclass("FsbPromotionDialog")
 export class FsbPromotionDialog extends ObserverComponent{
@@ -22,21 +23,11 @@ export class FsbPromotionDialog extends ObserverComponent{
     @property(Node)
     background: Node = null;
 
-    
-
     private readonly TRACKING_OBJECT_NAME = "Free spins promotion";
-    private _bgTween: Tween<Node> = null;
     public gameOffers: { name: string; gameId: number }[] = [];
 
-    onLoad(): void {
-        if (this._bgTween) {
-            this._bgTween.stop();
-            this._bgTween = null;
-        }
-    }
-
+    @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.CLOSE_FREE_SPINS_PROMOTION))
     closeDialog() {
-        this.background.active = false;
     }
 
     playGameNow() {
@@ -59,7 +50,7 @@ export class FsbPromotionDialog extends ObserverComponent{
         this.gameOffers = gameOffers;
     }
 
-    @handle(FSBPromotionUIStore, (store) => store.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_DETAILS_PANEL))
+    @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_DETAILS_PANEL))
     openPromotionDetailsPanel() {}
 
 }

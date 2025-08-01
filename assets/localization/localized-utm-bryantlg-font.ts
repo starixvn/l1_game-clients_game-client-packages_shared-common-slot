@@ -1,5 +1,4 @@
-import { _decorator, Font } from "cc";
-import { bundleManager } from "db://shared-components/shared/common-components/bundle-manager/bundle-manager";
+import { _decorator } from "cc";
 import { FontMapping, LocalizedFont } from "db://shared-components/shared/common-components/localization/localized-font";
 
 const { ccclass } = _decorator;

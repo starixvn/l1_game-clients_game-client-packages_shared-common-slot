@@ -3,6 +3,7 @@ import { bundleManager } from "db://shared-components/shared/common-components/b
 import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
 import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
 import Observer from "observer";
+import { FunctionUtils } from "db://shared-components/shared/utils/function-utils";
 const { handle, render } = Observer;
 const { ccclass, property } = _decorator;
 
@@ -10,6 +11,7 @@ const { ccclass, property } = _decorator;
 const BUNDLE_NAME = "fsb-promotion-resource";
 const PREFAB_GIFT_CODE_PATH = "prefabs/gift-code";
 const PREFAB_REDEEM_GIFT_CODE_POPUP_PATH = "prefabs/redeem-gift-code-popup";
+const PREFAB_EFFECT_UNBOX_GIFT_PATH = "prefabs/effect-unbox-gift";
 const CONTAINER_NAME = "fsb-promotion-container";
 const POPUP_CONTAINER_NAME = "fsb-promotion-popup-container";
 const NODE_NAMES = {
@@ -24,7 +26,8 @@ export class FSBPromotionUIManager extends ObserverComponent {
     public fsbPromotionPopupContainer: Node = null;
     private giftCodeNode: Node = null;
     private redeemGiftCodePopupNode: Node = null;
-
+    private effectUnboxGiftNode: Node = null;
+    private UNIT_SECOND_EFFECT_UNBOX_GIFT = 2000;
     onLoad() {
         this.createFsbPromotionContainer();
         this.createFsbPromotionPopupContainer();
@@ -38,13 +41,43 @@ export class FSBPromotionUIManager extends ObserverComponent {
         }
     }
 
+    @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.EFFECT_UNBOX_GIFT)
+    initEffectUnboxGift(shouldPlayEffect: boolean) {
+        if (shouldPlayEffect) {
+            this.loadAndPlayEffectUnboxGift();
+        }
+    }
+
+    private async loadAndPlayEffectUnboxGift() {
+        if (this.effectUnboxGiftNode && this.effectUnboxGiftNode.isValid) {
+            this.effectUnboxGiftNode.destroy();
+            this.effectUnboxGiftNode = null;
+        }
+
+        const prefab = await this.loadPrefab(PREFAB_EFFECT_UNBOX_GIFT_PATH);
+        const effectNode = instantiate(prefab);
+
+        this.fsbPromotionContainer.addChild(effectNode);
+        this.effectUnboxGiftNode = effectNode;
+        setTimeout(() => {
+            this.openGiftCodeRedeemPopup();
+        }, 500);
+        await FunctionUtils.delay(this.UNIT_SECOND_EFFECT_UNBOX_GIFT);
+
+        this.effectUnboxGiftNode.destroy();
+        this.effectUnboxGiftNode = null;
+    }
+
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.OPEN_GIFT_CODE_REDEEM_POPUP)
     initRedeemGiftCodePopup(isOpenRedeemGiftCodePopup: boolean) {
         if (isOpenRedeemGiftCodePopup) {
             this.loadAndShowRedeemGiftCodePopup();
         }
     }
-    
+
+    @handle(FSBPromotionUIStore, (store) => store.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_GIFT_CODE_REDEEM_POPUP))
+    @handle(FSBPromotionUIStore, (store) => store.removePendingUIEvent(FreeSpinsPromotionEvents.EFFECT_UNBOX_GIFT))
+    private openGiftCodeRedeemPopup() {}
     private createFsbPromotionContainer(): void {
         const autoScaleWidget = this.findAutoScaleWidget();
         if (!autoScaleWidget) {
@@ -62,7 +95,6 @@ export class FSBPromotionUIManager extends ObserverComponent {
 
         this.positionContainer(fsbPromotionContainer, autoScaleWidget);
         this.fsbPromotionContainer = fsbPromotionContainer;
-        
     }
 
     createFsbPromotionPopupContainer(): void {

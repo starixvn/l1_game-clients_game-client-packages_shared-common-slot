@@ -40,7 +40,7 @@ export class GiftCode extends ObserverComponent {
         }, 1);
     }
 
-    @handle(FSBPromotionUIStore, (store) => store.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_GIFT_CODE_REDEEM_POPUP))
+    @handle(FSBPromotionUIStore, (store) => store.addPendingUIEvent(FreeSpinsPromotionEvents.EFFECT_UNBOX_GIFT))
     private openGiftCodeRedeemPopup() {
     }
 }

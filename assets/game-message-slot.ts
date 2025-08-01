@@ -40,8 +40,6 @@ export namespace GameServiceMessageSlot {
     }
 
     export class RedeemResult {
-        redeemResult: number;
-
         static eventName = "redeemResult";
     }
 

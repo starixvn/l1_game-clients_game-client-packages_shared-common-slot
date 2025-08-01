@@ -2,7 +2,7 @@ import { _decorator } from "cc";
 import { FreeSpinsPromotionEvents, endpointConstants, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
 import gc from "@sg/game-client-base";
 import inversify from "inversify";
-import { FSBPromotionStore } from "../stores/fsb-promotion-store";
+import { FSBPromotionStore, RedeemStatus } from "../stores/fsb-promotion-store";
 import { GameClientMessageSlot } from "../../../game-message-slot";
 
 const { injectable, inject } = inversify;
@@ -153,5 +153,28 @@ export class FSBPromotionUIHandler {
 
     redeemGiftCode(giftCode: string) {
         this.connectionStore.send(GameClientMessageSlot.RedeemGifCode.eventName, { giftCode: giftCode });
+    }
+
+    handleRedemptionNotice() {
+        const errorCode = this.fsbPromotionStore.redemptionNotice.errorCode;
+        const messageKey = this.mapErrorCodeToMessageKey(errorCode);
+        this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.REDEMPTION_NOTICE, messageKey);
+    }
+
+    private mapErrorCodeToMessageKey(errorCode: string): string {
+        switch (errorCode) {
+            case "SB3019":
+                return "FreeSpinBonus.gift_code_error_message";
+            case "SB3020":
+                return "FreeSpinBonus.Invalide_gift_code_error_message";
+            case "SB3021":
+                return "FreeSpinBonus.Unexpected_gift_code_error_message";
+            default:
+                return "FreeSpinBonus.Invalide_gift_code_error_message";
+        }
+    }
+
+    resetRedeemResult() {
+        this.fsbPromotionStore.redeemResult = RedeemStatus.Idle;
     }
 }

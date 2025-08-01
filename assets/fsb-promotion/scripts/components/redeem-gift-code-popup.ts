@@ -1,13 +1,11 @@
 import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
-import { _decorator, EditBox, Label, Node, sys, tween, UIOpacity, v3 } from "cc";
+import { _decorator, EditBox, Label, Node, sys } from "cc";
 import Observer from "observer";
-import { Dialog } from "db://shared-components/shared/common-components/dialogs/dialog";
 import gc from "@sg/game-client-base";
 import { FSBPromotionStore } from "../stores/fsb-promotion-store";
-import { GameServiceMessageSlot } from "../../../game-message-slot";
 import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
 import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
-
+import { CustomTransitionDialog } from "./custom-transition-dialog";
 const { ccclass, property } = _decorator;
 const { render, handle } = Observer;
 
@@ -26,18 +24,18 @@ export class RedeemGiftCodePopup extends ObserverComponent {
 
     onEnable() {
         this.errorLabel.string = "";
-        this.nodeRedeemButton.on("click", this.onClickRedeemGifCode, this);
         this.giftCodeInput.node.on("editing-did-began", this.onEditBoxFocus, this);
         this.giftCodeInput.node.on("editing-did-ended", this.onInputFinalized, this);
     }
 
     onDisable() {
-        this.nodeRedeemButton.off("click", this.onClickRedeemGifCode, this);
         this.giftCodeInput.node.off("editing-did-began", this.onEditBoxFocus, this);
         this.giftCodeInput.node.off("editing-did-ended", this.onInputFinalized, this);
     }
 
     @handle(FSBPromotionUIHandler, (handle, giftCode: string) => handle.redeemGiftCode(giftCode))
+    @handle(FSBPromotionUIStore, (store) => store.removePendingUIEvent(FreeSpinsPromotionEvents.REDEMPTION_NOTICE))
+    @handle(FSBPromotionUIHandler, (handle) => handle.resetRedeemResult())
     onClickRedeemGifCode() {
         return this.giftCodeInput.string.trim().toUpperCase();
     }
@@ -45,13 +43,13 @@ export class RedeemGiftCodePopup extends ObserverComponent {
     @handle(gc.Audios.AudioHandler, (handle) => handle.playSFX(gc.Audios.AudioIds.CLICK))
     @handle(FSBPromotionUIStore, (store) => store.removePendingUIEvent(FreeSpinsPromotionEvents.OPEN_GIFT_CODE_REDEEM_POPUP))
     onClosePopup() {
-        this.node.getComponent(Dialog)?.hide();
+        this.node.getComponent(CustomTransitionDialog)?.hide();
     }
 
-    @render(FSBPromotionStore, (store) => store.redemptionNotice)
-    renderRedemptionNotice(redemptionNotice: GameServiceMessageSlot.RedemptionNotice) {
-        if (redemptionNotice) {
-            this.errorLabel.string = redemptionNotice.errorCode;
+    @render(FSBPromotionUIStore, (store) => store.pendingUIEvent)
+    renderRedemptionNotice(pendingUIEvent: { event: string; data: any }) {
+        if (pendingUIEvent?.event === FreeSpinsPromotionEvents.REDEMPTION_NOTICE) {
+            this.errorLabel.string = gc.Translator.translate(pendingUIEvent?.data);
         }
     }
 
@@ -59,22 +57,13 @@ export class RedeemGiftCodePopup extends ObserverComponent {
     renderRedeemSuccess(isRedeemSuccess: boolean) {
         if (isRedeemSuccess) {
             this.onClosePopup();
+            this.openBannerPromotion();
         }
     }
 
-    startRedeemButtonPulse() {
-        const node = this.nodeRedeemButton;
-        node.scale = v3(1, 1, 1);
+    @handle(FSBPromotionUIStore, (store) => store.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_FREE_SPINS_PROMOTION))
+    openBannerPromotion() {}
 
-        tween(node)
-            .repeatForever(
-                tween()
-                    .to(0.2, { scale: 0.93 }, { easing: "sineIn" })
-                    .to(0.4, { scale: 1.05 }, { easing: "sineOut" })
-                    .to(0.3, { scale: 1.0 }, { easing: "sineInOut" })
-            )
-            .start();
-    }
     onInputFinalized(editBox: EditBox) {
         const upper = editBox.string.toUpperCase();
         if (editBox.string !== upper) {

@@ -25,8 +25,8 @@ export class FSBPromotionHandlers implements gc.Shared.IMultipleHandlers {
         this.promotionStore.claimedAmount = data.claimedAmount;
     }
 
-    handleRedeemResult(data: GameServiceMessageSlot.RedeemResult) {
-        this.promotionStore.redeemResult = data.redeemResult;
+    handleRedeemResult(redeemResult: number) {
+        this.promotionStore.redeemResult = redeemResult;
     }
 
     handleFinishPromotion(data: GameServiceMessageSlot.FinishPromotion) {
@@ -35,6 +35,7 @@ export class FSBPromotionHandlers implements gc.Shared.IMultipleHandlers {
 
     handleRedemptionNotice(data: GameServiceMessageSlot.RedemptionNotice) {
         this.promotionStore.redemptionNotice = data;
+        this.fsbPromotionUIHandler.handleRedemptionNotice();
     }
 
     eventHandleList = [

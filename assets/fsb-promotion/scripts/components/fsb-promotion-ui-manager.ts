@@ -68,9 +68,9 @@ export class FSBPromotionUIManager extends ObserverComponent {
 
         this.fsbPromotionContainer.addChild(effectNode);
         this.effectUnboxGiftNode = effectNode;
-        setTimeout(() => {
+        this.scheduleOnce(() => {
             this.openGiftCodeRedeemPopup();
-        }, 500);
+        }, 0.8);
         await FunctionUtils.delay(this.UNIT_SECOND_EFFECT_UNBOX_GIFT);
 
         this.effectUnboxGiftNode.destroy();

@@ -4,6 +4,8 @@ import { ObserverComponent } from "db://shared-components/shared/common-componen
 import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
 import Observer from "observer";
 import { FunctionUtils } from "db://shared-components/shared/utils/function-utils";
+import { FSBPromotionHandlers } from "../handlers/fsb-promotion-handlers";
+import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
 const { handle, render } = Observer;
 const { ccclass, property } = _decorator;
 
@@ -14,6 +16,7 @@ const PREFAB_REDEEM_GIFT_CODE_POPUP_PATH = "prefabs/redeem-gift-code-popup";
 const PREFAB_EFFECT_REDEEM_SUCCESS_PATH = "prefabs/effect-redeem-success";
 const PREFAB_EFFECT_UNBOX_GIFT_PATH = "prefabs/effect-unbox-gift";
 const PREFAB_FSB_BANNER_PATH = "prefabs/fsb-banner";
+const PREFAB_PROMOTION_INFO_PATH = "prefabs/fsb-promotion-info";
 const CONTAINER_NAME = "fsb-promotion-container";
 const POPUP_CONTAINER_NAME = "fsb-promotion-popup-container";
 const NODE_NAMES = {
@@ -31,6 +34,8 @@ export class FSBPromotionUIManager extends ObserverComponent {
     private effectRedeemSuccessNode: Node = null;
     private effectUnboxGiftNode: Node = null;
     private fsbBannerNode: Node = null;
+
+    private fsbPromotionInfoNode: Node = null;
     private UNIT_SECOND_EFFECT_UNBOX_GIFT = 2000;
     private UNIT_SECOND_REDEEM_SUCCESS = 2000;
     onLoad() {
@@ -72,6 +77,31 @@ export class FSBPromotionUIManager extends ObserverComponent {
     closeGiftCodeIcon(isCloseGiftCodeIcon: boolean) {
         if (isCloseGiftCodeIcon) {
             this.giftCodeNode.destroy();
+        }
+    }
+
+    @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO)
+    initPromotionInfo(isOpenPromotionInfo: boolean) {
+        debugger;
+        if (isOpenPromotionInfo) {
+            this.loadAndShowPromotionInfo();
+        }
+    }
+
+    private async loadAndShowPromotionInfo() {
+        if (this.fsbPromotionInfoNode) {
+            this.showPromotionInfo();
+        } else {
+            const prefab = await this.loadPrefab(PREFAB_PROMOTION_INFO_PATH);
+            const fsbPromotionInfoNode = instantiate(prefab);
+            this.fsbPromotionContainer.addChild(fsbPromotionInfoNode);
+            this.fsbPromotionInfoNode = fsbPromotionInfoNode;
+        }
+    }
+
+    showPromotionInfo() {
+        if (this.fsbPromotionInfoNode) {
+            this.fsbPromotionInfoNode.active = true;
         }
     }
 
@@ -122,8 +152,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
         }
     }
 
-    @handle(FSBPromotionUIStore, (store) => store.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_GIFT_CODE_REDEEM_POPUP))
-    @handle(FSBPromotionUIStore, (store) => store.removePendingUIEvent(FreeSpinsPromotionEvents.EFFECT_UNBOX_GIFT))
+    @handle(FSBPromotionUIHandler, (handle) => handle.changeUIPendingEvent(FreeSpinsPromotionEvents.OPEN_GIFT_CODE_REDEEM_POPUP))
     private openGiftCodeRedeemPopup() {}
     private createFsbPromotionContainer(): void {
         const autoScaleWidget = this.findAutoScaleWidget();

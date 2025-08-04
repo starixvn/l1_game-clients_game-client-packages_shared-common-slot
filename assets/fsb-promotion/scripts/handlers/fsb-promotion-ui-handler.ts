@@ -40,7 +40,7 @@ export class FSBPromotionUIHandler {
 
         if (this.fsbPromotionUIStore.skipGiftCode) {
             this.fsbPromotionUIStore.skipGiftCode = false;
-            this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_DETAILS_PANEL, true);
+            this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO, true);
             return;
         }
 
@@ -50,7 +50,7 @@ export class FSBPromotionUIHandler {
             this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_FREE_SPINS_PROMOTION);
             this.fsbPromotionUIStore.promotionUrl = this.getPromoUrl();
         } else {
-            this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_DETAILS_PANEL);
+            this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO);
         }
     }
 

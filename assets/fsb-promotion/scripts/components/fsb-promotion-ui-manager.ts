@@ -38,6 +38,8 @@ export class FSBPromotionUIManager extends ObserverComponent {
     private fsbPromotionInfoNode: Node = null;
     private UNIT_SECOND_EFFECT_UNBOX_GIFT = 2000;
     private UNIT_SECOND_REDEEM_SUCCESS = 2000;
+    private UNIT_SECOND_ANIMATION_UNBOX_GIFT = 0.4;
+    private UNIT_SECOND_ANIMATION_REDEEM_SUCCESS = 0.6;
     onLoad() {
         this.createFsbPromotionContainer();
         this.createFsbPromotionPopupContainer();
@@ -121,7 +123,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
         this.effectUnboxGiftNode = effectNode;
         this.scheduleOnce(() => {
             this.openGiftCodeRedeemPopup();
-        }, 0.8);
+        }, this.UNIT_SECOND_ANIMATION_UNBOX_GIFT);
         await FunctionUtils.delay(this.UNIT_SECOND_EFFECT_UNBOX_GIFT);
 
         this.effectUnboxGiftNode.destroy();
@@ -141,7 +143,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
         this.effectRedeemSuccessNode = effectNode;
         this.scheduleOnce(() => {
             this.loadAndShowFsbBanner();
-        }, 0.6);
+        }, this.UNIT_SECOND_ANIMATION_REDEEM_SUCCESS);
         await FunctionUtils.delay(this.UNIT_SECOND_REDEEM_SUCCESS);
 
         this.effectRedeemSuccessNode.destroy();

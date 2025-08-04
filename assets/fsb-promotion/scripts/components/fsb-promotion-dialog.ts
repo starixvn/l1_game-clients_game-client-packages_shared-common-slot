@@ -24,7 +24,6 @@ export class FsbPromotionDialog extends ObserverComponent{
     @property(Node)
     background: Node = null;
 
-    private readonly TRACKING_OBJECT_NAME = "Free spins promotion";
     public gameOffers: { name: string; gameId: number }[] = [];
 
 
@@ -35,16 +34,6 @@ export class FsbPromotionDialog extends ObserverComponent{
     playGameNow() {
         this.closeDialog();
         this.openPromotionDetailsPanel();
-        const gameId = this.gameOffers[0].gameId;
-        if (!gameId) {
-            return;
-        }
-
-        utils.AnalyticsManager.trackEvent(utils.TrackingEvent.Button, {
-            location: director.getScene().name,
-            action: utils.TrackingAction.Click,
-            object_name: this.TRACKING_OBJECT_NAME,
-        });
     }
 
     @render(FSBPromotionUIStore, (store) => store.gameOffers)

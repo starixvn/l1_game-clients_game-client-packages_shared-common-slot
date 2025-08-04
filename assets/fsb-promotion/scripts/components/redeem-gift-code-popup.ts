@@ -1,11 +1,11 @@
 import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
-import { _decorator, EditBox, Label, Node, sys, tween, Vec3 } from "cc";
+import { _decorator, EditBox, Label, Node } from "cc";
 import Observer from "observer";
 import gc from "@sg/game-client-base";
 import { FSBPromotionStore } from "../stores/fsb-promotion-store";
 import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
 import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
-import { CustomTransitionDialog } from "./custom-transition-dialog";
+import { Dialog } from "db://shared-components/shared/common-components/dialogs/dialog";
 const { ccclass, property } = _decorator;
 const { render, handle } = Observer;
 
@@ -32,9 +32,8 @@ export class RedeemGiftCodePopup extends ObserverComponent {
     }
 
     @handle(gc.Audios.AudioHandler, (handle) => handle.playSFX(gc.Audios.AudioIds.CLICK))
-    @handle(FSBPromotionUIHandler, (handle) => handle.changeUIPendingEvent(FreeSpinsPromotionEvents.CLOSE_GIFT_CODE_REDEEM_POPUP))
     onClosePopup() {
-        this.node.getComponent(CustomTransitionDialog)?.hide();
+        this.node.getComponent(Dialog)?.hide();
     }
 
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent)

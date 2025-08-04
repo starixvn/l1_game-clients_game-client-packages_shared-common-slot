@@ -47,16 +47,8 @@ export class RedeemGiftCodePopup extends ObserverComponent {
     renderRedeemSuccess(isRedeemSuccess: boolean) {
         if (isRedeemSuccess) {
             this.onClosePopup();
-            this.openTransitionCoinEffect();
-            this.onCloseGiftCodeIcon();
         }
     }
-
-    @handle(FSBPromotionUIHandler, (handle) => handle.changeUIPendingEvent(FreeSpinsPromotionEvents.EFFECT_COIN_ANIMATION))
-    openTransitionCoinEffect() {}
-
-    @handle(FSBPromotionUIHandler, (handle) => handle.changeUIPendingEvent(FreeSpinsPromotionEvents.CLOSE_GIFT_CODE_ICON))
-    onCloseGiftCodeIcon() {}
 
     async onPasteClicked() {
         let text = "";

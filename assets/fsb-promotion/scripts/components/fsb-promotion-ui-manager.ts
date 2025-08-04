@@ -49,11 +49,12 @@ export class FSBPromotionUIManager extends ObserverComponent {
             this.loadAndPlayEffectUnboxGift();
         }
     }
-    
+
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.OPEN_FREE_SPINS_PROMOTION)
     initFsbBanner(isOpenFsbBanner: boolean) {
         if (isOpenFsbBanner) {
             this.loadAndShowFsbBanner();
+            this.destroyNode(this.giftCodeNode);
         }
     }
 
@@ -155,12 +156,12 @@ export class FSBPromotionUIManager extends ObserverComponent {
     async loadAndShowGiftCode() {
         if (this.giftCodeNode) {
             this.showGiftCode();
+        } else {
+            const prefab = await this.loadPrefab(PREFAB_GIFT_CODE_PATH);
+            const giftCodeNode = instantiate(prefab);
+            this.fsbPromotionContainer.addChild(giftCodeNode);
+            this.giftCodeNode = giftCodeNode;
         }
-
-        const prefab = await this.loadPrefab(PREFAB_GIFT_CODE_PATH);
-        const giftCodeNode = instantiate(prefab);
-        this.fsbPromotionContainer.addChild(giftCodeNode);
-        this.giftCodeNode = giftCodeNode;
     }
 
     async loadAndShowRedeemGiftCodePopup() {
@@ -171,10 +172,14 @@ export class FSBPromotionUIManager extends ObserverComponent {
     }
 
     async loadAndShowFsbBanner() {
-        const prefab = await this.loadPrefab(PREFAB_FSB_BANNER_PATH);
-        const fsbBannerNode = instantiate(prefab);
-        this.fsbPromotionPopupContainer.addChild(fsbBannerNode);
-        this.fsbBannerNode = fsbBannerNode;
+        if (this.fsbBannerNode) {
+            this.fsbBannerNode.active = true;
+        } else {
+            const prefab = await this.loadPrefab(PREFAB_FSB_BANNER_PATH);
+            const fsbBannerNode = instantiate(prefab);
+            this.fsbPromotionPopupContainer.addChild(fsbBannerNode);
+            this.fsbBannerNode = fsbBannerNode;
+        }
     }
 
     private async loadPrefab(prefabPath: string): Promise<Prefab | null> {
@@ -193,10 +198,10 @@ export class FSBPromotionUIManager extends ObserverComponent {
         }
     }
 
-    removeGiftCode() {
-        if (this.giftCodeNode && this.giftCodeNode.isValid) {
-            this.giftCodeNode.destroy();
-            this.giftCodeNode = null;
+    destroyNode(node: Node) {
+        if (node) {
+            node.destroy();
+            node = null;
         }
     }
 }

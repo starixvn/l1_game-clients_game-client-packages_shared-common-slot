@@ -817,6 +817,52 @@
       ],
       "subMetas": {}
     },
+    "adde4": {
+      "importer": "sprite-frame",
+      "uuid": "e6253adc-2d00-439c-8848-9eae6a196a8e@adde4",
+      "displayName": "",
+      "id": "adde4",
+      "name": "bg-promo-info-ver2",
+      "userData": {
+        "trimThreshold": 1,
+        "rotated": false,
+        "offsetX": 0,
+        "offsetY": 17,
+        "trimX": 3,
+        "trimY": 906,
+        "width": 207,
+        "height": 197,
+        "rawWidth": 207,
+        "rawHeight": 231,
+        "borderTop": 0,
+        "borderBottom": 0,
+        "borderLeft": 0,
+        "borderRight": 0,
+        "packable": true,
+        "pixelsToUnit": 100,
+        "pivotX": 0.5,
+        "pivotY": 0.5,
+        "meshType": 0,
+        "vertices": {
+          "rawPosition": [],
+          "indexes": [],
+          "uv": [],
+          "nuv": [],
+          "minPos": [],
+          "maxPos": []
+        },
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "244dc006-ba5a-427d-a06d-2fd66f616b23@6c48a",
+        "atlasUuid": "e6253adc-2d00-439c-8848-9eae6a196a8e",
+        "trimType": "auto"
+      },
+      "ver": "1.0.12",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
     "bf1be": {
       "importer": "sprite-frame",
       "uuid": "e6253adc-2d00-439c-8848-9eae6a196a8e@bf1be",

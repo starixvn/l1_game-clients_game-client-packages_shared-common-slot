@@ -235,7 +235,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 485.703125,
+      "width": 735.1171875,
       "height": 50.4
     },
     "_anchorPoint": {
@@ -271,7 +271,7 @@
       "b": 255,
       "a": 255
     },
-    "_string": "FreeSpinBonus.promo_info",
+    "_string": "FreeSpinBonus.promo_infoDATA NULL: ",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_actualFontSize": 40,
@@ -431,7 +431,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 207,
-      "height": 231
+      "height": 197
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -467,7 +467,7 @@
       "a": 255
     },
     "_spriteFrame": {
-      "__uuid__": "e6253adc-2d00-439c-8848-9eae6a196a8e@bf1be",
+      "__uuid__": "e6253adc-2d00-439c-8848-9eae6a196a8e@adde4",
       "__expectedType__": "cc.SpriteFrame"
     },
     "_type": 0,

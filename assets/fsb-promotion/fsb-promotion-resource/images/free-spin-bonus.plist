@@ -49,6 +49,21 @@
                 <key>textureRotated</key>
                 <false/>
             </dict>
+            <key>bg-promo-info-ver2.png</key>
+            <dict>
+                <key>aliases</key>
+                <array/>
+                <key>spriteOffset</key>
+                <string>{0,17}</string>
+                <key>spriteSize</key>
+                <string>{207,197}</string>
+                <key>spriteSourceSize</key>
+                <string>{207,231}</string>
+                <key>textureRect</key>
+                <string>{{3,906},{207,197}}</string>
+                <key>textureRotated</key>
+                <false/>
+            </dict>
             <key>bg-promo-info.png</key>
             <dict>
                 <key>aliases</key>
@@ -318,7 +333,7 @@
             <key>size</key>
             <string>{1024,2048}</string>
             <key>smartupdate</key>
-            <string>$TexturePacker:SmartUpdate:57ee3de85e1fd85fa50019d60a997f09:84a15428f0202d2a0800a43d8382ec4a:5712e7e35e06fba9109ea227c390f0c3$</string>
+            <string>$TexturePacker:SmartUpdate:ed1089e136bc21e320bdeabc1dd36e94:02e983565ad0aedc07b8dc2c1a9b2e79:5712e7e35e06fba9109ea227c390f0c3$</string>
             <key>textureFileName</key>
             <string>free-spin-bonus.png</string>
         </dict>

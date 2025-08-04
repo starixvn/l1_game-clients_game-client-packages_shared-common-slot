@@ -20,16 +20,9 @@ export class RedeemGiftCodePopup extends ObserverComponent {
     @property(Label)
     errorLabel: Label = null;
     private _debounceTimer: any = null;
-    private readonly _originalY = 0;
 
     onEnable() {
         this.errorLabel.string = "";
-        this.giftCodeInput.node.on("editing-did-began", this.onEditBoxFocus, this);
-        this.giftCodeInput.node.on("editing-did-ended", this.onInputFinalized, this);
-    }
-    onDisable() {
-        this.giftCodeInput.node.off("editing-did-began", this.onEditBoxFocus, this);
-        this.giftCodeInput.node.off("editing-did-ended", this.onInputFinalized, this);
     }
 
     @handle(FSBPromotionUIHandler, (handle, giftCode: string) => handle.redeemGiftCode(giftCode))
@@ -65,34 +58,7 @@ export class RedeemGiftCodePopup extends ObserverComponent {
     @handle(FSBPromotionUIHandler, (handle) => handle.addEvent(FreeSpinsPromotionEvents.OPEN_FREE_SPINS_PROMOTION))
     openBannerPromotion() {}
 
-    onInputFinalized(editBox: EditBox) {
-        const upper = editBox.string.toUpperCase();
-        if (editBox.string !== upper) {
-            editBox.string = upper;
-        }
-
-        this.onEditBoxBlur();
-    }
-    onEditBoxFocus() {
-        if (this._debounceTimer) {
-            clearTimeout(this._debounceTimer);
-        }
-        this._debounceTimer = setTimeout(() => {
-            if (sys.isMobile) {
-                this.node.y += 200;
-            }
-            window.dispatchEvent(new Event("resize"));
-        }, 200);
-    }
-
-    onEditBoxBlur() {
-        if (sys.isMobile) {
-            this.node.y = this._originalY;
-        }
-    }
-
     async onPasteClicked() {
-        this.giftCodeInput.blur();
         let text = "";
 
         try {
@@ -101,5 +67,17 @@ export class RedeemGiftCodePopup extends ObserverComponent {
         } catch (e) {
             console.warn("Clipboard read failed", e);
         }
+    }
+    triggerResize(editBox: EditBox) {
+        const upper = editBox.string.toUpperCase();
+        if (editBox.string !== upper) {
+            editBox.string = upper;
+        }
+        if (this._debounceTimer) {
+            clearTimeout(this._debounceTimer);
+        }
+        this._debounceTimer = setTimeout(() => {
+            window.dispatchEvent(new Event("resize"));
+        }, 200);
     }
 }

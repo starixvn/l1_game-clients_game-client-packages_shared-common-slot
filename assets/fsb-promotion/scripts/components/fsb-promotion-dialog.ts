@@ -1,9 +1,10 @@
 import gc from "@sg/game-client-base";
-import { _decorator, Node, director } from "cc";
+import { _decorator, Node, director, Tween, tween, UIOpacity } from "cc";
 import { ObserverComponent } from 'db://shared-components/shared/common-components/observer-component/scripts/observer-component';
 import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from '../stores/fsb-promotion-ui-store';
 import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
 import Observer from 'observer';
+import { Dialog } from "db://shared-components/shared/common-components/dialogs/dialog";
 const { Shared } = gc;
 const { utils } = Shared;
 const { ccclass, property } = _decorator;
@@ -26,8 +27,9 @@ export class FsbPromotionDialog extends ObserverComponent{
     private readonly TRACKING_OBJECT_NAME = "Free spins promotion";
     public gameOffers: { name: string; gameId: number }[] = [];
 
-    @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.CLOSE_FREE_SPINS_PROMOTION))
+
     closeDialog() {
+        this.node.getComponent(Dialog)?.hide();
     }
 
     playGameNow() {

@@ -57,13 +57,6 @@ export class FSBPromotionUIManager extends ObserverComponent {
         }
     }
 
-    @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.CLOSE_FREE_SPINS_PROMOTION)
-    closePromotionBanner(isClosePromotionBanner: boolean) {
-        if (isClosePromotionBanner) {
-            this.fsbBannerNode.destroy();
-        }
-    }
-
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.CLOSE_GIFT_CODE_ICON)
     closeGiftCodeIcon(isCloseGiftCodeIcon: boolean) {
         if (isCloseGiftCodeIcon) {

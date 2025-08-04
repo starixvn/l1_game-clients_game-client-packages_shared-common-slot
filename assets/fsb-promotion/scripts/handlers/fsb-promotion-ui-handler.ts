@@ -181,12 +181,4 @@ export class FSBPromotionUIHandler {
     resetRedeemResult() {
         this.fsbPromotionStore.redeemResult = RedeemStatus.Idle;
     }
-
-    addEvent(event: string, data?: any) {
-        this.fsbPromotionUIStore.addPendingUIEvent(event, data);
-    }
-
-    removeEvent(event: string) {
-        this.fsbPromotionUIStore.removePendingUIEvent(event);
-    }
 }

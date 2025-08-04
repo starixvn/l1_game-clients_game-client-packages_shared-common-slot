@@ -7,14 +7,32 @@ const { ccclass } = _decorator;
 export class LocalizedUTMBryantLGFont extends LocalizedFont {
     initData() {
         const utmBryantLG = "utm-bryantlg";
-        this.loadFont(utmBryantLG);
         this.fontBases = {
-            vi: utmBryantLG,
-            id: utmBryantLG,
-            en: utmBryantLG,
-            th: "noto-serif-regular-thai",
-            zh_cn: "noto-serif-regular-zhcn",
-            zh_tw: "noto-serif-regular-zhtw",
+            vi: {
+                name: utmBryantLG,
+                loadRemote: false,
+            },
+            id: {
+                name: utmBryantLG,
+                loadRemote: false,
+            },
+            en: {
+                name: utmBryantLG,
+                loadRemote: false,
+            },
+            th: {
+                name: "noto-serif-regular-thai",
+                loadRemote: false,
+            },
+            zh_tw: {
+                name: "noto-serif-regular-zhtw",
+                loadRemote: false,
+            },
+            zh_cn: {
+                name: "noto-serif-regular-zhcn",
+                loadRemote: false,
+            },
+            ...globalThis?.fontMapping?.bold,
         } as FontMapping;
     }
 }

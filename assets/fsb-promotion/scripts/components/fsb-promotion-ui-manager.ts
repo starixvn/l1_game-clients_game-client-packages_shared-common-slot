@@ -64,6 +64,20 @@ export class FSBPromotionUIManager extends ObserverComponent {
         }
     }
 
+    @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.CLOSE_GIFT_CODE_REDEEM_POPUP)
+    closeGiftCodeRedeemPopup(isCloseGiftCodeRedeemPopup: boolean) {
+        if (isCloseGiftCodeRedeemPopup) {
+            this.redeemGiftCodePopupNode.destroy();
+        }
+    }
+
+    @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.CLOSE_GIFT_CODE_ICON)
+    closeGiftCodeIcon(isCloseGiftCodeIcon: boolean) {
+        if (isCloseGiftCodeIcon) {
+            this.giftCodeNode.destroy();
+        }
+    }
+
     private async loadAndPlayEffectUnboxGift() {
         if (this.effectUnboxGiftNode && this.effectUnboxGiftNode.isValid) {
             this.effectUnboxGiftNode.destroy();

@@ -26,15 +26,13 @@ export class RedeemGiftCodePopup extends ObserverComponent {
     }
 
     @handle(FSBPromotionUIHandler, (handle, giftCode: string) => handle.redeemGiftCode(giftCode))
-    @handle(FSBPromotionUIHandler, (handle) => handle.removeEvent(FreeSpinsPromotionEvents.REDEMPTION_NOTICE))
     @handle(FSBPromotionUIHandler, (handle) => handle.resetRedeemResult())
     onClickRedeemGifCode() {
         return this.giftCodeInput.string.trim().toUpperCase();
     }
 
     @handle(gc.Audios.AudioHandler, (handle) => handle.playSFX(gc.Audios.AudioIds.CLICK))
-    @handle(FSBPromotionUIHandler, (handle) => handle.removeEvent(FreeSpinsPromotionEvents.OPEN_GIFT_CODE_REDEEM_POPUP))
-    @handle(FSBPromotionUIHandler, (handle) => handle.addEvent(FreeSpinsPromotionEvents.REDEMPTION_NOTICE))
+    @handle(FSBPromotionUIHandler, (handle) => handle.changeUIPendingEvent(FreeSpinsPromotionEvents.CLOSE_GIFT_CODE_REDEEM_POPUP))
     onClosePopup() {
         this.node.getComponent(CustomTransitionDialog)?.hide();
     }
@@ -50,13 +48,16 @@ export class RedeemGiftCodePopup extends ObserverComponent {
     renderRedeemSuccess(isRedeemSuccess: boolean) {
         if (isRedeemSuccess) {
             this.onClosePopup();
-            this.openBannerPromotion();
+            this.openTransitionCoinEffect();
+            this.onCloseGiftCodeIcon();
         }
     }
 
-    @handle(FSBPromotionUIHandler, (handle) => handle.addEvent(FreeSpinsPromotionEvents.CLOSE_GIFT_CODE_ICON))
-    @handle(FSBPromotionUIHandler, (handle) => handle.addEvent(FreeSpinsPromotionEvents.OPEN_FREE_SPINS_PROMOTION))
-    openBannerPromotion() {}
+    @handle(FSBPromotionUIHandler, (handle) => handle.changeUIPendingEvent(FreeSpinsPromotionEvents.EFFECT_COIN_ANIMATION))
+    openTransitionCoinEffect() {}
+
+    @handle(FSBPromotionUIHandler, (handle) => handle.changeUIPendingEvent(FreeSpinsPromotionEvents.CLOSE_GIFT_CODE_ICON))
+    onCloseGiftCodeIcon() {}
 
     async onPasteClicked() {
         let text = "";
@@ -69,8 +70,8 @@ export class RedeemGiftCodePopup extends ObserverComponent {
         }
     }
     triggerResize(editBox: EditBox) {
-        const upper = editBox.string.toUpperCase();
-        if (editBox.string !== upper) {
+        const upper = editBox?.string?.toUpperCase();
+        if (editBox?.string !== upper) {
             editBox.string = upper;
         }
         if (this._debounceTimer) {

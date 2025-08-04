@@ -83,9 +83,13 @@ export class FSBPromotionUIManager extends ObserverComponent {
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO)
     initPromotionInfo(isOpenPromotionInfo: boolean) {
         if (isOpenPromotionInfo) {
+            this.setBetControl();
             this.loadAndShowPromotionInfo();
         }
     }
+
+    @handle(FSBPromotionUIHandler, (handle) => handle.setBetControl())
+    setBetControl() {}
 
     private async loadAndShowPromotionInfo() {
         if (this.fsbPromotionInfoNode) {

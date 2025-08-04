@@ -4,6 +4,7 @@ import gc from "@sg/game-client-base";
 import inversify from "inversify";
 import { FSBPromotionStore, RedeemStatus } from "../stores/fsb-promotion-store";
 import { GameClientMessageSlot } from "../../../game-message-slot";
+import { BetControlHandlers } from "db://shared-cascading-slot/handlers/bet-control-handlers";
 
 const { injectable, inject } = inversify;
 
@@ -14,6 +15,7 @@ export class FSBPromotionUIHandler {
     @inject(FSBPromotionStore) protected readonly fsbPromotionStore: FSBPromotionStore;
     @inject(FSBPromotionUIStore) protected readonly fsbPromotionUIStore: FSBPromotionUIStore;
     @inject(gc.Auth.AuthStore) protected readonly authStore: gc.Auth.AuthStore;
+    @inject(BetControlHandlers) protected readonly betControlHandlers: BetControlHandlers;
 
     /** ========== PROMOTION FLOW ========== */
     public handlePromotionDisplay() {
@@ -180,5 +182,9 @@ export class FSBPromotionUIHandler {
 
     resetRedeemResult() {
         this.fsbPromotionStore.redeemResult = RedeemStatus.Idle;
+    }
+
+    setBetControl() {
+        this.betControlHandlers.init(this.fsbPromotionStore.promotion.coinValue, this.fsbPromotionStore.promotion.betLevel);
     }
 }

@@ -5,6 +5,7 @@ import inversify from "inversify";
 import { FSBPromotionStore, RedeemStatus } from "../stores/fsb-promotion-store";
 import { GameClientMessageSlot } from "../../../game-message-slot";
 import { BetControlHandlers } from "db://shared-cascading-slot/handlers/bet-control-handlers";
+import { CascadingUIHandler } from "db://shared-cascading-slot/handlers/cascading-ui-handler";
 
 const { injectable, inject } = inversify;
 
@@ -16,6 +17,8 @@ export class FSBPromotionUIHandler {
     @inject(FSBPromotionUIStore) protected readonly fsbPromotionUIStore: FSBPromotionUIStore;
     @inject(gc.Auth.AuthStore) protected readonly authStore: gc.Auth.AuthStore;
     @inject(BetControlHandlers) protected readonly betControlHandlers: BetControlHandlers;
+
+    @inject(CascadingUIHandler) protected readonly cascadingUIHandler: CascadingUIHandler;
 
     /** ========== PROMOTION FLOW ========== */
     public handlePromotionDisplay() {
@@ -186,5 +189,6 @@ export class FSBPromotionUIHandler {
 
     setBetControl() {
         this.betControlHandlers.init(this.fsbPromotionStore.promotion.coinValue, this.fsbPromotionStore.promotion.betLevel);
+        this.cascadingUIHandler.handleFreeSpinsTotal(this.fsbPromotionStore.promotion.remainingBonusItems);
     }
 }

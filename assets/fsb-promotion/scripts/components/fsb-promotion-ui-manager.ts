@@ -82,7 +82,6 @@ export class FSBPromotionUIManager extends ObserverComponent {
 
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO)
     initPromotionInfo(isOpenPromotionInfo: boolean) {
-        debugger;
         if (isOpenPromotionInfo) {
             this.loadAndShowPromotionInfo();
         }

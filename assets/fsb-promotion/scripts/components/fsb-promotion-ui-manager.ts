@@ -38,7 +38,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
     private fsbPromotionInfoNode: Node = null;
     private UNIT_SECOND_EFFECT_UNBOX_GIFT = 2000;
     private UNIT_SECOND_REDEEM_SUCCESS = 2000;
-    private UNIT_SECOND_ANIMATION_UNBOX_GIFT = 0.4;
+    private UNIT_SECOND_ANIMATION_UNBOX_GIFT = 0.8;
     private UNIT_SECOND_ANIMATION_REDEEM_SUCCESS = 0.6;
     onLoad() {
         this.createFsbPromotionContainer();

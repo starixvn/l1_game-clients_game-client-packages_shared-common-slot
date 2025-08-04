@@ -193,4 +193,14 @@ export class FSBPromotionUIStore {
             this.pendingUIEvent = null;
         }
     }
+
+    isRedeemSuccess() {
+        return this.pendingUIEvent?.event === FreeSpinsPromotionEvents.OPEN_FREE_SPINS_PROMOTION
+            && this.fsbPromotionStore.isRedeemSuccess;
+    }
+
+    isShowFsbBanner() {
+        return this.pendingUIEvent?.event === FreeSpinsPromotionEvents.OPEN_FREE_SPINS_PROMOTION
+            && !this.fsbPromotionStore.isRedeemSuccess;
+    }
 }

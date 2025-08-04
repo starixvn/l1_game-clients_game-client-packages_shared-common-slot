@@ -11,6 +11,7 @@ const { ccclass, property } = _decorator;
 const BUNDLE_NAME = "fsb-promotion-resource";
 const PREFAB_GIFT_CODE_PATH = "prefabs/gift-code";
 const PREFAB_REDEEM_GIFT_CODE_POPUP_PATH = "prefabs/redeem-gift-code-popup";
+const PREFAB_EFFECT_REDEEM_SUCCESS_PATH = "prefabs/effect-redeem-success";
 const PREFAB_EFFECT_UNBOX_GIFT_PATH = "prefabs/effect-unbox-gift";
 const PREFAB_FSB_BANNER_PATH = "prefabs/fsb-banner";
 const CONTAINER_NAME = "fsb-promotion-container";
@@ -27,9 +28,11 @@ export class FSBPromotionUIManager extends ObserverComponent {
     public fsbPromotionPopupContainer: Node = null;
     private giftCodeNode: Node = null;
     private redeemGiftCodePopupNode: Node = null;
+    private effectRedeemSuccessNode: Node = null;
     private effectUnboxGiftNode: Node = null;
     private fsbBannerNode: Node = null;
     private UNIT_SECOND_EFFECT_UNBOX_GIFT = 2000;
+    private UNIT_SECOND_REDEEM_SUCCESS = 2000;
     onLoad() {
         this.createFsbPromotionContainer();
         this.createFsbPromotionPopupContainer();
@@ -50,11 +53,18 @@ export class FSBPromotionUIManager extends ObserverComponent {
         }
     }
 
-    @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.OPEN_FREE_SPINS_PROMOTION)
+    @render(FSBPromotionUIStore, (store) => store.isRedeemSuccess())
+    initRedeemSuccess(isRedeemSuccess: boolean) {
+        if (isRedeemSuccess) {
+            this.loadAndPlayRedeemSuccess();
+            this.destroyNode(this.giftCodeNode);
+        }
+    }
+
+    @render(FSBPromotionUIStore, (store) => store.isShowFsbBanner())
     initFsbBanner(isOpenFsbBanner: boolean) {
         if (isOpenFsbBanner) {
             this.loadAndShowFsbBanner();
-            this.destroyNode(this.giftCodeNode);
         }
     }
 
@@ -83,6 +93,26 @@ export class FSBPromotionUIManager extends ObserverComponent {
 
         this.effectUnboxGiftNode.destroy();
         this.effectUnboxGiftNode = null;
+    }
+
+    private async loadAndPlayRedeemSuccess() {
+        if (this.effectRedeemSuccessNode && this.effectRedeemSuccessNode.isValid) {
+            this.effectRedeemSuccessNode.destroy();
+            this.effectRedeemSuccessNode = null;
+        }
+
+        const prefab = await this.loadPrefab(PREFAB_EFFECT_REDEEM_SUCCESS_PATH);
+        const effectNode = instantiate(prefab);
+
+        this.fsbPromotionContainer.addChild(effectNode);
+        this.effectRedeemSuccessNode = effectNode;
+        this.scheduleOnce(() => {
+            this.loadAndShowFsbBanner();
+        }, 0.6);
+        await FunctionUtils.delay(this.UNIT_SECOND_REDEEM_SUCCESS);
+
+        this.effectRedeemSuccessNode.destroy();
+        this.effectRedeemSuccessNode = null;
     }
 
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.OPEN_GIFT_CODE_REDEEM_POPUP)

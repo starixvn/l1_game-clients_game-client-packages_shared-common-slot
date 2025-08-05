@@ -29,4 +29,8 @@ export class FSBPromotionStore {
     set redeemResult(statusCode: number) {
         this._redeemStatus = statusCode;
     }
+
+    setFinishPromotion(finishPromotion: GameServiceMessageSlot.FinishPromotion) {
+        this.finishPromotion = finishPromotion;
+    }
 }

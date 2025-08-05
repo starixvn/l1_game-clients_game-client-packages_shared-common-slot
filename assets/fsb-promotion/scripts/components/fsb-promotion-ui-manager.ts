@@ -17,6 +17,7 @@ const PREFAB_EFFECT_REDEEM_SUCCESS_PATH = "prefabs/effect-redeem-success";
 const PREFAB_EFFECT_UNBOX_GIFT_PATH = "prefabs/effect-unbox-gift";
 const PREFAB_FSB_BANNER_PATH = "prefabs/fsb-banner";
 const PREFAB_PROMOTION_INFO_PATH = "prefabs/fsb-promotion-info";
+const PREFAB_PROMOTION_ENDED_POPUP_PATH = "prefabs/promotion-ended-popup";
 const CONTAINER_NAME = "fsb-promotion-container";
 const POPUP_CONTAINER_NAME = "fsb-promotion-popup-container";
 const NODE_NAMES = {
@@ -34,6 +35,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
     private effectRedeemSuccessNode: Node = null;
     private effectUnboxGiftNode: Node = null;
     private fsbBannerNode: Node = null;
+    private promotionEndedPopupNode: Node = null;
 
     private fsbPromotionInfoNode: Node = null;
     private UNIT_SECOND_EFFECT_UNBOX_GIFT = 2000;
@@ -87,6 +89,13 @@ export class FSBPromotionUIManager extends ObserverComponent {
         if (isOpenPromotionInfo) {
             this.setBetControl();
             this.loadAndShowPromotionInfo();
+        }
+    }
+
+    @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.OPEN_PROMOTION_ENDED_POPUP)
+    initPromotionEndedPopup(isOpenPromotionEndedPopup: boolean) {
+        if (isOpenPromotionEndedPopup) {
+            this.loadAndShowPromotionEndedPopup();
         }
     }
 
@@ -176,6 +185,18 @@ export class FSBPromotionUIManager extends ObserverComponent {
 
         this.positionContainer(fsbPromotionContainer, autoScaleWidget);
         this.fsbPromotionContainer = fsbPromotionContainer;
+    }
+
+
+    private async loadAndShowPromotionEndedPopup() {
+        if (this.promotionEndedPopupNode) {
+            this.promotionEndedPopupNode.active = true;
+        } else {
+            const prefab = await this.loadPrefab(PREFAB_PROMOTION_ENDED_POPUP_PATH);
+            const promotionEndedPopupNode = instantiate(prefab);
+            this.fsbPromotionPopupContainer.addChild(promotionEndedPopupNode);
+            this.promotionEndedPopupNode = promotionEndedPopupNode;
+        }
     }
 
     createFsbPromotionPopupContainer(): void {

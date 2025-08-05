@@ -43,6 +43,16 @@ export class FsbPromotionDialog extends ObserverComponent{
         this.gameOffers = gameOffers;
     }
 
+    @render(FSBPromotionUIStore, (store) => store.isWebViewLoading)
+    controlButtonsVisibility(isWebViewLoading: boolean) {
+        if (this.playNow) {
+            this.playNow.active = !isWebViewLoading;
+        }
+        if (this.playLater) {
+            this.playLater.active = !isWebViewLoading;
+        }
+    }
+
     @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO, 900))
     openPromotionDetailsPanel() {}
 }

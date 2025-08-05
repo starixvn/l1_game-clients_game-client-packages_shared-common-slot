@@ -63,6 +63,7 @@ export class FSBPromotionUIStore {
     public fsbConsumedThisRound = false;
     public promotionUrl = "";
     public gameOffers: { name: string; gameId: number }[] = [{ name: settings.name.toLowerCase(), gameId: settings.id }];
+    public isWebViewLoading = false;
 
     // UI Events state
     public pendingUIEvent: { event: string; data?: any } = null;
@@ -206,5 +207,9 @@ export class FSBPromotionUIStore {
     isShowFsbBanner() {
         return this.pendingUIEvent?.event === FreeSpinsPromotionEvents.OPEN_FREE_SPINS_PROMOTION
             && !this.fsbPromotionStore.isRedeemSuccess;
+    }
+
+    setWebViewLoading(isLoading: boolean) {
+        this.isWebViewLoading = isLoading;
     }
 }

@@ -6,6 +6,7 @@ import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
 import Observer from 'observer';
 import { Dialog } from "db://shared-components/shared/common-components/dialogs/dialog";
 import { FSBPromotionStore } from "../stores/fsb-promotion-store";
+import { DialogTransition } from "db://shared-components/shared/common-components/dialogs/transition/dialog-transition";
 const { Shared } = gc;
 const { utils } = Shared;
 const { ccclass, property } = _decorator;
@@ -45,6 +46,11 @@ export class FsbPromotionDialog extends ObserverComponent{
 
     @render(FSBPromotionUIStore, (store) => store.isWebViewLoading)
     controlButtonsVisibility(isWebViewLoading: boolean) {
+        if (isWebViewLoading) {
+            this.background.getComponent(DialogTransition)?.show(false);
+        } else {
+            this.background.getComponent(DialogTransition)?.show(true);
+        }
         if (this.playNow) {
             this.playNow.active = !isWebViewLoading;
         }

@@ -89,7 +89,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent)
     initPromotionInfo(pendingUIEvent: any) {
         if (pendingUIEvent?.event === FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO) {
-            this.setBetControl();
+            this.syncFSBBetControl();
             this.loadAndShowPromotionInfo(pendingUIEvent.data);
         }
     }
@@ -108,7 +108,8 @@ export class FSBPromotionUIManager extends ObserverComponent {
         }
     }
 
-    setBetControl() {}
+    @handle(FSBPromotionUIHandler, (handler) => handler.syncFSBBetControl())
+    syncFSBBetControl() {}
 
     private async loadAndShowPromotionInfo(delay = 0) {
         if (this.fsbPromotionInfoNode && this.fsbPromotionInfoNode.isValid) {

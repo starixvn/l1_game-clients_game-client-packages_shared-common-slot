@@ -45,7 +45,7 @@ export class FSBPromotionUIHandler {
 
         if (this.fsbPromotionUIStore.skipGiftCode) {
             this.fsbPromotionUIStore.skipGiftCode = false;
-            this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO, true);
+            this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO);
             return;
         }
 
@@ -115,6 +115,10 @@ export class FSBPromotionUIHandler {
     }
 
     /** ========== PROMOTION STATE MANAGEMENT ========== */
+    public setCurrentSpinCount(count: number) {
+        this.fsbPromotionUIStore.currentSpinCount = count;
+    }
+
     public tryShowEndedPopup() {
         if (this.fsbPromotionUIStore.hasServerFinishPromotion) {
             this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.CLOSE_PROMOTION_DETAILS_PANEL);
@@ -131,8 +135,8 @@ export class FSBPromotionUIHandler {
         }
     }
 
-    public revertLastFSB() {
-        if (this.fsbPromotionUIStore.revertLastFSB()) {
+    public undoLastFSBSpin() {
+        if (this.fsbPromotionUIStore.undoLastFSBSpin()) {
             this.fsbPromotionUIStore.addPendingUIEvent(
                 FreeSpinsPromotionEvents.UPDATE_FSB_COUNT,
                 this.fsbPromotionUIStore.currentSpinCount
@@ -140,11 +144,11 @@ export class FSBPromotionUIHandler {
         }
     }
 
-    public commitFSB() {
+    public commitFSBSpins() {
         this.fsbPromotionUIStore.commitFSB();
     }
 
-    public markServerConfirmedEnd() {
+    public markFSBEndFromServer() {
         this.fsbPromotionUIStore.markServerConfirmedEnd();
         if (!this.fsbPromotionUIStore.fsbConsumedThisRound) {
             this.tryShowEndedPopup();
@@ -183,12 +187,13 @@ export class FSBPromotionUIHandler {
         }
     }
 
-    resetRedeemResult() {
+    resetFSBRedemptionState() {
         this.fsbPromotionStore.redeemResult = RedeemStatus.Idle;
     }
 
-    setBetControl() {
+    syncFSBBetControl() {
         this.betControlHandlers.init(this.fsbPromotionStore.promotion.coinValue, this.fsbPromotionStore.promotion.betLevel);
         this.cascadingUIHandler.handleFreeSpinsTotal(this.fsbPromotionStore.promotion.remainingBonusItems);
+        this.setCurrentSpinCount(this.fsbPromotionStore.promotion.remainingBonusItems);
     }
 }

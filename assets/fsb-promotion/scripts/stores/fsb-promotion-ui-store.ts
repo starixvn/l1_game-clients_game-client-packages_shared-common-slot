@@ -169,7 +169,7 @@ export class FSBPromotionUIStore {
         return false;
     }
 
-    revertLastFSB() {
+    undoLastFSBSpin() {
         if (this.fsbConsumedThisRound) {
             this.currentSpinCount++;
             this.fsbConsumedThisRound = false;

@@ -1,4 +1,4 @@
-import { _decorator, Node, instantiate, Prefab, Component } from "cc";
+import { _decorator, Node, instantiate, Prefab, Component, Vec3, tween } from "cc";
 import { bundleManager } from "db://shared-components/shared/common-components/bundle-manager/bundle-manager";
 import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
 import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
@@ -86,11 +86,11 @@ export class FSBPromotionUIManager extends ObserverComponent {
         }
     }
 
-    @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO)
-    initPromotionInfo(isOpenPromotionInfo: boolean) {
-        if (isOpenPromotionInfo) {
+    @render(FSBPromotionUIStore, (store) => store.pendingUIEvent)
+    initPromotionInfo(pendingUIEvent: any) {
+        if (pendingUIEvent?.event === FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO) {
             this.setBetControl();
-            this.loadAndShowPromotionInfo();
+            this.loadAndShowPromotionInfo(pendingUIEvent.data);
         }
     }
 
@@ -108,24 +108,37 @@ export class FSBPromotionUIManager extends ObserverComponent {
         }
     }
 
-    @handle(FSBPromotionUIHandler, (handle) => handle.setBetControl())
     setBetControl() {}
 
-    private async loadAndShowPromotionInfo() {
-        if (this.fsbPromotionInfoNode) {
-            this.showPromotionInfo();
+    private async loadAndShowPromotionInfo(delay = 0) {
+        if (this.fsbPromotionInfoNode && this.fsbPromotionInfoNode.isValid) {
+            this.showPromotionInfoWithAnimation(delay);
         } else {
             const prefab = await this.loadPrefab(PREFAB_PROMOTION_INFO_PATH);
             const fsbPromotionInfoNode = instantiate(prefab);
+
+            fsbPromotionInfoNode.active = false;
+
             this.fsbPromotionContainer.addChild(fsbPromotionInfoNode);
             this.fsbPromotionInfoNode = fsbPromotionInfoNode;
+
+            this.showPromotionInfoWithAnimation(delay);
         }
     }
 
-    showPromotionInfo() {
-        if (this.fsbPromotionInfoNode) {
-            this.fsbPromotionInfoNode.active = true;
+    private async showPromotionInfoWithAnimation(delay: number) {
+        if (!this.fsbPromotionInfoNode || !this.fsbPromotionInfoNode.isValid) {
+            return;
         }
+
+        await FunctionUtils.delay(delay);
+
+        this.fsbPromotionInfoNode.active = true;
+        this.fsbPromotionInfoNode.setScale(new Vec3(0, 0, 0));
+
+        tween(this.fsbPromotionInfoNode)
+            .to(0.3, { scale: new Vec3(1, 1, 1) }, { easing: "backOut" })
+            .start();
     }
 
     private async loadAndPlayEffectUnboxGift() {

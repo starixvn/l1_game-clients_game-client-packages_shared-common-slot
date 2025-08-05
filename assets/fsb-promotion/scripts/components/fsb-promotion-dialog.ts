@@ -42,6 +42,6 @@ export class FsbPromotionDialog extends ObserverComponent{
         this.gameOffers = gameOffers;
     }
 
-    @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO))
+    @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO, 900))
     openPromotionDetailsPanel() {}
 }

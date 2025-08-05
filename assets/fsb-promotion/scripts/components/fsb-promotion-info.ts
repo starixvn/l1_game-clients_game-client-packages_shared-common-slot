@@ -7,18 +7,19 @@ import Observer from "observer";
 import { AutoPlayHandler } from "db://shared-cascading-slot/handlers/auto-play-handlers";
 import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
 import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
+import gc from "@sg/game-client-base";
+import { CascadingUIStore } from "db://shared-cascading-slot/stores/cascading-ui-store";
 
 const { render, handle } = Observer;
 const { ccclass, property } = _decorator;
+const { Bet } = gc;
 
 @ccclass()
 export class FSBPromotionInfo extends ObserverComponent {
     @property(Label) labelTotalWin: Label = null;
     @property(Label) labelFSB: Label = null;
     @property(Label) labelTotalBet: Label = null;
-
     private readonly BET_MULTIPLIER = 20;
-    private readonly BET_LEVEL = 1;
 
     onEnable() {
         this.setupDraggable();
@@ -38,13 +39,13 @@ export class FSBPromotionInfo extends ObserverComponent {
 
     @render(FSBPromotionStore, (store) => store.promotion)
     onFSBPromotionInfo(promotion: GameServiceMessageSlot.Promotion) {
-        const { coinValue = 0, totalWin = 0, remainingBonusItems = 0 } = promotion;
-        const totalBet = this.calculateTotalBet(coinValue);
+        const { coinValue = 0, betLevel = 0, totalWin = 0, remainingBonusItems = 0 } = promotion;
+        const totalBet = this.calculateTotalBet(coinValue, betLevel);
         this.updateUI({ totalWin, remainingBonusItems, totalBet });
     }
 
-    private calculateTotalBet(coinValue: number): number {
-        return +(this.BET_LEVEL * coinValue * this.BET_MULTIPLIER).toFixed(1);
+    private calculateTotalBet(coinValue: number, betLevel: number): number {
+        return +(betLevel * coinValue * this.BET_MULTIPLIER).toFixed(1);
     }
 
     private updateUI({ totalWin, remainingBonusItems, totalBet }: { totalWin?: number; remainingBonusItems?: number; totalBet?: number }) {
@@ -54,11 +55,20 @@ export class FSBPromotionInfo extends ObserverComponent {
 
         this.labelTotalBet.string = totalBet.toString();
 
-        this.placeBet();
+        if (remainingBonusItems > 0) {
+            this.scheduleOnce(() => {
+                this.placeBet();
+            }, 0.5);
+        }
     }
 
     @handle(AutoPlayHandler, (handler) => handler.placeBet())
-    placeBet() {}
+    placeBet() {
+        this.tryConsumeFSB();
+    }
+
+    @handle(FSBPromotionUIHandler, (handler) => handler.tryConsumeFSB())
+    tryConsumeFSB() {}
 
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent)
     onPendingUIEvent(event: { event: string; data?: any }) {
@@ -82,4 +92,31 @@ export class FSBPromotionInfo extends ObserverComponent {
 
     @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.OPEN_FREE_SPINS_PROMOTION))
     onClickInfoIcon() {}
+
+    @render(Bet.BetStore, (store) => store.lastReceivedBet, { fireImmediately: false })
+    updataRemainingBonus(lastReceivedBet: any) {
+        const isReceivedBet = lastReceivedBet.value > 0;
+        if (!isReceivedBet) {
+            this.revertLastFSB();
+        } else {
+            this.commitFSB();
+        }
+    }
+
+    @handle(FSBPromotionUIHandler, (handler) => handler.undoLastFSBSpin())
+    revertLastFSB() {}
+
+    @handle(FSBPromotionUIHandler, (handler) => handler.commitFSBSpins())
+    commitFSB() {}
+
+    @render(CascadingUIStore, (store) => store.isFreeSpins)
+    async checkNextRound(isFreeSpins: boolean) {
+        if (isFreeSpins) {
+            this.setBetControl();
+            this.tryConsumeFSB();
+        }
+    }
+
+    @handle(FSBPromotionUIHandler, (handler) => handler.syncFSBBetControl())
+    setBetControl() {}
 }

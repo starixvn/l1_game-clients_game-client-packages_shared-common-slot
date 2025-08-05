@@ -26,7 +26,7 @@ export class RedeemGiftCodePopup extends ObserverComponent {
     }
 
     @handle(FSBPromotionUIHandler, (handle, giftCode: string) => handle.redeemGiftCode(giftCode))
-    @handle(FSBPromotionUIHandler, (handle) => handle.resetRedeemResult())
+    @handle(FSBPromotionUIHandler, (handle) => handle.resetFSBRedemptionState())
     onClickRedeemGifCode() {
         return this.giftCodeInput.string.trim().toUpperCase();
     }

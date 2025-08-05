@@ -1,16 +1,17 @@
-import { _decorator, Component, Label } from "cc";
+import { _decorator, Label } from "cc";
 import gc from "@sg/game-client-base";
 import { Dialog } from "db://shared-components/shared/common-components/dialogs/dialog";
 import Observer from "observer";
 import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
 import { FreeSpinsPromotionEvents } from "../stores/fsb-promotion-ui-store";
+import { ObserverComponent } from 'db://shared-components/shared/common-components/observer-component/scripts/observer-component';
 import { FSBPromotionStore } from "../stores/fsb-promotion-store";
  
 const { ccclass, property } = _decorator;
 const { handle, render } = Observer;
  
 @ccclass
-export default class ClaimBonusNotificationPopup extends Component {
+export default class ClaimBonusNotificationPopup extends ObserverComponent {
     @property(Label) labelTotalWin: Label = null;
  
     @render(FSBPromotionStore, (store) => store.claimedAmount)

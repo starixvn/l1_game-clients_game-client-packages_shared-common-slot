@@ -35,6 +35,7 @@ export class FsbPromotionDialog extends ObserverComponent{
     playGameNow() {
         this.closeDialog();
         this.openPromotionDetailsPanel();
+
     }
 
     @render(FSBPromotionUIStore, (store) => store.gameOffers)

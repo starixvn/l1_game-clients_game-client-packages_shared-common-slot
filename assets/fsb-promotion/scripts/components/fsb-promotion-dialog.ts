@@ -1,19 +1,20 @@
 import gc from "@sg/game-client-base";
 import { _decorator, Node, director, Tween, tween, UIOpacity } from "cc";
-import { ObserverComponent } from 'db://shared-components/shared/common-components/observer-component/scripts/observer-component';
-import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from '../stores/fsb-promotion-ui-store';
+import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
+import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
 import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
-import Observer from 'observer';
+import Observer from "observer";
 import { Dialog } from "db://shared-components/shared/common-components/dialogs/dialog";
 import { FSBPromotionStore } from "../stores/fsb-promotion-store";
 import { DialogTransition } from "db://shared-components/shared/common-components/dialogs/transition/dialog-transition";
+import { CascadingUIStore } from "db://shared-cascading-slot/stores/cascading-ui-store";
 const { Shared } = gc;
 const { utils } = Shared;
 const { ccclass, property } = _decorator;
 const { handle, render } = Observer;
 
 @ccclass("FsbPromotionDialog")
-export class FsbPromotionDialog extends ObserverComponent{
+export class FsbPromotionDialog extends ObserverComponent {
     @property(Node)
     playNow: Node = null;
 
@@ -26,8 +27,9 @@ export class FsbPromotionDialog extends ObserverComponent{
     @property(Node)
     background: Node = null;
 
-    public gameOffers: { name: string; gameId: number }[] = [];
+    private isFreeSpins = false;
 
+    public gameOffers: { name: string; gameId: number }[] = [];
 
     closeDialog() {
         this.node.getComponent(Dialog)?.hide();
@@ -35,8 +37,19 @@ export class FsbPromotionDialog extends ObserverComponent{
 
     playGameNow() {
         this.closeDialog();
-        this.openPromotionDetailsPanel();
+        if (this.isFreeSpins) {
+            this.showFreeSpinMessage();
+        } else {
+            this.openPromotionDetailsPanel();
 
+        }
+    }
+
+    @render(CascadingUIStore, (store) => store.isFreeSpins)
+    checkFeeSpinInGame(isFreeSpins: boolean) {
+        if (isFreeSpins) {
+            this.isFreeSpins = true;
+        }
     }
 
     @render(FSBPromotionUIStore, (store) => store.gameOffers)
@@ -59,6 +72,9 @@ export class FsbPromotionDialog extends ObserverComponent{
         }
     }
 
-    @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO, 900))
+    @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO, true))
     openPromotionDetailsPanel() {}
+
+    @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.SHOW_FREE_SPIN_MESSAGE))
+    showFreeSpinMessage() {}
 }

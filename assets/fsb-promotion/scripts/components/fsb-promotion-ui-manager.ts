@@ -6,6 +6,7 @@ import Observer from "observer";
 import { FunctionUtils } from "db://shared-components/shared/utils/function-utils";
 import { FSBPromotionHandlers } from "../handlers/fsb-promotion-handlers";
 import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
+import { CascadingUIStore } from "db://shared-cascading-slot/stores/cascading-ui-store";
 const { handle, render } = Observer;
 const { ccclass, property } = _decorator;
 
@@ -89,7 +90,6 @@ export class FSBPromotionUIManager extends ObserverComponent {
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent)
     initPromotionInfo(pendingUIEvent: any) {
         if (pendingUIEvent?.event === FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO) {
-            this.syncFSBBetControl();
             this.loadAndShowPromotionInfo(pendingUIEvent.data);
         }
     }
@@ -108,12 +108,10 @@ export class FSBPromotionUIManager extends ObserverComponent {
         }
     }
 
-    @handle(FSBPromotionUIHandler, (handler) => handler.syncFSBBetControl())
-    syncFSBBetControl() {}
-
-    private async loadAndShowPromotionInfo(delay = 0) {
+    private async loadAndShowPromotionInfo(isAutoPlay = false) {
+        const delay = isAutoPlay ? 900 : 0;
         if (this.fsbPromotionInfoNode && this.fsbPromotionInfoNode.isValid) {
-            this.showPromotionInfoWithAnimation(delay);
+            this.showPromotionInfoWithAnimation(delay, isAutoPlay);
         } else {
             const prefab = await this.loadPrefab(PREFAB_PROMOTION_INFO_PATH);
             const fsbPromotionInfoNode = instantiate(prefab);
@@ -123,11 +121,11 @@ export class FSBPromotionUIManager extends ObserverComponent {
             this.fsbPromotionContainer.addChild(fsbPromotionInfoNode);
             this.fsbPromotionInfoNode = fsbPromotionInfoNode;
 
-            this.showPromotionInfoWithAnimation(delay);
+            this.showPromotionInfoWithAnimation(delay, isAutoPlay);
         }
     }
 
-    private async showPromotionInfoWithAnimation(delay: number) {
+    private async showPromotionInfoWithAnimation(delay: number, isAutoPlay: boolean) {
         if (!this.fsbPromotionInfoNode || !this.fsbPromotionInfoNode.isValid) {
             return;
         }
@@ -140,7 +138,14 @@ export class FSBPromotionUIManager extends ObserverComponent {
         tween(this.fsbPromotionInfoNode)
             .to(0.3, { scale: new Vec3(1, 1, 1) }, { easing: "backOut" })
             .start();
+
+        if (isAutoPlay) {
+            this.spinOnFSBPromotionFirstTime();
+        }
     }
+
+    @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.SPIN_ON_FSB_PROMOTION_FIRST_TIME))
+    spinOnFSBPromotionFirstTime() {}
 
     private async loadAndPlayEffectUnboxGift() {
         if (this.effectUnboxGiftNode && this.effectUnboxGiftNode.isValid) {
@@ -209,7 +214,6 @@ export class FSBPromotionUIManager extends ObserverComponent {
         this.positionContainer(fsbPromotionContainer, autoScaleWidget);
         this.fsbPromotionContainer = fsbPromotionContainer;
     }
-
 
     private async loadAndShowPromotionEndedPopup() {
         if (this.promotionEndedPopupNode) {

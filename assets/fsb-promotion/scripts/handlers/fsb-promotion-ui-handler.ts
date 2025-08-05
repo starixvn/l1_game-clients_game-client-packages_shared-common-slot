@@ -194,6 +194,5 @@ export class FSBPromotionUIHandler {
     syncFSBBetControl() {
         this.betControlHandlers.init(this.fsbPromotionStore.promotion.coinValue, this.fsbPromotionStore.promotion.betLevel);
         this.cascadingUIHandler.handleFreeSpinsTotal(this.fsbPromotionStore.promotion.remainingBonusItems);
-        this.setCurrentSpinCount(this.fsbPromotionStore.promotion.remainingBonusItems);
     }
 }

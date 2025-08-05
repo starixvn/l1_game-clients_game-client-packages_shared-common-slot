@@ -42,6 +42,7 @@ export class FSBPromotionInfo extends ObserverComponent {
         const { coinValue = 0, betLevel = 0, totalWin = 0, remainingBonusItems = 0 } = promotion;
         const totalBet = this.calculateTotalBet(coinValue, betLevel);
         this.updateUI({ totalWin, remainingBonusItems, totalBet });
+        this.setCurrentSpinCount(remainingBonusItems);
     }
 
     private calculateTotalBet(coinValue: number, betLevel: number): number {
@@ -54,11 +55,20 @@ export class FSBPromotionInfo extends ObserverComponent {
         this.labelFSB.string = remainingBonusItems.toString();
 
         this.labelTotalBet.string = totalBet.toString();
+    }
 
-        if (remainingBonusItems > 0) {
+    @handle(FSBPromotionUIHandler, (handler, remainingBonusItems: number) => handler.setCurrentSpinCount(remainingBonusItems))
+    setCurrentSpinCount(remainingBonusItems: number) {
+        return remainingBonusItems;
+    }
+
+    @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.SPIN_ON_FSB_PROMOTION_FIRST_TIME)
+    spinOnFSBPromotionFirstTime(isSpinOnFSBPromotionFirstTime: boolean) {
+        if (isSpinOnFSBPromotionFirstTime) {
             this.scheduleOnce(() => {
+                this.setBetControl();
                 this.placeBet();
-            }, 0.5);
+            }, 0.8);
         }
     }
 
@@ -109,7 +119,7 @@ export class FSBPromotionInfo extends ObserverComponent {
     @handle(FSBPromotionUIHandler, (handler) => handler.commitFSBSpins())
     commitFSB() {}
 
-    @render(CascadingUIStore, (store) => store.isFreeSpins)
+    @render(CascadingUIStore, (store) => store.isUsedFSBPromotionBonus)
     async checkNextRound(isFreeSpins: boolean) {
         if (isFreeSpins) {
             this.setBetControl();

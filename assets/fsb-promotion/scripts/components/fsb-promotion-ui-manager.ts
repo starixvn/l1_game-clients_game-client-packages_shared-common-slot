@@ -18,6 +18,7 @@ const PREFAB_EFFECT_UNBOX_GIFT_PATH = "prefabs/effect-unbox-gift";
 const PREFAB_FSB_BANNER_PATH = "prefabs/fsb-banner";
 const PREFAB_PROMOTION_INFO_PATH = "prefabs/fsb-promotion-info";
 const PREFAB_PROMOTION_ENDED_POPUP_PATH = "prefabs/promotion-ended-popup";
+const PREFAB_CLAIM_BONUS_NOTIFICATION_PATH = "prefabs/claim-bonus-notification-popup";
 const CONTAINER_NAME = "fsb-promotion-container";
 const POPUP_CONTAINER_NAME = "fsb-promotion-popup-container";
 const NODE_NAMES = {
@@ -36,6 +37,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
     private effectUnboxGiftNode: Node = null;
     private fsbBannerNode: Node = null;
     private promotionEndedPopupNode: Node = null;
+    private claimBonusNotificationNode: Node = null;
 
     private fsbPromotionInfoNode: Node = null;
     private UNIT_SECOND_EFFECT_UNBOX_GIFT = 2000;
@@ -96,6 +98,13 @@ export class FSBPromotionUIManager extends ObserverComponent {
     initPromotionEndedPopup(isOpenPromotionEndedPopup: boolean) {
         if (isOpenPromotionEndedPopup) {
             this.loadAndShowPromotionEndedPopup();
+        }
+    }
+
+    @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.OPEN_CLAIM_BONUS_NOTIFICATION)
+    initClaimBonusNotification(isOpenClaimBonusNotification: boolean) {
+        if (isOpenClaimBonusNotification) {
+            this.loadAndShowClaimBonusNotification();
         }
     }
 
@@ -196,6 +205,17 @@ export class FSBPromotionUIManager extends ObserverComponent {
             const promotionEndedPopupNode = instantiate(prefab);
             this.fsbPromotionPopupContainer.addChild(promotionEndedPopupNode);
             this.promotionEndedPopupNode = promotionEndedPopupNode;
+        }
+    }
+
+    private async loadAndShowClaimBonusNotification() {
+        if (this.claimBonusNotificationNode) {
+            this.claimBonusNotificationNode.active = true;
+        } else {
+            const prefab = await this.loadPrefab(PREFAB_CLAIM_BONUS_NOTIFICATION_PATH);
+            const claimBonusNotificationNode = instantiate(prefab);
+            this.fsbPromotionPopupContainer.addChild(claimBonusNotificationNode);
+            this.claimBonusNotificationNode = claimBonusNotificationNode;
         }
     }
 

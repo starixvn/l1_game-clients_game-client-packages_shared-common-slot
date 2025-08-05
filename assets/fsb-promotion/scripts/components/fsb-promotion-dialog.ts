@@ -35,8 +35,6 @@ export class FsbPromotionDialog extends ObserverComponent{
     playGameNow() {
         this.closeDialog();
         this.openPromotionDetailsPanel();
-        this.openPromotionEndedPopup();
-        this.onPromotionEnded();
     }
 
     @render(FSBPromotionUIStore, (store) => store.gameOffers)
@@ -46,15 +44,4 @@ export class FsbPromotionDialog extends ObserverComponent{
 
     @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO))
     openPromotionDetailsPanel() {}
-
-    @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_ENDED_POPUP))
-    openPromotionEndedPopup() {}
-
-    @handle(FSBPromotionStore, (store) => store.setFinishPromotion({
-        endPromotion: true,
-        totalWin: 5,    
-    }))
-    onPromotionEnded() {
-       
-    }
 }

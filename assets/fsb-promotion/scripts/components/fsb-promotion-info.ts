@@ -118,9 +118,6 @@ export class FSBPromotionInfo extends ObserverComponent {
     @handle(FSBPromotionUIHandler, (handler) => handler.undoLastFSBSpin())
     revertLastFSB() {}
 
-    @handle(FSBPromotionUIHandler, (handler) => handler.commitFSBSpins())
-    commitFSB() {}
-
     @render(FSBPromotionUIStore, (store) => store.isUsedFSBPromotionBonus)
     async checkNextRound(isUsedFSBPromotionBonus: boolean) {
         if (isUsedFSBPromotionBonus) {
@@ -137,7 +134,6 @@ export class FSBPromotionInfo extends ObserverComponent {
         if (finishData) {
             const { win } = finishData;
             this.updateTotalWin(win);
-            this.commitFSB();
         }
     }
 

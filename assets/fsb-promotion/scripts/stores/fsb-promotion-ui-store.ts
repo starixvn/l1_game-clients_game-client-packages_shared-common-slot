@@ -41,7 +41,7 @@ export const FreeSpinsPromotionEvents = {
     OPEN_CLAIM_BONUS_NOTIFICATION: "OPEN_CLAIM_BONUS_NOTIFICATION",
     UPDATE_BALANCE_BONUS: "UPDATE_BALANCE_BONUS",
     SPIN_ON_FSB_PROMOTION_FIRST_TIME: "SPIN_ON_FSB_PROMOTION_FIRST_TIME",
-    SHOW_FREE_SPIN_MESSAGE: "SHOW_FREE_SPIN_MESSAGE"
+    SHOW_FREE_SPIN_MESSAGE: "SHOW_FREE_SPIN_MESSAGE",
 };
 
 @injectable()
@@ -49,7 +49,7 @@ export class FSBPromotionUIStore {
     @inject(gc.Configs.SiteConfigs) protected readonly siteConfigs: gc.Configs.SiteConfigs;
     @inject(FSBPromotionStore) protected readonly fsbPromotionStore: FSBPromotionStore;
     @inject(CascadingUIStore) protected readonly cascadingUIStore: CascadingUIStore;
-    
+
     constructor() {
         mobx.makeAutoObservable(this);
     }
@@ -209,16 +209,18 @@ export class FSBPromotionUIStore {
     }
 
     isRedeemSuccess() {
-        return this.pendingUIEvent?.event === FreeSpinsPromotionEvents.OPEN_FREE_SPINS_PROMOTION
-            && this.fsbPromotionStore.isRedeemSuccess;
+        return this.pendingUIEvent?.event === FreeSpinsPromotionEvents.OPEN_FREE_SPINS_PROMOTION && this.fsbPromotionStore.isRedeemSuccess;
     }
 
     isShowFsbBanner() {
-        return this.pendingUIEvent?.event === FreeSpinsPromotionEvents.OPEN_FREE_SPINS_PROMOTION
-            && !this.fsbPromotionStore.isRedeemSuccess;
+        return this.pendingUIEvent?.event === FreeSpinsPromotionEvents.OPEN_FREE_SPINS_PROMOTION && !this.fsbPromotionStore.isRedeemSuccess;
     }
 
     setWebViewLoading(isLoading: boolean) {
         this.isWebViewLoading = isLoading;
+    }
+
+    isFSBPromotionInProgress() {
+        return this.currentSpinCount >= 0;
     }
 }

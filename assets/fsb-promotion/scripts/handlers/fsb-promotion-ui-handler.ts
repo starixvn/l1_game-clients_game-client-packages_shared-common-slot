@@ -194,12 +194,14 @@ export class FSBPromotionUIHandler {
 
     syncFSBBetControl() {
         this.betControlHandlers.init(this.fsbPromotionStore.promotion.coinValue, this.fsbPromotionStore.promotion.betLevel);
-        this.cascadingUIHandler.handleFreeSpinsTotal(this.fsbPromotionStore.promotion.remainingBonusItems);
     }
 
     updateTotalWin(win: number) {
-        if (this.fsbPromotionUIStore.fsbConsumedThisRound && win > 0) {
+        if (this.fsbPromotionUIStore.fsbConsumedThisRound || this.cascadingUIStore.freeSpinsTotal > 0) {
             this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.UPDATE_TOTAL_WIN, win);
+            if (this.cascadingUIStore.freeSpinsTotal === 0) {
+                this.commitFSBSpins();
+            }
         }
     }
 

@@ -19,7 +19,6 @@ export class FSBPromotionUIHandler {
     @inject(gc.Auth.AuthStore) protected readonly authStore: gc.Auth.AuthStore;
     @inject(BetControlHandlers) protected readonly betControlHandlers: BetControlHandlers;
     @inject(CascadingUIStore) protected readonly cascadingUIStore: CascadingUIStore;
-    @inject(CascadingUIHandler) protected readonly cascadingUIHandler: CascadingUIHandler;
 
     /** ========== PROMOTION FLOW ========== */
     public handlePromotionDisplay() {
@@ -196,12 +195,17 @@ export class FSBPromotionUIHandler {
         this.betControlHandlers.init(this.fsbPromotionStore.promotion.coinValue, this.fsbPromotionStore.promotion.betLevel);
     }
 
-    updateTotalWin(win: number) {
-        if (this.fsbPromotionUIStore.fsbConsumedThisRound || this.cascadingUIStore.freeSpinsTotal > 0) {
-            this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.UPDATE_TOTAL_WIN, win);
-            if (this.cascadingUIStore.freeSpinsTotal === 0) {
-                this.commitFSBSpins();
-            }
+    updateTotalWin({ win, totalFreeSpins }: { win: number; totalFreeSpins: number }) {
+        const isFSBActive = this.fsbPromotionUIStore.fsbConsumedThisRound || this.fsbPromotionUIStore.resumedFSBPromotion;
+        if (!isFSBActive) {
+            return;
+        }
+
+        this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.UPDATE_TOTAL_WIN, win);
+
+        const isLastFreeSpin = totalFreeSpins === 0;
+        if (isLastFreeSpin) {
+            this.commitFSBSpins();
         }
     }
 

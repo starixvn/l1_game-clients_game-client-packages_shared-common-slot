@@ -221,6 +221,6 @@ export class FSBPromotionUIStore {
     }
 
     isFSBPromotionInProgress() {
-        return this.currentSpinCount >= 0;
+        return this.currentSpinCount >= 0 && !this.resumedFSBPromotion && !this.hasServerFinishPromotion;
     }
 }

@@ -132,13 +132,13 @@ export class FSBPromotionInfo extends ObserverComponent {
     @render(CascadingSlotSettlementStore, (store) => store.finishData, { fireImmediately: false })
     onSettlement(finishData: any) {
         if (finishData) {
-            const { win } = finishData;
-            this.updateTotalWin(win);
+            const { win, totalFreeSpins } = finishData;
+            this.updateTotalWin(win, totalFreeSpins);
         }
     }
 
-    @handle(FSBPromotionUIHandler, (handler, win: number) => handler.updateTotalWin(win))
-    updateTotalWin(win: number) {
-        return win;
+    @handle(FSBPromotionUIHandler, (handler, payload: { win: number; totalFreeSpins: number }) => handler.updateTotalWin(payload))
+    updateTotalWin(win: number, totalFreeSpins: number) {
+        return { win, totalFreeSpins };
     }
 }

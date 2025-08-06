@@ -214,7 +214,6 @@ export class FSBPromotionUIManager extends ObserverComponent {
 
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.SHOW_PROMOTION_INFO_AFTER_FREE_SPIN_IN_GAME)
     initShowPromotionInfoAfterFreeSpinInGame(isShowPromotionInfoAfterFreeSpinInGame: boolean) {
-        debugger;
         if (isShowPromotionInfoAfterFreeSpinInGame) {
             this.showPromotionInfoAfterFreeSpinInGame();
         }

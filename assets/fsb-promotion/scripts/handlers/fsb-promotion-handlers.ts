@@ -31,6 +31,7 @@ export class FSBPromotionHandlers implements gc.Shared.IMultipleHandlers {
 
     handleFinishPromotion(data: GameServiceMessageSlot.FinishPromotion) {
         this.promotionStore.finishPromotion = data;
+        this.fsbPromotionUIHandler.markFSBEndFromServer();
     }
 
     handleRedemptionNotice(data: GameServiceMessageSlot.RedemptionNotice) {

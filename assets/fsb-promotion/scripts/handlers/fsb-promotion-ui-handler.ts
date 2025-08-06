@@ -5,7 +5,6 @@ import inversify from "inversify";
 import { FSBPromotionStore, RedeemStatus } from "../stores/fsb-promotion-store";
 import { GameClientMessageSlot } from "../../../game-message-slot";
 import { BetControlHandlers } from "db://shared-cascading-slot/handlers/bet-control-handlers";
-import { CascadingUIHandler } from "db://shared-cascading-slot/handlers/cascading-ui-handler";
 import { CascadingUIStore } from "db://shared-cascading-slot/stores/cascading-ui-store";
 
 const { injectable, inject } = inversify;
@@ -220,5 +219,11 @@ export class FSBPromotionUIHandler {
 
         this.syncFSBBetControl();
         this.tryConsumeFSB();
+    }
+
+    isShowPromotionInfoAfterFreeSpinInGame() {
+        if (this.fsbPromotionStore.isClaimed) {
+            this.changeUIPendingEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO);
+        }
     }
 }

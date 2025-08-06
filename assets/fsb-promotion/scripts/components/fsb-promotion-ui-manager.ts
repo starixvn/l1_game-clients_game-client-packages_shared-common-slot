@@ -20,6 +20,7 @@ const PREFAB_FSB_BANNER_PATH = "prefabs/fsb-banner";
 const PREFAB_PROMOTION_INFO_PATH = "prefabs/fsb-promotion-info";
 const PREFAB_PROMOTION_ENDED_POPUP_PATH = "prefabs/promotion-ended-popup";
 const PREFAB_CLAIM_BONUS_NOTIFICATION_PATH = "prefabs/claim-bonus-notification";
+const PREFAB_FREE_SPIN_MESSAGE_PATH = "prefabs/fsb-bottom-message";
 const CONTAINER_NAME = "fsb-promotion-container";
 const POPUP_CONTAINER_NAME = "fsb-promotion-popup-container";
 const NODE_NAMES = {
@@ -39,7 +40,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
     private fsbBannerNode: Node = null;
     private promotionEndedPopupNode: Node = null;
     private claimBonusNotificationNode: Node = null;
-
+    private freeSpinMessageNode: Node = null;
     private fsbPromotionInfoNode: Node = null;
     private UNIT_SECOND_EFFECT_UNBOX_GIFT = 2000;
     private UNIT_SECOND_REDEEM_SUCCESS = 2000;
@@ -196,6 +197,32 @@ export class FSBPromotionUIManager extends ObserverComponent {
 
     @handle(FSBPromotionUIHandler, (handle) => handle.changeUIPendingEvent(FreeSpinsPromotionEvents.OPEN_GIFT_CODE_REDEEM_POPUP))
     private openGiftCodeRedeemPopup() {}
+
+    @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.SHOW_FREE_SPIN_MESSAGE)
+    initShowFreeSpinMessage(isShowFreeSpinMessage: boolean) {
+        if (isShowFreeSpinMessage) {
+            this.loadAndShowFreeSpinMessage();
+        }
+    }
+
+    private async loadAndShowFreeSpinMessage() {
+        const prefab = await this.loadPrefab(PREFAB_FREE_SPIN_MESSAGE_PATH);
+        const freeSpinMessageNode = instantiate(prefab);
+        this.fsbPromotionPopupContainer.addChild(freeSpinMessageNode);
+        this.freeSpinMessageNode = freeSpinMessageNode;
+    }
+
+    @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.SHOW_PROMOTION_INFO_AFTER_FREE_SPIN_IN_GAME)
+    initShowPromotionInfoAfterFreeSpinInGame(isShowPromotionInfoAfterFreeSpinInGame: boolean) {
+        debugger;
+        if (isShowPromotionInfoAfterFreeSpinInGame) {
+            this.showPromotionInfoAfterFreeSpinInGame();
+        }
+    }
+
+    @handle(FSBPromotionUIHandler, (handler) => handler.isShowPromotionInfoAfterFreeSpinInGame())
+    showPromotionInfoAfterFreeSpinInGame() {}
+
     private createFsbPromotionContainer(): void {
         const autoScaleWidget = this.findAutoScaleWidget();
         if (!autoScaleWidget) {

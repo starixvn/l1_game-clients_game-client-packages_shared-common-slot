@@ -21,6 +21,8 @@ export class FSBPromotionInfo extends ObserverComponent {
     @property(Label) labelTotalBet: Label = null;
     private readonly BET_MULTIPLIER = 20;
 
+    private totalWin = 0;
+
     onEnable() {
         this.setupDraggable();
     }
@@ -40,6 +42,7 @@ export class FSBPromotionInfo extends ObserverComponent {
     @render(FSBPromotionStore, (store) => store.promotion)
     onFSBPromotionInfo(promotion: GameServiceMessageSlot.Promotion) {
         const { coinValue = 0, betLevel = 0, totalWin = 0, remainingBonusItems = 0 } = promotion;
+        this.totalWin = totalWin;
         const totalBet = this.calculateTotalBet(coinValue, betLevel);
         this.updateUI({ totalWin, remainingBonusItems, totalBet });
         this.setCurrentSpinCount(remainingBonusItems);
@@ -50,11 +53,11 @@ export class FSBPromotionInfo extends ObserverComponent {
     }
 
     private updateUI({ totalWin, remainingBonusItems, totalBet }: { totalWin?: number; remainingBonusItems?: number; totalBet?: number }) {
-        this.labelTotalWin.string = totalWin.toString();
+        this.labelTotalWin.string = gc.FormatUtils.numberWithCommas(totalWin, 2);
 
         this.labelFSB.string = remainingBonusItems.toString();
 
-        this.labelTotalBet.string = totalBet.toString();
+        this.labelTotalBet.string = gc.FormatUtils.numberWithCommas(totalBet, 2);
     }
 
     @handle(FSBPromotionUIHandler, (handler, remainingBonusItems: number) => handler.setCurrentSpinCount(remainingBonusItems))
@@ -94,7 +97,8 @@ export class FSBPromotionInfo extends ObserverComponent {
                 break;
             case FreeSpinsPromotionEvents.UPDATE_TOTAL_WIN:
                 if (this.labelTotalWin) {
-                    this.labelTotalWin.string = data.toString();
+                    this.totalWin += data;
+                    this.labelTotalWin.string = gc.FormatUtils.numberWithCommas(this.totalWin, 2);
                 }
                 break;
         }

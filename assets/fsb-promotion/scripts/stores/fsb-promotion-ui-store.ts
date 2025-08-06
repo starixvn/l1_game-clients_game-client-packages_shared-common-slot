@@ -4,6 +4,7 @@ import mobx from "mobx";
 import { FSBPromotionStore } from "./fsb-promotion-store";
 import inversify from "inversify";
 import { settings } from "db://assets/game/scripts/game-settings";
+import { CascadingUIStore } from "db://shared-cascading-slot/stores/cascading-ui-store";
 
 const { injectable, inject } = inversify;
 
@@ -47,6 +48,8 @@ export const FreeSpinsPromotionEvents = {
 export class FSBPromotionUIStore {
     @inject(gc.Configs.SiteConfigs) protected readonly siteConfigs: gc.Configs.SiteConfigs;
     @inject(FSBPromotionStore) protected readonly fsbPromotionStore: FSBPromotionStore;
+    @inject(CascadingUIStore) protected readonly cascadingUIStore: CascadingUIStore;
+    
     constructor() {
         mobx.makeAutoObservable(this);
     }
@@ -120,6 +123,10 @@ export class FSBPromotionUIStore {
 
     get skipGiftCode() {
         return this._skipGiftCode;
+    }
+
+    get isUsedFSBPromotionBonus() {
+        return this.cascadingUIStore.isUsedFSBPromotionBonus && this.currentSpinCount > 0;
     }
 
     // State management methods

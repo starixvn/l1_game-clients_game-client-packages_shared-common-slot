@@ -8,7 +8,7 @@ import { AutoPlayHandler } from "db://shared-cascading-slot/handlers/auto-play-h
 import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
 import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
 import gc from "@sg/game-client-base";
-import { CascadingUIStore } from "db://shared-cascading-slot/stores/cascading-ui-store";
+import { CascadingSlotSettlementStore } from "db://shared-cascading-slot/stores/cascading-slot-settlement-store";
 
 const { render, handle } = Observer;
 const { ccclass, property } = _decorator;
@@ -108,8 +108,6 @@ export class FSBPromotionInfo extends ObserverComponent {
         const isReceivedBet = lastReceivedBet.value > 0;
         if (!isReceivedBet) {
             this.revertLastFSB();
-        } else {
-            this.commitFSB();
         }
     }
 
@@ -119,9 +117,9 @@ export class FSBPromotionInfo extends ObserverComponent {
     @handle(FSBPromotionUIHandler, (handler) => handler.commitFSBSpins())
     commitFSB() {}
 
-    @render(CascadingUIStore, (store) => store.isUsedFSBPromotionBonus)
-    async checkNextRound(isFreeSpins: boolean) {
-        if (isFreeSpins) {
+    @render(FSBPromotionUIStore, (store) => store.isUsedFSBPromotionBonus)
+    async checkNextRound(isUsedFSBPromotionBonus: boolean) {
+        if (isUsedFSBPromotionBonus) {
             this.setBetControl();
             this.tryConsumeFSB();
         }
@@ -129,4 +127,18 @@ export class FSBPromotionInfo extends ObserverComponent {
 
     @handle(FSBPromotionUIHandler, (handler) => handler.syncFSBBetControl())
     setBetControl() {}
+
+    @render(CascadingSlotSettlementStore, (store) => store.finishData, { fireImmediately: false })
+    onSettlement(finishData: any) {
+        if (finishData) {
+            const { win } = finishData;
+            this.updateTotalWin(win);
+            this.commitFSB();
+        }
+    }
+
+    @handle(FSBPromotionUIHandler, (handler, win: number) => handler.updateTotalWin(win))
+    updateTotalWin(win: number) {
+        return win;
+    }
 }

@@ -202,4 +202,17 @@ export class FSBPromotionUIHandler {
             this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.UPDATE_TOTAL_WIN, win);
         }
     }
+
+    triggerFSBManual() {
+        if (
+            this.fsbPromotionUIStore.fsbConsumedThisRound ||
+            this.cascadingUIStore.isFreeSpins ||
+            this.fsbPromotionUIStore.currentSpinCount <= 0
+        ) {
+            return;
+        }
+
+        this.syncFSBBetControl();
+        this.tryConsumeFSB();
+    }
 }

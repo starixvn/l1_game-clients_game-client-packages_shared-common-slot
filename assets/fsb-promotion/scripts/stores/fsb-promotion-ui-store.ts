@@ -13,6 +13,14 @@ export const endpointConstants = {
     announcementDetails: "announcement-detail",
 };
 
+export enum FSBPromotionState {
+    Idle = "IDLE", // Chưa bắt đầu
+    Ready = "READY", // Đã nhận khuyến mãi, chưa quay
+    Spinning = "SPINNING", // Đang quay FSB
+    Finished = "FINISHED", // Đã quay xong
+    Resumed = "RESUMED", // Resume từ giữa
+}
+
 export const FreeSpinsPromotionEvents = {
     OPEN_FREE_SPINS_PROMOTION: "OPEN_FREE_SPINS_PROMOTION",
     OPEN_GIFT_CODE: "OPEN_GIFT_CODE",
@@ -126,8 +134,44 @@ export class FSBPromotionUIStore {
         return this._skipGiftCode;
     }
 
-    get isUsedFSBPromotionBonus() {
-        return this.cascadingUIStore.isUsedFSBPromotionBonus && this.currentSpinCount > 0;
+    get hasConsumedFSB() {
+        return this.currentSpinCount > 0 && this.currentSpinCount < this.fsbPromotionStore.promotion?.initialBonusItem;
+    }
+
+    get isEligibleForNextFSBSpin() {
+        return this.cascadingUIStore.isUsedFSBPromotionBonus && this.hasConsumedFSB;
+    }
+
+    get isFSBPromotionInProgress() {
+        return this.fsbState === FSBPromotionState.Ready || this.fsbState === FSBPromotionState.Spinning;
+    }
+    get isUpdateTotalWin() {
+        return this.fsbConsumedThisRound || this.resumedFSBPromotion;
+    }
+
+
+    get fsbState(): FSBPromotionState {
+        if (!this.hasPromo()) {
+            return FSBPromotionState.Idle;
+        }
+
+        if (this.hasServerFinishPromotion) {
+            return FSBPromotionState.Finished;
+        }
+
+        if (this.resumedFSBPromotion) {
+            return FSBPromotionState.Resumed;
+        }
+
+        if (this.currentSpinCount >= 0 && this.fsbConsumedThisRound) {
+            return FSBPromotionState.Spinning;
+        }
+
+        if (this.currentSpinCount >= 0) {
+            return FSBPromotionState.Ready;
+        }
+
+        return FSBPromotionState.Idle;
     }
 
     // State management methods
@@ -156,14 +200,6 @@ export class FSBPromotionUIStore {
         }
 
         return isSC;
-    }
-
-    isPromotionInProgress(): boolean {
-        return this.currentSpinCount >= 0 && !this.hasServerFinishPromotion && !this.resumedFSBPromotion;
-    }
-
-    isUpdateTotalWin() {
-        return this.fsbConsumedThisRound || this.resumedFSBPromotion;
     }
 
     isEligibleForTurnOverPanel() {
@@ -219,9 +255,5 @@ export class FSBPromotionUIStore {
 
     setWebViewLoading(isLoading: boolean) {
         this.isWebViewLoading = isLoading;
-    }
-
-    isFSBPromotionInProgress() {
-        return this.currentSpinCount >= 0 && !this.resumedFSBPromotion && !this.hasServerFinishPromotion;
     }
 }

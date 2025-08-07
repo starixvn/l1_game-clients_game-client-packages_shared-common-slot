@@ -109,20 +109,23 @@ export class FSBPromotionUIManager extends ObserverComponent {
         }
     }
 
-    private async loadAndShowPromotionInfo(isAutoPlay = false) {
-        const delay = isAutoPlay ? 900 : 0;
+    private async loadAndShowPromotionInfo(options?: { isAutoSpin?: boolean; triggerAfterFSInGame?: boolean }) {
+        const isAutoSpin = options?.isAutoSpin ?? false;
+        const triggerAfterFSInGame = options?.triggerAfterFSInGame ?? false;
+
+        const delay = triggerAfterFSInGame ? 0 : isAutoSpin ? 900 : 0;
+
         if (this.fsbPromotionInfoNode && this.fsbPromotionInfoNode.isValid) {
-            this.showPromotionInfoWithAnimation(delay, isAutoPlay);
+            this.showPromotionInfoWithAnimation(delay, isAutoSpin);
         } else {
             const prefab = await this.loadPrefab(PREFAB_PROMOTION_INFO_PATH);
             const fsbPromotionInfoNode = instantiate(prefab);
-
             fsbPromotionInfoNode.active = false;
 
             this.fsbPromotionContainer.addChild(fsbPromotionInfoNode);
             this.fsbPromotionInfoNode = fsbPromotionInfoNode;
 
-            this.showPromotionInfoWithAnimation(delay, isAutoPlay);
+            this.showPromotionInfoWithAnimation(delay, isAutoSpin);
         }
     }
 
@@ -136,9 +139,12 @@ export class FSBPromotionUIManager extends ObserverComponent {
         this.fsbPromotionInfoNode.active = true;
         this.fsbPromotionInfoNode.setScale(new Vec3(0, 0, 0));
 
-        tween(this.fsbPromotionInfoNode)
-            .to(0.3, { scale: new Vec3(1, 1, 1) }, { easing: "backOut" })
-            .start();
+        await new Promise<void>((resolve) => {
+            tween(this.fsbPromotionInfoNode)
+                .to(0.3, { scale: new Vec3(1, 1, 1) }, { easing: "backOut" })
+                .call(() => resolve())
+                .start();
+        });
 
         if (isAutoPlay) {
             this.spinOnFSBPromotionFirstTime();
@@ -212,7 +218,10 @@ export class FSBPromotionUIManager extends ObserverComponent {
         this.freeSpinMessageNode = freeSpinMessageNode;
     }
 
-    @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.SHOW_PROMOTION_INFO_AFTER_FREE_SPIN_IN_GAME)
+    @render(
+        FSBPromotionUIStore,
+        (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.SHOW_PROMOTION_INFO_AFTER_FREE_SPIN_IN_GAME
+    )
     initShowPromotionInfoAfterFreeSpinInGame(isShowPromotionInfoAfterFreeSpinInGame: boolean) {
         if (isShowPromotionInfoAfterFreeSpinInGame) {
             this.showPromotionInfoAfterFreeSpinInGame();

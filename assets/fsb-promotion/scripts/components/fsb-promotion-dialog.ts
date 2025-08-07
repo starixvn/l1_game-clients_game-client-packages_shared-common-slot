@@ -72,7 +72,7 @@ export class FsbPromotionDialog extends ObserverComponent {
         }
     }
 
-    @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO, true))
+    @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO, { isAutoSpin: true, triggerAfterFSInGame: false }))
     openPromotionDetailsPanel() {}
 
     @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.SHOW_FREE_SPIN_MESSAGE))

@@ -195,8 +195,7 @@ export class FSBPromotionUIHandler {
     }
 
     updateTotalWin({ win, totalFreeSpins }: { win: number; totalFreeSpins: number }) {
-        const isFSBActive = this.fsbPromotionUIStore.fsbConsumedThisRound || this.fsbPromotionUIStore.resumedFSBPromotion;
-        if (!isFSBActive) {
+        if (!this.fsbPromotionUIStore.isUpdateTotalWin) {
             return;
         }
 
@@ -205,6 +204,7 @@ export class FSBPromotionUIHandler {
         const isLastFreeSpin = totalFreeSpins === 0;
         if (isLastFreeSpin) {
             this.commitFSBSpins();
+            this.fsbPromotionUIStore.resumedFSBPromotion = false;
         }
     }
 
@@ -223,7 +223,10 @@ export class FSBPromotionUIHandler {
 
     isShowPromotionInfoAfterFreeSpinInGame() {
         if (this.fsbPromotionStore.isClaimed) {
-            this.changeUIPendingEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO);
+            this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO, {
+                isAutoSpin: true,
+                triggerAfterFSInGame: true,
+            });
         }
     }
 }

@@ -223,10 +223,11 @@ export class FSBPromotionUIHandler {
 
     isShowPromotionInfoAfterFreeSpinInGame() {
         if (this.fsbPromotionStore.isClaimed) {
-            this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO, {
-                isAutoSpin: true,
-                triggerAfterFSInGame: true,
-            });
+            this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO);
         }
+    }
+
+    setFSBInfoReady(isReady: boolean) {
+        this.fsbPromotionUIStore.setFSBInfoReady(isReady);
     }
 }

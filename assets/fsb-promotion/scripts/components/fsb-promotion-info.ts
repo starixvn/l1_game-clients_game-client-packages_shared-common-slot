@@ -77,6 +77,7 @@ export class FSBPromotionInfo extends ObserverComponent {
 
     @handle(AutoPlayHandler, (handler) => handler.placeBet())
     placeBet() {
+        
         this.tryConsumeFSB();
     }
 
@@ -107,6 +108,7 @@ export class FSBPromotionInfo extends ObserverComponent {
     @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.OPEN_FREE_SPINS_PROMOTION))
     onClickInfoIcon() {}
 
+
     @render(Bet.BetStore, (store) => store.lastReceivedBet, { fireImmediately: false })
     updataRemainingBonus(lastReceivedBet: any) {
         const isReceivedBet = lastReceivedBet.value > 0;
@@ -119,7 +121,7 @@ export class FSBPromotionInfo extends ObserverComponent {
     revertLastFSB() {}
 
     @render(FSBPromotionUIStore, (store) => store.isEligibleForNextFSBSpin)
-    async continueFSBSpin(isUsedFSBPromotionBonus: boolean) {
+    async autoTriggerNextFSBSpin(isUsedFSBPromotionBonus: boolean) {
         if (isUsedFSBPromotionBonus) {
             this.setBetControl();
             this.tryConsumeFSB();

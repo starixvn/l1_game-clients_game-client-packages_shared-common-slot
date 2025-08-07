@@ -109,11 +109,11 @@ export class FSBPromotionUIManager extends ObserverComponent {
         }
     }
 
-    private async loadAndShowPromotionInfo(options?: { isAutoSpin?: boolean; triggerAfterFSInGame?: boolean }) {
-        const isAutoSpin = options?.isAutoSpin ?? false;
-        const triggerAfterFSInGame = options?.triggerAfterFSInGame ?? false;
+    @handle(FSBPromotionUIHandler, (handler) => handler.setFSBInfoReady(true))
+    setFSBInfoReady(isReady: boolean) {}
 
-        const delay = triggerAfterFSInGame ? 0 : isAutoSpin ? 900 : 0;
+    private async loadAndShowPromotionInfo(isAutoSpin?: boolean) {
+        const delay = isAutoSpin ? 900 : 0;
 
         if (this.fsbPromotionInfoNode && this.fsbPromotionInfoNode.isValid) {
             this.showPromotionInfoWithAnimation(delay, isAutoSpin);
@@ -145,7 +145,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
                 .call(() => resolve())
                 .start();
         });
-
+        this.setFSBInfoReady(true);
         if (isAutoPlay) {
             this.spinOnFSBPromotionFirstTime();
         }

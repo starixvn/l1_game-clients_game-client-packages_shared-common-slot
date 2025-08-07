@@ -79,12 +79,18 @@ export class FSBPromotionUIStore {
     public gameOffers: { name: string; gameId: number }[] = [{ name: settings.name.toLowerCase(), gameId: settings.id }];
     public isWebViewLoading = false;
 
+    public isFSBInfoReady = false;
+
     // UI Events state
     public pendingUIEvent: { event: string; data?: any } = null;
 
     // Getters and Setters
     getStorageKey() {
         return this.storageKey;
+    }
+
+    setFSBInfoReady(isReady: boolean) {
+        this.isFSBInfoReady = isReady;
     }
 
     public getFallbackGameOffers() {
@@ -134,12 +140,8 @@ export class FSBPromotionUIStore {
         return this._skipGiftCode;
     }
 
-    get hasConsumedFSB() {
-        return this.currentSpinCount > 0 && this.currentSpinCount < this.fsbPromotionStore.promotion?.initialBonusItem;
-    }
-
     get isEligibleForNextFSBSpin() {
-        return this.cascadingUIStore.isUsedFSBPromotionBonus && this.hasConsumedFSB;
+        return this.cascadingUIStore.isUsedFSBPromotionBonus && this.currentSpinCount > 0 && this.isFSBInfoReady;
     }
 
     get isFSBPromotionInProgress() {
@@ -148,7 +150,6 @@ export class FSBPromotionUIStore {
     get isUpdateTotalWin() {
         return this.fsbConsumedThisRound || this.resumedFSBPromotion;
     }
-
 
     get fsbState(): FSBPromotionState {
         if (!this.hasPromo()) {
@@ -237,12 +238,6 @@ export class FSBPromotionUIStore {
 
     addPendingUIEvent(event: string, data?: any) {
         this.pendingUIEvent = { event, data };
-    }
-
-    removePendingUIEvent(event: string) {
-        if (this.pendingUIEvent?.event === event) {
-            this.pendingUIEvent = null;
-        }
     }
 
     isRedeemSuccess() {

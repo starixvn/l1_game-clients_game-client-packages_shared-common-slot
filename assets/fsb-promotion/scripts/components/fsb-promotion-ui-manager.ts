@@ -218,19 +218,6 @@ export class FSBPromotionUIManager extends ObserverComponent {
         this.freeSpinMessageNode = freeSpinMessageNode;
     }
 
-    @render(
-        FSBPromotionUIStore,
-        (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.SHOW_PROMOTION_INFO_AFTER_FREE_SPIN_IN_GAME
-    )
-    initShowPromotionInfoAfterFreeSpinInGame(isShowPromotionInfoAfterFreeSpinInGame: boolean) {
-        if (isShowPromotionInfoAfterFreeSpinInGame) {
-            this.showPromotionInfoAfterFreeSpinInGame();
-        }
-    }
-
-    @handle(FSBPromotionUIHandler, (handler) => handler.isShowPromotionInfoAfterFreeSpinInGame())
-    showPromotionInfoAfterFreeSpinInGame() {}
-
     private createFsbPromotionContainer(): void {
         const autoScaleWidget = this.findAutoScaleWidget();
         if (!autoScaleWidget) {

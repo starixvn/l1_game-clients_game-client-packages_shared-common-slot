@@ -1,6 +1,7 @@
 import { _decorator } from "cc";
 import gc from "@sg/game-client-base";
 import mobx from "mobx";
+import { reaction } from "mobx";
 import { FSBPromotionStore } from "./fsb-promotion-store";
 import inversify from "inversify";
 import { settings } from "db://assets/game/scripts/game-settings";
@@ -50,7 +51,6 @@ export const FreeSpinsPromotionEvents = {
     UPDATE_BALANCE_BONUS: "UPDATE_BALANCE_BONUS",
     SPIN_ON_FSB_PROMOTION_FIRST_TIME: "SPIN_ON_FSB_PROMOTION_FIRST_TIME",
     SHOW_FREE_SPIN_MESSAGE: "SHOW_FREE_SPIN_MESSAGE",
-    SHOW_PROMOTION_INFO_AFTER_FREE_SPIN_IN_GAME: "SHOW_PROMOTION_INFO_AFTER_FREE_SPIN_IN_GAME",
 };
 
 @injectable()
@@ -61,6 +61,18 @@ export class FSBPromotionUIStore {
 
     constructor() {
         mobx.makeAutoObservable(this);
+        mobx.reaction(
+            () => ({
+                isFSBUsed: this.cascadingUIStore.isUsedFSBPromotionBonus,
+                isClaimed: this.fsbPromotionStore.isClaimed,
+                isFSBInfoReady: this.isFSBInfoReady,
+            }),
+            ({ isFSBUsed, isClaimed, isFSBInfoReady }) => {
+                if (isFSBUsed && isClaimed && !isFSBInfoReady) {
+                    this.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO);
+                }
+            }
+        );
     }
 
     private readonly storageKey = "free-spins-promotion-dont-show-again";

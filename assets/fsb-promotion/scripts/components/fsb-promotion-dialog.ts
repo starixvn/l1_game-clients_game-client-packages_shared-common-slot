@@ -28,6 +28,7 @@ export class FsbPromotionDialog extends ObserverComponent {
     background: Node = null;
 
     private isFreeSpins = false;
+    private activeDetailPromo = false;
 
     public gameOffers: { name: string; gameId: number }[] = [];
 
@@ -65,11 +66,16 @@ export class FsbPromotionDialog extends ObserverComponent {
             this.background.getComponent(DialogTransition)?.show(true);
         }
         if (this.playNow) {
-            this.playNow.active = !isWebViewLoading;
+            this.playNow.active = !isWebViewLoading && !this.activeDetailPromo;
         }
         if (this.playLater) {
-            this.playLater.active = !isWebViewLoading;
+            this.playLater.active = !isWebViewLoading && !this.activeDetailPromo;
         }
+    }
+
+    @render(FSBPromotionUIStore, (store) => store.activeDetailPromo)
+    setActiveAnnouncement(activeDetailPromo: boolean) {
+        this.activeDetailPromo = activeDetailPromo;
     }
 
     @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO, true))

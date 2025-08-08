@@ -251,6 +251,10 @@ export class FSBPromotionUIHandler {
         this.fsbPromotionUIStore.activeDetailPromo = isActive;
     }
 
+    public updatePromotionURL() {
+        this.fsbPromotionUIStore.promotionUrl = this.getPromoUrl();
+    }
+
     public initTurnOverRequiredEvents() {
         this.clearTurnOverRequiredObservers();
         

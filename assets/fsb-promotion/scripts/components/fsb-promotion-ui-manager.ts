@@ -23,6 +23,7 @@ const PREFAB_CLAIM_BONUS_NOTIFICATION_PATH = "prefabs/claim-bonus-notification";
 const PREFAB_FREE_SPIN_MESSAGE_PATH = "prefabs/fsb-bottom-message";
 const CONTAINER_NAME = "fsb-promotion-container";
 const POPUP_CONTAINER_NAME = "fsb-promotion-popup-container";
+const PREFAB_TURN_OVER_REQUIRED_PATH = "prefabs/turn-over-required-panel";
 const NODE_NAMES = {
     CENTER: "center",
     AUTO_SCALE_WIDGET: "auto-scale-widget",
@@ -42,6 +43,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
     private claimBonusNotificationNode: Node = null;
     private freeSpinMessageNode: Node = null;
     private fsbPromotionInfoNode: Node = null;
+    private turnOverRequiredNode: Node = null;
     private UNIT_SECOND_EFFECT_UNBOX_GIFT = 2000;
     private UNIT_SECOND_REDEEM_SUCCESS = 2000;
     private UNIT_SECOND_ANIMATION_UNBOX_GIFT = 0.8;
@@ -110,8 +112,26 @@ export class FSBPromotionUIManager extends ObserverComponent {
         }
     }
 
+    @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.OPEN_TURN_OVER_REQUIRED)
+    initOpenTurnOverRequired(isOpenTurnOverRequired: boolean) {
+        if (isOpenTurnOverRequired) {
+            this.loadAndShowTurnOverRequired();
+        }
+    }
+
     @handle(FSBPromotionUIHandler, (handler) => handler.setFSBInfoReady(true))
     setFSBInfoReady(isReady: boolean) {}
+
+    private async loadAndShowTurnOverRequired() {
+        if (this.turnOverRequiredNode) {
+            this.turnOverRequiredNode.active = true;
+        } else {
+            const prefab = await this.loadPrefab(PREFAB_TURN_OVER_REQUIRED_PATH);
+            const turnOverRequiredNode = instantiate(prefab);
+            this.fsbPromotionPopupContainer.addChild(turnOverRequiredNode);
+            this.turnOverRequiredNode = turnOverRequiredNode;
+        }
+    }
 
     private async loadAndShowPromotionInfo(isAutoSpin?: boolean) {
         const delay = isAutoSpin ? 900 : 0;

@@ -10,6 +10,7 @@ export namespace GameClientMessageSlot {
 }
 export namespace GameServiceMessageSlot {
     export class PromotionTOProgress {
+        win: number;
         totalTO: number;
         minTO: number;
         remainTO: number;

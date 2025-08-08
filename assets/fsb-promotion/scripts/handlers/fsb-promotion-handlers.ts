@@ -3,6 +3,7 @@ import inversify from "inversify";
 import { GameServiceMessageSlot } from "../../../game-message-slot";
 import { FSBPromotionStore } from "../stores/fsb-promotion-store";
 import { FSBPromotionUIHandler } from "./fsb-promotion-ui-handler";
+import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
 
 const { injectable, inject } = inversify;
 
@@ -11,6 +12,7 @@ export class FSBPromotionHandlers implements gc.Shared.IMultipleHandlers {
     @inject(FSBPromotionStore) protected readonly promotionStore: FSBPromotionStore;
     @inject(gc.Connection.ConnectionStore) protected readonly connectionStore: gc.Connection.ConnectionStore;
     @inject(FSBPromotionUIHandler) protected readonly fsbPromotionUIHandler: FSBPromotionUIHandler;
+    @inject(FSBPromotionUIStore) protected readonly fsbPromotionUIStore: FSBPromotionUIStore;
 
     handlePromotion(data: GameServiceMessageSlot.Promotion) {
         this.promotionStore.promotion = data;
@@ -19,6 +21,8 @@ export class FSBPromotionHandlers implements gc.Shared.IMultipleHandlers {
 
     handlePromotionTOProgress(data: GameServiceMessageSlot.PromotionTOProgress) {
         this.promotionStore.promotionTOProgress = data;
+        this.fsbPromotionUIStore.toProgress = data;
+        this.fsbPromotionUIHandler.changeUIPendingEvent(FreeSpinsPromotionEvents.OPEN_TURN_OVER_REQUIRED);
     }
 
     handleClaimedAmount(data: GameServiceMessageSlot.ClaimedAmount) {

@@ -74,6 +74,7 @@ export class FSBPromotionUIHandler {
             this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_FREE_SPINS_PROMOTION);
             this.fsbPromotionUIStore.promotionUrl = this.getPromoUrl();
         } else {
+            this.cascadingUIStore.fsbPromotionInProgress = true;
             this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO);
         }
     }
@@ -172,6 +173,7 @@ export class FSBPromotionUIHandler {
         if (!this.fsbPromotionUIStore.fsbConsumedThisRound) {
             this.tryShowEndedPopup();
         }
+        this.cascadingUIStore.fsbPromotionInProgress = false;
     }
 
     public changeUIPendingEvent(event: string, data?: any) {
@@ -220,7 +222,6 @@ export class FSBPromotionUIHandler {
         }
 
         this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.UPDATE_TOTAL_WIN, win);
-
         const isLastFreeSpin = totalFreeSpins === 0;
         if (isLastFreeSpin) {
             this.commitFSBSpins();

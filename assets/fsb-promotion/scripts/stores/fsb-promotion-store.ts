@@ -33,8 +33,4 @@ export class FSBPromotionStore {
     get isClaimed() {
         return this.promotion?.isClaimed;
     }
-
-    get isFSBUsed() {
-        return this.promotion?.initialBonusItem !== this.promotion?.remainingBonusItems;
-    }
 }

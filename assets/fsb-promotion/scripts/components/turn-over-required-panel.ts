@@ -1,0 +1,201 @@
+import { _decorator, EditBox, Label, Node, ProgressBar } from "cc";
+import Observer from "observer";
+import gc from "@sg/game-client-base";
+const { render, handle } = Observer;
+const { ccclass, property } = _decorator;
+
+import { FreeSpinsPromotionEvents, FSBPromotionUIStore, ITurnOverRequired } from "../stores/fsb-promotion-ui-store";
+import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
+
+import  * as i18n from "db://i18n/LanguageData";
+import DraggableItem from "db://shared-components/shared/common-components/draggable/draggable-item";
+import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
+import SimpleClaimButton from "./simple-claim-button";
+
+@ccclass
+export default class TurnOverRequiredPanel extends ObserverComponent {
+    @property(Label) labelTotalWin: Label = null;
+    @property(Label) labelTotalTurnover: Label = null;
+    @property(Label) labelPercentage: Label = null;
+    @property(ProgressBar) progressBar: ProgressBar = null;
+    @property(Node) claimButton: Node = null;
+    @property(Label) labelTimer: Label = null;
+    @property(Label) labelMainMessage: Label = null;
+    @property(Label) labelSubMessage: Label = null;
+ 
+    private totalWinAmount = 0;
+    private totalTurnover = 0;
+    private minRequiredTurnover = 0;
+    private progressPercentage = 0;
+    private endTime = 0;
+    private toProgress: ITurnOverRequired = null;
+ 
+
+
+    onLoad() {
+        this.schedule(this.updateTimer, 1);
+        // uiManager.emitterListener(TurnOverRequiredEvents.UPDATE_TURN_OVER_REQUIRED, (data) => this.updateBonusWallet(data), this);
+        this.dragTurnOverRequired();
+        // uiManager.emitterListener(FreeSpinsPromotionEvents.EXPIRE_CLAIM_BONUS, () => this.hidePanel(), this);
+        // uiManager.emitterListener(FreeSpinsPromotionEvents.SHOW_NOTICE_ERROR, (errorCode) => this.showNoticeError(errorCode), this);
+        // uiManager.emitterListener(
+        //     FreeSpinsPromotionEvents.CLAIMED_BONUS_SUCCESS,
+        //     (claimedAmount) => this.showClaimBonusNotification(claimedAmount),
+        //     this
+        // );
+    }   
+ 
+    showNoticeError(errorCode: string) {
+        this.showTONoticeError(errorCode);
+        const claimBtnCtrl = this.claimButton.getComponent(SimpleClaimButton);
+        if (claimBtnCtrl) {
+            claimBtnCtrl.setClaimable(this.progressPercentage >= 100);
+            claimBtnCtrl.startClaimButtonPulse();
+        }
+    }
+ 
+    dragTurnOverRequired() {
+        const draggableItem = this.getComponent(DraggableItem);
+        if (draggableItem) {
+            draggableItem.touchCallback.end = (isClicked) => {
+                if (isClicked) {
+                    this.collapseMenu();
+                }
+            };
+        }
+    }
+ 
+    initData() {
+        this.updateBonusWallet(this.toProgress);
+    }
+ 
+    public updateBonusWallet(data: ITurnOverRequired) {
+        this.totalWinAmount = data?.win;
+        this.totalTurnover = data?.totalTO;
+        this.minRequiredTurnover = data?.minTO;
+        this.progressPercentage = data?.progress;
+        this.endTime = new Date(data?.expire).getTime();
+ 
+        this.updateProgressUI();
+        this.updateTimer();
+    }
+ 
+    public updateTotalWinAndTurnover(totalWin: number, turnover: number) {
+        this.totalWinAmount = totalWin;
+        this.totalTurnover = turnover;
+        this.updateProgressUI();
+    }
+ 
+    private updateProgressUI() {
+        this.labelTotalWin.string = gc.FormatUtils.numberWithCommas(this.totalWinAmount, 2);
+ 
+        const formattedTotalTO = gc.FormatUtils.numberWithCommas(this.totalTurnover, 2);
+        const formattedMinRequiredTO = gc.FormatUtils.numberWithCommas(this.minRequiredTurnover, 2);
+        this.labelTotalTurnover.string = `${formattedTotalTO} / ${formattedMinRequiredTO}`;
+ 
+        this.labelPercentage.string = `${this.progressPercentage}%`;
+        this.progressBar.progress = this.progressPercentage / 100;
+ 
+        this.getProgressMessage();
+ 
+        const isReadyToClaim = this.progressPercentage >= 100;
+        const claimBtnCtrl = this.claimButton.getComponent(SimpleClaimButton);
+        if (claimBtnCtrl) {
+            claimBtnCtrl.setClaimable(isReadyToClaim);
+            if (isReadyToClaim) {
+                claimBtnCtrl.startClaimButtonPulse();
+            } else {
+                claimBtnCtrl.stopClaimButtonPulse();
+            }
+        }
+    }
+ 
+    private updateTimer() {
+        if (!this.endTime) {
+            return;
+        }
+ 
+        const now = Date.now();
+        const remaining = Math.max(0, this.endTime - now);
+ 
+        const days = Math.floor(remaining / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((remaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+        const dayText = i18n.t("FreeSpinBonus.FSB_days");
+        this.labelTimer.string = `${days} ${dayText} ${this.pad(hours)}:${this.pad(minutes)}:${this.pad(seconds)}`;
+    }
+ 
+    private pad(num: number): string {
+        return num < 10 ? `0${num}` : `${num}`;
+    }
+ 
+    public onClickClaim() {
+        const claimBtnCtrl = this.claimButton.getComponent(SimpleClaimButton);
+        if (claimBtnCtrl) {
+            claimBtnCtrl.setClaimable(false);
+            claimBtnCtrl.stopClaimButtonPulse();
+        }
+        this.collapseMenu();
+        this.claimBonusWin();
+    }
+ 
+    onClickInfoIcon() {
+        this.collapseMenu();
+        this.activeDetailPromo();
+        this.openFreeSpinsPromotion();
+    }
+ 
+    private getProgressMessage() {
+        const value = this.progressPercentage;
+        let mainMessageKey = "";
+        let subMessageKey = "";
+ 
+        if (value >= 100) {
+            mainMessageKey = "FreeSpinBonus.FSB_notification_para1a";
+            subMessageKey = "FreeSpinBonus.TO_requirement_state4_message";
+        } else if (value >= 81) {
+            mainMessageKey = "FreeSpinBonus.TO_requirement_state3_message";
+            subMessageKey = "FreeSpinBonus.TO_requirement_state3_message1";
+        } else if (value >= 41) {
+            mainMessageKey = "FreeSpinBonus.TO_requirement_state2_message";
+            subMessageKey = "FreeSpinBonus.TO_requirement_state2_message1";
+        } else {
+            mainMessageKey = "FreeSpinBonus.TO_requirement_state1_message";
+            subMessageKey = "FreeSpinBonus.TO_requirement_state1_message1";
+        }
+ 
+        this.labelMainMessage.string = i18n.t(mainMessageKey).toUpperCase();
+        this.labelSubMessage.string = i18n.t(subMessageKey);
+    }
+ 
+    hidePanel() {
+        this.node.active = false;
+    }
+
+    @render(FSBPromotionUIStore, (store) => store.toProgress)
+    private updateTOProgress(data: ITurnOverRequired) {
+        this.toProgress = data;
+    }
+
+    @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.COLLAPSE_MENU))
+    private collapseMenu() {
+    }
+
+    @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.OPEN_FREE_SPINS_PROMOTION))
+    private openFreeSpinsPromotion() {
+    }
+
+    @handle(FSBPromotionUIHandler, (handler) => handler.claimBonusWin())
+    private claimBonusWin() {
+    }
+
+    @handle(FSBPromotionUIHandler, (handler) => handler.activeDetailPromo(true))
+    private activeDetailPromo() {
+    }
+
+    @handle(FSBPromotionUIHandler, (handler, errorCode) => handler.showNoticeError(errorCode as string))
+    private showTONoticeError(errorCode: string) {
+        return errorCode;
+    }
+}

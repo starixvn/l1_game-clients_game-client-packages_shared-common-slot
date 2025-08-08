@@ -22,6 +22,18 @@ export enum FSBPromotionState {
     Resumed = "RESUMED", // Resume từ giữa
 }
 
+export interface ITurnOverRequired {
+    win: number;
+    totalTO: number;
+    minTO: number;
+    expire?: string;
+    progress: number;
+}
+
+export const TurnOverRequiredDataKey = {
+    PROMOTION_TO_PROGRESS: "promotionProgress"
+};
+
 export const FreeSpinsPromotionEvents = {
     OPEN_FREE_SPINS_PROMOTION: "OPEN_FREE_SPINS_PROMOTION",
     OPEN_GIFT_CODE: "OPEN_GIFT_CODE",
@@ -80,6 +92,10 @@ export class FSBPromotionUIStore {
     public isWebViewLoading = false;
 
     public isFSBInfoReady = false;
+
+    // TurnOverRequired state properties
+    private _toProgress: ITurnOverRequired = null;
+    public readonly turnOverRequiredDataKey = [TurnOverRequiredDataKey.PROMOTION_TO_PROGRESS];
 
     // UI Events state
     public pendingUIEvent: { event: string; data?: any } = null;
@@ -175,6 +191,31 @@ export class FSBPromotionUIStore {
         return FSBPromotionState.Idle;
     }
 
+    // TurnOverRequired state management methods
+    get toProgress() {
+        return this._toProgress;
+    }
+
+    set toProgress(promotionTOProgress: ITurnOverRequired) {
+        this._toProgress = promotionTOProgress;
+    }
+
+    public updateTOProgress(data: ITurnOverRequired): boolean {
+        const oldData = this.toProgress;
+        const isChanged = !oldData || oldData.totalTO !== data.totalTO || oldData.win !== data.win || oldData.progress !== data.progress;
+
+        this.toProgress = data;
+        return isChanged;
+    }
+
+    public hasTOProgress(): boolean {
+        return !!this._toProgress;
+    }
+
+    public resetTOProgress() {
+        this._toProgress = null;
+    }
+
     // State management methods
     public reset() {
         this.receivedPromotionInGame = false;
@@ -185,6 +226,7 @@ export class FSBPromotionUIStore {
         this.hasServerFinishPromotion = false;
         this.fsbConsumedThisRound = false;
         this.currentSpinCount = -1;
+        this.resetTOProgress();
     }
 
     hasPromo(): boolean {

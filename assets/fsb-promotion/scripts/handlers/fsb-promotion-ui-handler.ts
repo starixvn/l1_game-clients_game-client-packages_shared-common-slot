@@ -1,5 +1,5 @@
 import { _decorator } from "cc";
-import { FreeSpinsPromotionEvents, endpointConstants, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
+import { FreeSpinsPromotionEvents, endpointConstants, FSBPromotionUIStore, ITurnOverRequired, TurnOverRequiredDataKey } from "../stores/fsb-promotion-ui-store";
 import gc from "@sg/game-client-base";
 import inversify from "inversify";
 import { FSBPromotionStore, RedeemStatus } from "../stores/fsb-promotion-store";
@@ -7,6 +7,7 @@ import { GameClientMessageSlot } from "../../../game-message-slot";
 import { BetControlHandlers } from "db://shared-cascading-slot/handlers/bet-control-handlers";
 import { CascadingUIStore } from "db://shared-cascading-slot/stores/cascading-ui-store";
 import mobx from "mobx";
+import { NoticeErrorsHandlers } from "@sg/game-client-base/dist/game/notices/notice-errors-handlers";
 
 const { injectable, inject } = inversify;
 
@@ -19,6 +20,7 @@ export class FSBPromotionUIHandler {
     @inject(gc.Auth.AuthStore) protected readonly authStore: gc.Auth.AuthStore;
     @inject(BetControlHandlers) protected readonly betControlHandlers: BetControlHandlers;
     @inject(CascadingUIStore) protected readonly cascadingUIStore: CascadingUIStore;
+    @inject(NoticeErrorsHandlers.AutoSignOutHandler) protected readonly noticeErrorsHandlers: NoticeErrorsHandlers.AutoSignOutHandler;
 
     constructor() {
         setTimeout(() => {
@@ -241,5 +243,69 @@ export class FSBPromotionUIHandler {
 
     setFSBInfoReady(isReady: boolean) {
         this.fsbPromotionUIStore.setFSBInfoReady(isReady);
+    }
+
+    /** ========== TURN OVER REQUIRED MANAGEMENT ========== */
+
+    public activeDetailPromo(isActive: boolean) {
+        this.fsbPromotionUIStore.activeDetailPromo = isActive;
+    }
+
+    public initTurnOverRequiredEvents() {
+        this.clearTurnOverRequiredObservers();
+        
+        this.fsbPromotionUIStore.turnOverRequiredDataKey.forEach((key) => {
+            this.addTurnOverRequiredDataObserver(key, key);
+        });
+    }
+
+    public clearTurnOverRequiredObservers() {
+        this.fsbPromotionUIStore.turnOverRequiredDataKey.forEach((key) => {
+            this.removeTurnOverRequiredDataObserver(key, key);
+        });
+    }
+
+    private addTurnOverRequiredDataObserver(dataType: string, dataKey: string) {
+        let callback;
+        if (dataType === TurnOverRequiredDataKey.PROMOTION_TO_PROGRESS) {
+            callback = (data: ITurnOverRequired) => this.onReceivedTOProgressData(data);
+        }
+        // Note: You'll need to replace this with your actual notification service implementation
+        // NotificationService.getInstance().addDataObserver(dataType, dataKey, callback);
+    }
+
+    private onReceivedTOProgressData(data: ITurnOverRequired) {
+        const isChanged = this.fsbPromotionUIStore.updateTOProgress(data);
+
+        if (isChanged) {
+            this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.UPDATE_TURN_OVER_REQUIRED, data);
+        }
+    }
+
+    private removeTurnOverRequiredDataObserver(dataType: string, dataKey: string) {
+        // Note: You'll need to replace this with your actual notification service implementation
+        // NotificationService.getInstance().removeDataObserver(dataType, dataKey);
+    }
+
+    public displayTurnOverRequired() {
+        this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_TURN_OVER_REQUIRED);
+    }
+
+    public emitTurnOverRequiredEvent(eventName: string, data: ITurnOverRequired) {
+        // Note: You'll need to replace this with your actual notification service implementation
+        // NotificationService.getInstance().emitEvent(eventName, data);
+        this.fsbPromotionUIStore.addPendingUIEvent(eventName, data);
+    }
+
+    public getTurnOverProgress(): ITurnOverRequired | null {
+        return this.fsbPromotionUIStore.toProgress;
+    }
+
+    public hasTurnOverProgress(): boolean {
+        return this.fsbPromotionUIStore.hasTOProgress();
+    }
+
+    public showNoticeError(errorCode: string) {
+        this.noticeErrorsHandlers.showErrorNotice(errorCode);
     }
 }

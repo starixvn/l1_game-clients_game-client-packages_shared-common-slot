@@ -99,6 +99,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
     initPromotionEndedPopup(isOpenPromotionEndedPopup: boolean) {
         if (isOpenPromotionEndedPopup) {
             this.loadAndShowPromotionEndedPopup();
+            this.destroyNode(this.fsbPromotionInfoNode);
         }
     }
 

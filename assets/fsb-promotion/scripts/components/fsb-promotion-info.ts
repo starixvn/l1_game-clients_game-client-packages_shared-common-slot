@@ -8,7 +8,6 @@ import { AutoPlayHandler } from "db://shared-cascading-slot/handlers/auto-play-h
 import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
 import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
 import gc from "@sg/game-client-base";
-import { CascadingSlotSettlementStore } from "db://shared-cascading-slot/stores/cascading-slot-settlement-store";
 
 const { render, handle } = Observer;
 const { ccclass, property } = _decorator;
@@ -131,17 +130,4 @@ export class FSBPromotionInfo extends ObserverComponent {
 
     @handle(FSBPromotionUIHandler, (handler) => handler.syncFSBBetControl())
     setBetControl() {}
-
-    @render(CascadingSlotSettlementStore, (store) => store.finishData, { fireImmediately: false })
-    onSettlement(finishData: any) {
-        if (finishData) {
-            const { win, totalFreeSpins } = finishData;
-            this.updateTotalWin(win, totalFreeSpins);
-        }
-    }
-
-    @handle(FSBPromotionUIHandler, (handler, payload: { win: number; totalFreeSpins: number }) => handler.updateTotalWin(payload))
-    updateTotalWin(win: number, totalFreeSpins: number) {
-        return { win, totalFreeSpins };
-    }
 }

@@ -6,6 +6,7 @@ import { FSBPromotionStore, RedeemStatus } from "../stores/fsb-promotion-store";
 import { GameClientMessageSlot } from "../../../game-message-slot";
 import { BetControlHandlers } from "db://shared-cascading-slot/handlers/bet-control-handlers";
 import { CascadingUIStore } from "db://shared-cascading-slot/stores/cascading-ui-store";
+import mobx from "mobx";
 
 const { injectable, inject } = inversify;
 
@@ -18,6 +19,23 @@ export class FSBPromotionUIHandler {
     @inject(gc.Auth.AuthStore) protected readonly authStore: gc.Auth.AuthStore;
     @inject(BetControlHandlers) protected readonly betControlHandlers: BetControlHandlers;
     @inject(CascadingUIStore) protected readonly cascadingUIStore: CascadingUIStore;
+
+    constructor() {
+        setTimeout(() => {
+            mobx.reaction(
+                () => ({
+                    isFSBUsed: this.cascadingUIStore?.isUsedFSBPromotionBonus ?? false,
+                    isClaimed: this.fsbPromotionStore?.isClaimed ?? false,
+                    isFSBInfoReady: this.fsbPromotionUIStore.isFSBInfoReady ?? false,
+                }),
+                ({ isFSBUsed, isClaimed, isFSBInfoReady }) => {
+                    if (isFSBUsed && isClaimed && !isFSBInfoReady) {
+                        this.changeUIPendingEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO);
+                    }
+                }
+            );
+        }, 0);
+    }
 
     /** ========== PROMOTION FLOW ========== */
     public handlePromotionDisplay() {

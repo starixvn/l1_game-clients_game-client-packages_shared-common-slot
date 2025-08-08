@@ -61,18 +61,6 @@ export class FSBPromotionUIStore {
 
     constructor() {
         mobx.makeAutoObservable(this);
-        mobx.reaction(
-            () => ({
-                isFSBUsed: this.cascadingUIStore.isUsedFSBPromotionBonus,
-                isClaimed: this.fsbPromotionStore.isClaimed,
-                isFSBInfoReady: this.isFSBInfoReady,
-            }),
-            ({ isFSBUsed, isClaimed, isFSBInfoReady }) => {
-                if (isFSBUsed && isClaimed && !isFSBInfoReady) {
-                    this.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO);
-                }
-            }
-        );
     }
 
     private readonly storageKey = "free-spins-promotion-dont-show-again";

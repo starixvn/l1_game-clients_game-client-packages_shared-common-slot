@@ -31,7 +31,7 @@ export interface ITurnOverRequired {
 }
 
 export const TurnOverRequiredDataKey = {
-    PROMOTION_TO_PROGRESS: "promotionProgress"
+    PROMOTION_TO_PROGRESS: "promotionProgress",
 };
 
 export const FreeSpinsPromotionEvents = {
@@ -165,6 +165,10 @@ export class FSBPromotionUIStore {
     }
     get isUpdateTotalWin() {
         return this.fsbConsumedThisRound || this.resumedFSBPromotion;
+    }
+
+    get isButtonDisabled() {
+        return this.fsbPromotionStore.isFSBUsed && this.currentSpinCount !== 0;
     }
 
     get fsbState(): FSBPromotionState {

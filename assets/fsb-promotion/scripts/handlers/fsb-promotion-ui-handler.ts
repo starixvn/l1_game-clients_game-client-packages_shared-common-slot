@@ -7,9 +7,9 @@ import { GameClientMessageSlot } from "../../../game-message-slot";
 import { BetControlHandlers } from "db://shared-cascading-slot/handlers/bet-control-handlers";
 import { CascadingUIStore } from "db://shared-cascading-slot/stores/cascading-ui-store";
 import mobx from "mobx";
-import { NoticeErrorsHandlers } from "@sg/game-client-base/dist/game/notices/notice-errors-handlers";
 
 const { injectable, inject } = inversify;
+
 
 @injectable()
 export class FSBPromotionUIHandler {
@@ -20,7 +20,7 @@ export class FSBPromotionUIHandler {
     @inject(gc.Auth.AuthStore) protected readonly authStore: gc.Auth.AuthStore;
     @inject(BetControlHandlers) protected readonly betControlHandlers: BetControlHandlers;
     @inject(CascadingUIStore) protected readonly cascadingUIStore: CascadingUIStore;
-    @inject(NoticeErrorsHandlers.AutoSignOutHandler) protected readonly noticeErrorsHandlers: NoticeErrorsHandlers.AutoSignOutHandler;
+    @inject(gc.Notices.NoticeErrorsHandlers.AutoSignOutHandler) protected readonly noticeErrorsHandlers: gc.Notices.NoticeErrorsHandlers.AutoSignOutHandler;
 
     constructor() {
         setTimeout(() => {

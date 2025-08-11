@@ -1,5 +1,5 @@
 import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
-import { _decorator, EditBox, Label, Node } from "cc";
+import { _decorator, EditBox, Label, sys } from "cc";
 import Observer from "observer";
 import gc from "@sg/game-client-base";
 import { FSBPromotionStore } from "../stores/fsb-promotion-store";
@@ -13,9 +13,6 @@ const { render, handle } = Observer;
 export class RedeemGiftCodePopup extends ObserverComponent {
     @property(EditBox)
     giftCodeInput: EditBox = null;
-
-    @property(Node)
-    nodeRedeemButton: Node = null;
 
     @property(Label)
     errorLabel: Label = null;
@@ -69,6 +66,9 @@ export class RedeemGiftCodePopup extends ObserverComponent {
             clearTimeout(this._debounceTimer);
         }
         this._debounceTimer = setTimeout(() => {
+            if (sys.isMobile) {
+                this.node.y += 200;
+            }
             window.dispatchEvent(new Event("resize"));
         }, 200);
     }

@@ -100,7 +100,6 @@ export class FSBPromotionUIHandler {
         }
     }
 
-
     private shouldShowGiftCode() {
         const p = this.fsbPromotionStore?.promotion;
         return !this.fsbPromotionUIStore.isTrialMode && p?.isGiftCode && !p?.isClaimed;

@@ -61,6 +61,14 @@ export class FSBPromotionUIManager extends ObserverComponent {
         }
     }
 
+    @render(FSBPromotionUIStore, (s) => s.pendingUIEvent?.event === FreeSpinsPromotionEvents.HIDE_GIFT_CODE_ICON)
+    onHideGiftCode(shouldHide: boolean) {
+        if (!shouldHide) {
+            return;
+        }
+        this.hideGiftCode();
+    }
+
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.EFFECT_UNBOX_GIFT)
     initEffectUnboxGift(shouldPlayEffect: boolean) {
         if (shouldPlayEffect) {

@@ -1,5 +1,11 @@
 import { _decorator } from "cc";
-import { FreeSpinsPromotionEvents, endpointConstants, FSBPromotionUIStore, ITurnOverRequired, TurnOverRequiredDataKey } from "../stores/fsb-promotion-ui-store";
+import {
+    FreeSpinsPromotionEvents,
+    endpointConstants,
+    FSBPromotionUIStore,
+    ITurnOverRequired,
+    TurnOverRequiredDataKey,
+} from "../stores/fsb-promotion-ui-store";
 import gc from "@sg/game-client-base";
 import inversify from "inversify";
 import { FSBPromotionStore, RedeemStatus } from "../stores/fsb-promotion-store";
@@ -10,7 +16,6 @@ import mobx from "mobx";
 
 const { injectable, inject } = inversify;
 
-
 @injectable()
 export class FSBPromotionUIHandler {
     @inject(gc.Connection.ConnectionStore) protected readonly connectionStore: gc.Connection.ConnectionStore;
@@ -20,7 +25,8 @@ export class FSBPromotionUIHandler {
     @inject(gc.Auth.AuthStore) protected readonly authStore: gc.Auth.AuthStore;
     @inject(BetControlHandlers) protected readonly betControlHandlers: BetControlHandlers;
     @inject(CascadingUIStore) protected readonly cascadingUIStore: CascadingUIStore;
-    @inject(gc.Notices.NoticeErrorsHandlers.AutoSignOutHandler) protected readonly noticeErrorsHandlers: gc.Notices.NoticeErrorsHandlers.AutoSignOutHandler;
+    @inject(gc.Notices.NoticeErrorsHandlers.AutoSignOutHandler)
+    protected readonly noticeErrorsHandlers: gc.Notices.NoticeErrorsHandlers.AutoSignOutHandler;
 
     constructor() {
         setTimeout(() => {
@@ -33,6 +39,22 @@ export class FSBPromotionUIHandler {
                 ({ isFSBUsed, isClaimed, isFSBInfoReady }) => {
                     if (isFSBUsed && isClaimed && !isFSBInfoReady) {
                         this.changeUIPendingEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO);
+                    }
+                }
+            );
+            mobx.reaction(
+                () => this.fsbPromotionUIStore.isTrialMode,
+                (trial) => {
+                    if (trial) {
+                        this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.HIDE_GIFT_CODE_ICON);
+                    }
+                }
+            );
+            mobx.reaction(
+                () => this.fsbPromotionUIStore.isTrialMode,
+                (trial, prev) => {
+                    if (!trial && prev === true && this.shouldShowGiftCode()) {
+                        this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_GIFT_CODE);
                     }
                 }
             );
@@ -57,7 +79,6 @@ export class FSBPromotionUIHandler {
 
     private handleDirectOpen() {
         const promotion = this.fsbPromotionStore.promotion;
-        const isGiftCode = promotion?.isGiftCode;
         const isClaimed = promotion?.isClaimed;
         const remaining = promotion?.remainingBonusItems;
         const initial = promotion?.initialBonusItem;
@@ -68,7 +89,7 @@ export class FSBPromotionUIHandler {
             return;
         }
 
-        if (isGiftCode && !isClaimed) {
+        if (this.shouldShowGiftCode()) {
             this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_GIFT_CODE);
         } else if (isClaimed && remaining === initial) {
             this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_FREE_SPINS_PROMOTION);
@@ -77,6 +98,12 @@ export class FSBPromotionUIHandler {
             this.cascadingUIStore.fsbPromotionInProgress = true;
             this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO);
         }
+    }
+
+
+    private shouldShowGiftCode() {
+        const p = this.fsbPromotionStore?.promotion;
+        return !this.fsbPromotionUIStore.isTrialMode && p?.isGiftCode && !p?.isClaimed;
     }
 
     /** ========== URL HELPERS ========== */
@@ -258,7 +285,7 @@ export class FSBPromotionUIHandler {
 
     public initTurnOverRequiredEvents() {
         this.clearTurnOverRequiredObservers();
-        
+
         this.fsbPromotionUIStore.turnOverRequiredDataKey.forEach((key) => {
             this.addTurnOverRequiredDataObserver(key, key);
         });
@@ -312,5 +339,9 @@ export class FSBPromotionUIHandler {
 
     public showNoticeError(errorCode: string) {
         this.noticeErrorsHandlers.showErrorNotice(errorCode);
+    }
+
+    public handleTrialMode(isTrialMode: boolean) {
+        this.fsbPromotionUIStore.isTrialMode = isTrialMode;
     }
 }

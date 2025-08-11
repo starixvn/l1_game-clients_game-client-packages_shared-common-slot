@@ -1,7 +1,6 @@
 import { _decorator } from "cc";
 import gc from "@sg/game-client-base";
 import mobx from "mobx";
-import { reaction } from "mobx";
 import { FSBPromotionStore } from "./fsb-promotion-store";
 import inversify from "inversify";
 import { settings } from "db://assets/game/scripts/game-settings";
@@ -63,6 +62,7 @@ export const FreeSpinsPromotionEvents = {
     UPDATE_BALANCE_BONUS: "UPDATE_BALANCE_BONUS",
     SPIN_ON_FSB_PROMOTION_FIRST_TIME: "SPIN_ON_FSB_PROMOTION_FIRST_TIME",
     SHOW_FREE_SPIN_MESSAGE: "SHOW_FREE_SPIN_MESSAGE",
+    HIDE_GIFT_CODE_ICON: "HIDE_GIFT_CODE_ICON",
 };
 
 @injectable()
@@ -92,6 +92,8 @@ export class FSBPromotionUIStore {
     public isWebViewLoading = false;
 
     public isFSBInfoReady = false;
+
+    public isTrialMode = false;
 
     // TurnOverRequired state properties
     private _toProgress: ITurnOverRequired = null;
@@ -165,10 +167,6 @@ export class FSBPromotionUIStore {
     }
     get isUpdateTotalWin() {
         return this.fsbConsumedThisRound || this.resumedFSBPromotion;
-    }
-
-    get isButtonDisabled() {
-        return this.fsbPromotionStore.isFSBUsed && this.currentSpinCount !== 0;
     }
 
     get fsbState(): FSBPromotionState {

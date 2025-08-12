@@ -4,9 +4,9 @@ import { ObserverComponent } from "db://shared-components/shared/common-componen
 import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
 import Observer from "observer";
 import { FunctionUtils } from "db://shared-components/shared/utils/function-utils";
-import { FSBPromotionHandlers } from "../handlers/fsb-promotion-handlers";
 import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
-import { CascadingUIStore } from "db://shared-cascading-slot/stores/cascading-ui-store";
+import gc from "@sg/game-client-base";
+
 const { handle, render } = Observer;
 const { ccclass, property } = _decorator;
 
@@ -128,7 +128,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
     }
 
     @handle(FSBPromotionUIHandler, (handler) => handler.setFSBInfoReady(true))
-    setFSBInfoReady(isReady: boolean) {}
+    setFSBInfoReady() {}
 
     private async loadAndShowTurnOverRequired() {
         if (this.turnOverRequiredNode) {
@@ -174,7 +174,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
                 .call(() => resolve())
                 .start();
         });
-        this.setFSBInfoReady(true);
+        this.setFSBInfoReady();
         if (isAutoPlay) {
             this.spinOnFSBPromotionFirstTime();
         }
@@ -182,6 +182,16 @@ export class FSBPromotionUIManager extends ObserverComponent {
 
     @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.SPIN_ON_FSB_PROMOTION_FIRST_TIME))
     spinOnFSBPromotionFirstTime() {}
+
+    @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.UPDATE_BALANCE_BONUS)
+    updateBalanceBonus(isUpdateBalanceBonus: boolean) {
+        if (isUpdateBalanceBonus) {
+            this.getBalance();
+        }
+    }
+
+    @handle(gc.Auth.AuthHandlers.GetBalance)
+    getBalance() {}
 
     private async loadAndPlayEffectUnboxGift() {
         if (this.effectUnboxGiftNode && this.effectUnboxGiftNode.isValid) {

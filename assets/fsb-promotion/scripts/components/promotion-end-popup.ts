@@ -28,7 +28,7 @@ export default class PromotionEndedPopup extends ObserverComponent {
         }
         PromotionEndedPopup.hasShown = true;
         const { totalWin } = finishPromotion;
-        this.labelTotalWin.string = gc.FormatUtils.numberWithCommas(totalWin, 2);
+        this.labelTotalWin.string = gc.FormatUtils.numberWithCommas(totalWin, 2, false);
         this.node.active = true;
         this.setupContent(totalWin, promotion);
     }

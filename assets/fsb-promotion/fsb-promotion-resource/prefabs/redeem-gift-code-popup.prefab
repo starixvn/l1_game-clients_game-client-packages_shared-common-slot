@@ -1637,13 +1637,13 @@
       "b": 80,
       "a": 255
     },
-    "_string": "ádfasdfasdf",
+    "_string": "",
     "_horizontalAlign": 0,
     "_verticalAlign": 1,
-    "_actualFontSize": 0,
-    "_fontSize": 0,
+    "_actualFontSize": 30,
+    "_fontSize": 30,
     "_fontFamily": "Arial",
-    "_lineHeight": 59,
+    "_lineHeight": 30,
     "_overflow": 1,
     "_enableWrapText": false,
     "_font": {
@@ -1867,7 +1867,7 @@
     "_actualFontSize": 30,
     "_fontSize": 30,
     "_fontFamily": "Arial",
-    "_lineHeight": 40,
+    "_lineHeight": 30,
     "_overflow": 1,
     "_enableWrapText": false,
     "_font": {

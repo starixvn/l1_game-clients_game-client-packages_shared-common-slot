@@ -1,10 +1,5 @@
 import { _decorator } from "cc";
-import {
-    FreeSpinsPromotionEvents,
-    endpointConstants,
-    FSBPromotionUIStore,
-    ITurnOverRequired,
-} from "../stores/fsb-promotion-ui-store";
+import { FreeSpinsPromotionEvents, endpointConstants, FSBPromotionUIStore, ITurnOverRequired } from "../stores/fsb-promotion-ui-store";
 import gc from "@sg/game-client-base";
 import inversify from "inversify";
 import { FSBPromotionStore, RedeemStatus } from "../stores/fsb-promotion-store";
@@ -310,8 +305,7 @@ export class FSBPromotionUIHandler {
             if (this.fsbPromotionStore.finishPromotion) {
                 this.fsbPromotionUIStore.pendingOpenTOAfterFinish = true;
                 return;
-            }
-            if (!this.fsbPromotionUIStore.isTrialMode) {
+            } else {
                 this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_TURN_OVER_REQUIRED);
             }
         } else if (context === "end-promotion") {

@@ -52,11 +52,11 @@ export class FSBPromotionInfo extends ObserverComponent {
     }
 
     private updateUI({ totalWin, remainingBonusItems, totalBet }: { totalWin?: number; remainingBonusItems?: number; totalBet?: number }) {
-        this.labelTotalWin.string = gc.FormatUtils.numberWithCommas(totalWin, 2);
+        this.labelTotalWin.string = gc.FormatUtils.numberWithCommas(totalWin, 2, false);
 
         this.labelFSB.string = remainingBonusItems.toString();
 
-        this.labelTotalBet.string = gc.FormatUtils.numberWithCommas(totalBet, 2);
+        this.labelTotalBet.string = gc.FormatUtils.numberWithCommas(totalBet, 2, false);
     }
 
     @handle(FSBPromotionUIHandler, (handler, remainingBonusItems: number) => handler.setCurrentSpinCount(remainingBonusItems))
@@ -97,7 +97,7 @@ export class FSBPromotionInfo extends ObserverComponent {
             case FreeSpinsPromotionEvents.UPDATE_TOTAL_WIN:
                 if (this.labelTotalWin) {
                     this.totalWin += data;
-                    this.labelTotalWin.string = gc.FormatUtils.numberWithCommas(this.totalWin, 2);
+                    this.labelTotalWin.string = gc.FormatUtils.numberWithCommas(this.totalWin, 2, false);
                 }
                 break;
         }

@@ -38,13 +38,16 @@ export class FsbPromotionDialog extends ObserverComponent {
 
     playGameNow() {
         this.closeDialog();
+        this.onPlayGameNow();
         if (this.isFreeSpins) {
             this.showFreeSpinMessage();
         } else {
             this.openPromotionDetailsPanel();
-
         }
     }
+
+    @handle(FSBPromotionUIHandler, (handle) => handle.setIsClickPlayNow(true))
+    onPlayGameNow() {}
 
     @render(CascadingUIStore, (store) => store.isFreeSpins)
     checkFeeSpinInGame(isFreeSpins: boolean) {

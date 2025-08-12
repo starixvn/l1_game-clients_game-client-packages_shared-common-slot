@@ -63,6 +63,7 @@ export const FreeSpinsPromotionEvents = {
     SPIN_ON_FSB_PROMOTION_FIRST_TIME: "SPIN_ON_FSB_PROMOTION_FIRST_TIME",
     SHOW_FREE_SPIN_MESSAGE: "SHOW_FREE_SPIN_MESSAGE",
     HIDE_GIFT_CODE_ICON: "HIDE_GIFT_CODE_ICON",
+    EFFECT_REDEEM_SUCCESS: "EFFECT_REDEEM_SUCCESS",
 };
 
 @injectable()
@@ -95,6 +96,8 @@ export class FSBPromotionUIStore {
 
     public isTrialMode = false;
     public pendingOpenTOAfterFinish = false;
+
+    public isClickPlayNow = false;
 
     // TurnOverRequired state properties
     private _toProgress: ITurnOverRequired = null;
@@ -295,5 +298,13 @@ export class FSBPromotionUIStore {
 
     setWebViewLoading(isLoading: boolean) {
         this.isWebViewLoading = isLoading;
+    }
+    get shouldOpenPromotionInfo(): boolean {
+        const isFSBUsed = this.cascadingUIStore?.isUsedFSBPromotionBonus ?? false;
+        const isClaimed = this.fsbPromotionStore?.isClaimed ?? false;
+        const isFSBInfoReady = this.isFSBInfoReady ?? false;
+        const isClickPlayNow = this.isClickPlayNow ?? false;
+
+        return isFSBUsed && isClaimed && !isFSBInfoReady && isClickPlayNow;
     }
 }

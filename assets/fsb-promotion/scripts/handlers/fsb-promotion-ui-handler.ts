@@ -25,28 +25,19 @@ export class FSBPromotionUIHandler {
     constructor() {
         setTimeout(() => {
             mobx.reaction(
-                () => ({
-                    isFSBUsed: this.cascadingUIStore?.isUsedFSBPromotionBonus ?? false,
-                    isClaimed: this.fsbPromotionStore?.isClaimed ?? false,
-                    isFSBInfoReady: this.fsbPromotionUIStore.isFSBInfoReady ?? false,
-                }),
-                ({ isFSBUsed, isClaimed, isFSBInfoReady }) => {
-                    if (isFSBUsed && isClaimed && !isFSBInfoReady) {
+                () => this.fsbPromotionUIStore.shouldOpenPromotionInfo,
+                (shouldOpenPromotionInfo) => {
+                    if (shouldOpenPromotionInfo) {
                         this.changeUIPendingEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO);
                     }
                 }
             );
             mobx.reaction(
                 () => this.fsbPromotionUIStore.isTrialMode,
-                (trial) => {
+                (trial, prev) => {
                     if (trial) {
                         this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.HIDE_GIFT_CODE_ICON);
                     }
-                }
-            );
-            mobx.reaction(
-                () => this.fsbPromotionUIStore.isTrialMode,
-                (trial, prev) => {
                     if (!trial && prev === true && this.shouldShowGiftCode()) {
                         this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_GIFT_CODE);
                     }
@@ -58,7 +49,11 @@ export class FSBPromotionUIHandler {
     /** ========== PROMOTION FLOW ========== */
     public handlePromotionDisplay() {
         try {
-            if (this.fsbPromotionUIStore.activeTransitionEffect || !this.fsbPromotionUIStore.hasPromo()) {
+            if (
+                this.fsbPromotionUIStore.activeTransitionEffect ||
+                !this.fsbPromotionUIStore.hasPromo() ||
+                this.fsbPromotionUIStore.isTrialMode
+            ) {
                 return;
             }
             if (this.fsbPromotionUIStore.shouldSkipPromo()) {
@@ -268,6 +263,10 @@ export class FSBPromotionUIHandler {
 
     setFSBInfoReady(isReady: boolean) {
         this.fsbPromotionUIStore.setFSBInfoReady(isReady);
+    }
+
+    setIsClickPlayNow(isClickPlayNow: boolean) {
+        this.fsbPromotionUIStore.isClickPlayNow = isClickPlayNow;
     }
 
     /** ========== TURN OVER REQUIRED MANAGEMENT ========== */

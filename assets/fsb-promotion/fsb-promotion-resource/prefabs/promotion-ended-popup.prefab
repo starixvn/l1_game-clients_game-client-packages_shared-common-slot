@@ -1668,7 +1668,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 309.0625,
+      "width": 216.015625,
       "height": 100.8
     },
     "_anchorPoint": {
@@ -1704,7 +1704,7 @@
       "b": 34,
       "a": 255
     },
-    "_string": "UI.CLOSE",
+    "_string": "CLOSE",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_actualFontSize": 80,
@@ -1765,7 +1765,7 @@
     "__prefab": {
       "__id__": 82
     },
-    "key": "ui.close",
+    "key": "FreeSpinBonus.Close",
     "format": 1,
     "prefix": "",
     "suffix": "",

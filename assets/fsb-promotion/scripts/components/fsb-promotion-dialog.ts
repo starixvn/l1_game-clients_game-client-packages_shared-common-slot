@@ -5,9 +5,9 @@ import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-pro
 import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
 import Observer from "observer";
 import { Dialog } from "db://shared-components/shared/common-components/dialogs/dialog";
-import { FSBPromotionStore } from "../stores/fsb-promotion-store";
 import { DialogTransition } from "db://shared-components/shared/common-components/dialogs/transition/dialog-transition";
 import { CascadingUIStore } from "db://shared-cascading-slot/stores/cascading-ui-store";
+import { FSBPromotionHandlers } from "../handlers/fsb-promotion-handlers";
 const { Shared } = gc;
 const { utils } = Shared;
 const { ccclass, property } = _decorator;
@@ -34,6 +34,7 @@ export class FsbPromotionDialog extends ObserverComponent {
 
     closeDialog() {
         this.node.getComponent(Dialog)?.hide();
+        this.resetRedeemSuccess();
     }
 
     playGameNow() {
@@ -89,4 +90,8 @@ export class FsbPromotionDialog extends ObserverComponent {
 
     @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.SHOW_FREE_SPIN_MESSAGE))
     showFreeSpinMessage() {}
+
+    @handle(FSBPromotionHandlers, (handler) => handler.resetRedeemSuccess())
+    resetRedeemSuccess() {
+    }
 }

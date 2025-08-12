@@ -1,7 +1,7 @@
 import gc from "@sg/game-client-base";
 import inversify from "inversify";
 import { GameServiceMessageSlot } from "../../../game-message-slot";
-import { FSBPromotionStore } from "../stores/fsb-promotion-store";
+import { FSBPromotionStore, RedeemStatus } from "../stores/fsb-promotion-store";
 import { FSBPromotionUIHandler } from "./fsb-promotion-ui-handler";
 import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
 
@@ -58,6 +58,10 @@ export class FSBPromotionHandlers implements gc.Shared.IMultipleHandlers {
             this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.EXPIRE_CLAIM_BONUS);
         }
         this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.SHOW_NOTICE_ERROR, errorCode);
+    }
+
+    resetRedeemSuccess() {
+        this.promotionStore.redeemResult = RedeemStatus.Idle;
     }
 
     eventHandleList = [

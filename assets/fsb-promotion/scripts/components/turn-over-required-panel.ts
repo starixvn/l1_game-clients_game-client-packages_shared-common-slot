@@ -33,15 +33,7 @@ export default class TurnOverRequiredPanel extends ObserverComponent {
 
     onEnable() {
         this.schedule(this.updateTimer, 1);
-        // uiManager.emitterListener(TurnOverRequiredEvents.UPDATE_TURN_OVER_REQUIRED, (data) => this.updateBonusWallet(data), this);
         this.dragTurnOverRequired();
-        // uiManager.emitterListener(FreeSpinsPromotionEvents.EXPIRE_CLAIM_BONUS, () => this.hidePanel(), this);
-        // uiManager.emitterListener(FreeSpinsPromotionEvents.SHOW_NOTICE_ERROR, (errorCode) => this.showNoticeError(errorCode), this);
-        // uiManager.emitterListener(
-        //     FreeSpinsPromotionEvents.CLAIMED_BONUS_SUCCESS,
-        //     (claimedAmount) => this.showClaimBonusNotification(claimedAmount),
-        //     this
-        // );
     }
 
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent)
@@ -146,7 +138,6 @@ export default class TurnOverRequiredPanel extends ObserverComponent {
     }
 
     onClickInfoIcon() {
-        // this.collapseMenu();
         this.activeDetailPromo();
         this.updatePromotionURL();
         this.openFreeSpinsPromotion();

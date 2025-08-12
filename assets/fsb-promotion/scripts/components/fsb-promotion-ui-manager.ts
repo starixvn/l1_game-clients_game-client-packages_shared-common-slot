@@ -241,10 +241,14 @@ export class FSBPromotionUIManager extends ObserverComponent {
     }
 
     private async loadAndShowFreeSpinMessage() {
-        const prefab = await this.loadPrefab(PREFAB_FREE_SPIN_MESSAGE_PATH);
-        const freeSpinMessageNode = instantiate(prefab);
-        this.fsbPromotionPopupContainer.addChild(freeSpinMessageNode);
-        this.freeSpinMessageNode = freeSpinMessageNode;
+        if (this.freeSpinMessageNode) {
+            this.freeSpinMessageNode.active = true;
+        } else {
+            const prefab = await this.loadPrefab(PREFAB_FREE_SPIN_MESSAGE_PATH);
+            const freeSpinMessageNode = instantiate(prefab);
+            this.fsbPromotionPopupContainer.addChild(freeSpinMessageNode);
+            this.freeSpinMessageNode = freeSpinMessageNode;
+        }
     }
 
     private createFsbPromotionContainer(): void {
@@ -339,10 +343,14 @@ export class FSBPromotionUIManager extends ObserverComponent {
     }
 
     async loadAndShowRedeemGiftCodePopup() {
-        const prefab = await this.loadPrefab(PREFAB_REDEEM_GIFT_CODE_POPUP_PATH);
-        const redeemGiftCodePopupNode = instantiate(prefab);
-        this.fsbPromotionPopupContainer.addChild(redeemGiftCodePopupNode);
-        this.redeemGiftCodePopupNode = redeemGiftCodePopupNode;
+        if (this.redeemGiftCodePopupNode) {
+            this.redeemGiftCodePopupNode.active = true;
+        } else {
+            const prefab = await this.loadPrefab(PREFAB_REDEEM_GIFT_CODE_POPUP_PATH);
+            const redeemGiftCodePopupNode = instantiate(prefab);
+            this.fsbPromotionPopupContainer.addChild(redeemGiftCodePopupNode);
+            this.redeemGiftCodePopupNode = redeemGiftCodePopupNode;
+        }
     }
 
     async loadAndShowFsbBanner() {

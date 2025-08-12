@@ -72,6 +72,10 @@ export class FSBPromotionUIManager extends ObserverComponent {
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.EFFECT_UNBOX_GIFT)
     initEffectUnboxGift(shouldPlayEffect: boolean) {
         if (shouldPlayEffect) {
+            if (this.redeemGiftCodePopupNode && this.redeemGiftCodePopupNode.isValid) {
+                this.redeemGiftCodePopupNode.destroy();
+            }
+            this.redeemGiftCodePopupNode = null;
             this.loadAndPlayEffectUnboxGift();
         }
     }
@@ -94,7 +98,10 @@ export class FSBPromotionUIManager extends ObserverComponent {
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.CLOSE_GIFT_CODE_ICON)
     closeGiftCodeIcon(isCloseGiftCodeIcon: boolean) {
         if (isCloseGiftCodeIcon) {
-            this.giftCodeNode.destroy();
+            if (this.giftCodeNode && this.giftCodeNode.isValid) {
+                this.giftCodeNode.destroy();
+            }
+            this.giftCodeNode = null;
         }
     }
 
@@ -109,7 +116,10 @@ export class FSBPromotionUIManager extends ObserverComponent {
     initPromotionEndedPopup(isOpenPromotionEndedPopup: boolean) {
         if (isOpenPromotionEndedPopup) {
             this.loadAndShowPromotionEndedPopup();
-            this.destroyNode(this.fsbPromotionInfoNode);
+            if (this.fsbPromotionInfoNode && this.fsbPromotionInfoNode.isValid) {
+                this.fsbPromotionInfoNode.destroy();
+            }
+            this.fsbPromotionInfoNode = null;
         }
     }
 

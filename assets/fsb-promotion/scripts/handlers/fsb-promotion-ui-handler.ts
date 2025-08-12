@@ -4,7 +4,6 @@ import {
     endpointConstants,
     FSBPromotionUIStore,
     ITurnOverRequired,
-    TurnOverRequiredDataKey,
 } from "../stores/fsb-promotion-ui-store";
 import gc from "@sg/game-client-base";
 import inversify from "inversify";
@@ -206,6 +205,10 @@ export class FSBPromotionUIHandler {
         this.fsbPromotionUIStore.addPendingUIEvent(event, data);
     }
 
+    isEligibleForTurnOverPanel() {
+        return this.fsbPromotionStore.finishPromotion?.totalWin > 0 && this.fsbPromotionUIStore.currentSpinCount === 0;
+    }
+
     /** ========== SOCKET COMMUNICATION ========== */
     claimBonusWin() {
         this.connectionStore.send(GameClientMessageSlot.ClaimBonusWin.eventName, null);
@@ -282,58 +285,12 @@ export class FSBPromotionUIHandler {
         this.fsbPromotionUIStore.promotionUrl = this.getPromoUrl();
     }
 
-    public initTurnOverRequiredEvents() {
-        this.clearTurnOverRequiredObservers();
-
-        this.fsbPromotionUIStore.turnOverRequiredDataKey.forEach((key) => {
-            this.addTurnOverRequiredDataObserver(key, key);
-        });
-    }
-
-    public clearTurnOverRequiredObservers() {
-        this.fsbPromotionUIStore.turnOverRequiredDataKey.forEach((key) => {
-            this.removeTurnOverRequiredDataObserver(key, key);
-        });
-    }
-
-    private addTurnOverRequiredDataObserver(dataType: string, dataKey: string) {
-        let callback;
-        if (dataType === TurnOverRequiredDataKey.PROMOTION_TO_PROGRESS) {
-            callback = (data: ITurnOverRequired) => this.onReceivedTOProgressData(data);
-        }
-        // Note: You'll need to replace this with your actual notification service implementation
-        // NotificationService.getInstance().addDataObserver(dataType, dataKey, callback);
-    }
-
-    private onReceivedTOProgressData(data: ITurnOverRequired) {
+    public onReceivedTOProgressData(data: ITurnOverRequired) {
         const isChanged = this.fsbPromotionUIStore.updateTOProgress(data);
 
         if (isChanged) {
             this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.UPDATE_TURN_OVER_REQUIRED, data);
         }
-    }
-
-    private removeTurnOverRequiredDataObserver(dataType: string, dataKey: string) {
-        // Note: You'll need to replace this with your actual notification service implementation
-        // NotificationService.getInstance().removeDataObserver(dataType, dataKey);
-    }
-
-    public displayTurnOverRequired() {
-        this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_TURN_OVER_REQUIRED);
-    }
-
-    public emitTurnOverRequiredEvent(eventName: string, data: ITurnOverRequired) {
-        // Note: You'll need to replace this with your actual notification service implementation
-        // NotificationService.getInstance().emitEvent(eventName, data);
-        this.fsbPromotionUIStore.addPendingUIEvent(eventName, data);
-    }
-
-    public getTurnOverProgress(): ITurnOverRequired | null {
-        return this.fsbPromotionUIStore.toProgress;
-    }
-
-    public hasTurnOverProgress(): boolean {
-        return this.fsbPromotionUIStore.hasTOProgress();
     }
 
     public showNoticeError(errorCode: string) {
@@ -342,5 +299,26 @@ export class FSBPromotionUIHandler {
 
     public handleTrialMode(isTrialMode: boolean) {
         this.fsbPromotionUIStore.isTrialMode = isTrialMode;
+    }
+
+    public claimedBonusSuccess() {
+        this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.CLAIMED_BONUS_SUCCESS);
+    }
+
+    public openTurnOverRequired(context: "in-game" | "end-promotion") {
+        if (context === "in-game") {
+            if (this.fsbPromotionStore.finishPromotion) {
+                this.fsbPromotionUIStore.pendingOpenTOAfterFinish = true;
+                return;
+            }
+            if (!this.fsbPromotionUIStore.isTrialMode) {
+                this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_TURN_OVER_REQUIRED);
+            }
+        } else if (context === "end-promotion") {
+            if (this.fsbPromotionStore.finishPromotion && this.isEligibleForTurnOverPanel()) {
+                this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_TURN_OVER_REQUIRED);
+                this.fsbPromotionUIStore.pendingOpenTOAfterFinish = false;
+            }
+        }
     }
 }

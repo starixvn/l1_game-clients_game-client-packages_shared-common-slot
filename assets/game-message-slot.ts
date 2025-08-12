@@ -50,8 +50,11 @@ export namespace GameServiceMessageSlot {
         static eventName = "redemptionNotice";
     }
     export class ClaimedAmount {
-        claimedAmount: number;
         static eventName = "claimedAmount";
+    }
+
+    export class ClaimedBonusFailed {
+        static eventName = "errorCode";
     }
 }
 

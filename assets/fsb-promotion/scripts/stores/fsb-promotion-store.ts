@@ -19,7 +19,7 @@ export class FSBPromotionStore {
     finishPromotion?: GameServiceMessageSlot.FinishPromotion;
     promotionTOProgress?: GameServiceMessageSlot.PromotionTOProgress;
     redemptionNotice?: GameServiceMessageSlot.RedemptionNotice;
-
+    claimedBonusFailed?: string;
     private _redeemStatus: RedeemStatus = RedeemStatus.Idle;
 
     get isRedeemSuccess() {

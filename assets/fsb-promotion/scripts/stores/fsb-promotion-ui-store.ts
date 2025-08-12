@@ -94,6 +94,7 @@ export class FSBPromotionUIStore {
     public isFSBInfoReady = false;
 
     public isTrialMode = false;
+    public pendingOpenTOAfterFinish = false;
 
     // TurnOverRequired state properties
     private _toProgress: ITurnOverRequired = null;

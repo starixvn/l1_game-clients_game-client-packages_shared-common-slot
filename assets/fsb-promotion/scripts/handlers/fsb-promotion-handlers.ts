@@ -13,6 +13,7 @@ export class FSBPromotionHandlers implements gc.Shared.IMultipleHandlers {
     @inject(gc.Connection.ConnectionStore) protected readonly connectionStore: gc.Connection.ConnectionStore;
     @inject(FSBPromotionUIHandler) protected readonly fsbPromotionUIHandler: FSBPromotionUIHandler;
     @inject(FSBPromotionUIStore) protected readonly fsbPromotionUIStore: FSBPromotionUIStore;
+    @inject(gc.Notification.NotificationStore) protected readonly notificationStore: gc.Notification.NotificationStore;
 
     handlePromotion(data: GameServiceMessageSlot.Promotion) {
         this.promotionStore.promotion = data;
@@ -22,11 +23,19 @@ export class FSBPromotionHandlers implements gc.Shared.IMultipleHandlers {
     handlePromotionTOProgress(data: GameServiceMessageSlot.PromotionTOProgress) {
         this.promotionStore.promotionTOProgress = data;
         this.fsbPromotionUIStore.toProgress = data;
-        this.fsbPromotionUIHandler.changeUIPendingEvent(FreeSpinsPromotionEvents.OPEN_TURN_OVER_REQUIRED);
+        this.fsbPromotionUIHandler.openTurnOverRequired("in-game");
+        this.notificationStore.connection.on("promotionProgress", (data: GameServiceMessageSlot.PromotionTOProgress) => {
+            this.handleNotificationReceived(data);
+        });
     }
 
-    handleClaimedAmount(data: GameServiceMessageSlot.ClaimedAmount) {
-        this.promotionStore.claimedAmount = data.claimedAmount;
+    handleNotificationReceived(data: GameServiceMessageSlot.PromotionTOProgress) {
+        this.fsbPromotionUIHandler.onReceivedTOProgressData(data);
+    }
+
+    handleClaimedAmount(claimedAmount: number) {
+        this.promotionStore.claimedAmount = claimedAmount;
+        this.fsbPromotionUIHandler.claimedBonusSuccess();
     }
 
     handleRedeemResult(redeemResult: number) {
@@ -41,6 +50,14 @@ export class FSBPromotionHandlers implements gc.Shared.IMultipleHandlers {
     handleRedemptionNotice(data: GameServiceMessageSlot.RedemptionNotice) {
         this.promotionStore.redemptionNotice = data;
         this.fsbPromotionUIHandler.handleRedemptionNotice();
+    }
+
+    handleClaimedBonusFailed(errorCode: string) {
+        this.promotionStore.claimedBonusFailed = errorCode;
+        if (errorCode === "SB3023") {
+            this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.EXPIRE_CLAIM_BONUS);
+        }
+        this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.SHOW_NOTICE_ERROR, errorCode);
     }
 
     eventHandleList = [
@@ -67,6 +84,10 @@ export class FSBPromotionHandlers implements gc.Shared.IMultipleHandlers {
         {
             name: GameServiceMessageSlot.RedemptionNotice.eventName,
             handle: this.handleRedemptionNotice,
+        },
+        {
+            name: GameServiceMessageSlot.ClaimedBonusFailed.eventName,
+            handle: this.handleClaimedBonusFailed,
         },
     ];
 }

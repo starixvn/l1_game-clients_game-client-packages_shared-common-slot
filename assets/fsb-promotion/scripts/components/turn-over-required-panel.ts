@@ -1,8 +1,8 @@
 import { _decorator, Label, Node, ProgressBar } from "cc";
 import gc from "@sg/game-client-base";
 import DraggableItem from "db://shared-components/shared/common-components/draggable/draggable-item";
-import { ObserverComponent } from 'db://shared-components/shared/common-components/observer-component/scripts/observer-component';
-import { FreeSpinsPromotionEvents, ITurnOverRequired } from "../stores/fsb-promotion-ui-store";
+import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
+import { FreeSpinsPromotionEvents, FSBPromotionUIStore, ITurnOverRequired } from "../stores/fsb-promotion-ui-store";
 import { FSBPromotionStore } from "../stores/fsb-promotion-store";
 import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
 import { GameServiceMessageSlot } from "../../../game-message-slot";
@@ -10,7 +10,7 @@ import { GameServiceMessageSlot } from "../../../game-message-slot";
 import * as i18n from "db://i18n/LanguageData";
 import SimpleClaimButton from "./simple-claim-button";
 
-import Observer from 'observer';
+import Observer from "observer";
 const { ccclass, property } = _decorator;
 const { handle, render } = Observer;
 
@@ -42,6 +42,16 @@ export default class TurnOverRequiredPanel extends ObserverComponent {
         //     (claimedAmount) => this.showClaimBonusNotification(claimedAmount),
         //     this
         // );
+    }
+
+    @render(FSBPromotionUIStore, (store) => store.pendingUIEvent)
+    private updatePendingUIEvent(data: { event: string; data?: any }) {
+        if (data.event === FreeSpinsPromotionEvents.SHOW_NOTICE_ERROR) {
+            this.showNoticeError(data.data as string);
+        }
+        if (data.event === FreeSpinsPromotionEvents.EXPIRE_CLAIM_BONUS) {
+            this.hidePanel();
+        }
     }
 
     showNoticeError(errorCode: string) {
@@ -174,6 +184,13 @@ export default class TurnOverRequiredPanel extends ObserverComponent {
         this.updateBonusWallet(data);
     }
 
+    @render(FSBPromotionUIStore, (store) => store.pendingUIEvent)
+    private updatePromotionProgress(data: { event: string; data?: any }) {
+        if (data.event === FreeSpinsPromotionEvents.UPDATE_TURN_OVER_REQUIRED) {
+            this.updateBonusWallet(data.data as ITurnOverRequired);
+        }
+    }
+
     @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.COLLAPSE_MENU))
     private collapseMenu() {}
 
@@ -193,4 +210,15 @@ export default class TurnOverRequiredPanel extends ObserverComponent {
     private showTONoticeError(errorCode: string) {
         return errorCode;
     }
+
+    @render(FSBPromotionUIStore, (store) => store.pendingUIEvent)
+    private updateClaimedBonusSuccess(data: { event: string; data?: any }) {
+        if (data.event === FreeSpinsPromotionEvents.CLAIMED_BONUS_SUCCESS) {
+            this.hidePanel();
+            this.openClaimBonusNotification();
+        }
+    }
+
+    @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.OPEN_CLAIM_BONUS_NOTIFICATION))
+    private openClaimBonusNotification() {}
 }

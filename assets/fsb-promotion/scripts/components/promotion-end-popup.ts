@@ -1,19 +1,20 @@
-import { _decorator, Button, Label, tween, Vec3, UIOpacity } from "cc";
+import { _decorator, Button, Label } from "cc";
 import gc from "@sg/game-client-base";
 import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
-import  * as i18n from "db://i18n/LanguageData";
+import * as i18n from "db://i18n/LanguageData";
 import { FSBPromotionStore } from "../stores/fsb-promotion-store";
 import { FSBPromotionHandlers } from "../handlers/fsb-promotion-handlers";
 import Observer from "observer";
 import { GameServiceMessageSlot } from "../../../game-message-slot";
 import { Dialog } from "db://shared-components/shared/common-components/dialogs/dialog";
+import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
 const { render, handle } = Observer;
 
 const { ccclass, property } = _decorator;
 
 @ccclass("PromotionEndedPopup")
 export default class PromotionEndedPopup extends ObserverComponent {
-    @property( Label) labelTitle: Label = null;
+    @property(Label) labelTitle: Label = null;
     @property(Label) labelMainMessage: Label = null;
     @property(Label) labelSubMessage: Label = null;
     @property(Label) labelTotalWin: Label = null;
@@ -61,9 +62,12 @@ export default class PromotionEndedPopup extends ObserverComponent {
 
     private onCloseClicked() {
         this.node.getComponent(Dialog)?.hide();
+        this.openTurnOverRequired();
     }
 
     @handle(FSBPromotionHandlers, (handler) => handler.handleFinishPromotion(null))
-    onDestroy() {
-    }
+    onDestroy() {}
+
+    @handle(FSBPromotionUIHandler, (handler) => handler.openTurnOverRequired("end-promotion"))
+    private openTurnOverRequired() {}
 }

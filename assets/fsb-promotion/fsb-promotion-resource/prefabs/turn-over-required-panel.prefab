@@ -3697,7 +3697,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 1089.7265625,
+      "width": 298.30078125,
       "height": 75.6
     },
     "_anchorPoint": {
@@ -3752,7 +3752,7 @@
       "b": 255,
       "a": 255
     },
-    "_string": "FREESPINBONUS.TO_REQUIREMENT_CLAIM",
+    "_string": "CLAIM NOW",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_actualFontSize": 60,
@@ -3833,7 +3833,7 @@
     "__prefab": {
       "__id__": 185
     },
-    "key": "FREESPINBONUS.TO_REQUIREMENT_CLAIM",
+    "key": "FreeSpinBonus.TO_requirement_claim",
     "format": 1,
     "prefix": "",
     "suffix": "",

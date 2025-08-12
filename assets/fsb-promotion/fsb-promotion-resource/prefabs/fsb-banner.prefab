@@ -598,7 +598,7 @@
     },
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": 490.679,
+      "x": 506.267,
       "y": 257.115,
       "z": 0
     },
@@ -1569,7 +1569,7 @@
   },
   {
     "__type__": "cc.CompPrefabInfo",
-    "fileId": "72F5eKgWtCcJhS9VRMw810"
+    "fileId": "dbLpdAlrNF3ZR3cES+NChx"
   },
   {
     "__type__": "cc.PrefabInfo",
@@ -2110,7 +2110,7 @@
   },
   {
     "__type__": "cc.CompPrefabInfo",
-    "fileId": "a7m+4z5IFKNbyhwiaDMLGK"
+    "fileId": "09MGp/8ZlIyb+YmYDwbX6L"
   },
   {
     "__type__": "cc.PrefabInfo",

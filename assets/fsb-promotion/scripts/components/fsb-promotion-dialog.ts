@@ -74,6 +74,9 @@ export class FsbPromotionDialog extends ObserverComponent {
         if (this.playLater) {
             this.playLater.active = !isWebViewLoading && !this.activeDetailPromo;
         }
+        if (this.closeButton) {
+            this.closeButton.active = this.activeDetailPromo;
+        }
     }
 
     @render(FSBPromotionUIStore, (store) => store.activeDetailPromo)

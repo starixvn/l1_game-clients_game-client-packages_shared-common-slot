@@ -8,6 +8,7 @@ import Observer from "observer";
 import { GameServiceMessageSlot } from "../../../game-message-slot";
 import { Dialog } from "db://shared-components/shared/common-components/dialogs/dialog";
 import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
+import { FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
 const { render, handle } = Observer;
 
 const { ccclass, property } = _decorator;
@@ -21,8 +22,15 @@ export default class PromotionEndPopup extends ObserverComponent {
     @property(Button) closeButton: Button = null;
     public static hasShown = false;
 
-    @render(FSBPromotionStore, (store) => [store.finishPromotion, store.promotion])
-    public show([finishPromotion, promotion]: [GameServiceMessageSlot.FinishPromotion, GameServiceMessageSlot.Promotion]) {
+    private currentSpinCount = 0;
+
+    @render(FSBPromotionUIStore, (store) => store.currentSpinCount)
+    updateCurrentSpinCount(currentSpinCount: number) {
+        this.currentSpinCount = currentSpinCount;
+    }
+
+    @render(FSBPromotionStore, (store) => store.finishPromotion)
+    public show(finishPromotion: GameServiceMessageSlot.FinishPromotion) {
         if (!finishPromotion) {
             return;
         }
@@ -30,34 +38,41 @@ export default class PromotionEndPopup extends ObserverComponent {
         const { totalWin } = finishPromotion;
         this.labelTotalWin.string = gc.FormatUtils.numberWithCommas(totalWin, 2, false);
         this.node.active = true;
-        this.setupContent(totalWin, promotion);
+        this.setupContent(totalWin);
     }
 
-    private setupContent(totalWin: number, promotion: GameServiceMessageSlot.Promotion) {
-        const hasUsedAllBonusSpins = promotion.remainingBonusItems === 0;
+    private setupContent(totalWin: number) {
+        const hasUsedAllBonusSpins = this.currentSpinCount === 0;
 
-        let titleKey = "";
-        let mainMessageKey = "";
-        let subMessageKey = "";
+        const keyMap = {
+            win_allUsed: {
+                title: "FreeSpinBonus.FSB_notification_para1a",
+                main: "FreeSpinBonus.FSB_end_notification",
+                sub: "FreeSpinBonus.FSB_end_notification_message",
+            },
+            win_withRemaining: {
+                title: "FreeSpinBonus.FSB_end_notification_unusedFS",
+                main: "FreeSpinBonus.FSB_end_notification_unusedFS_message",
+                sub: "FreeSpinBonus.FSB_end_notification_unusedFS_message1",
+            },
+            zero_allUsed: {
+                title: "FreeSpinBonus.FSB_end_notification_zero_win",
+                main: "",
+                sub: "FreeSpinBonus.FSB_end_notification_zero_win_message",
+            },
+            zero_withRemaining: {
+                title: "FreeSpinBonus.FSB_end_notification_unusedFS",
+                main: "FreeSpinBonus.FSB_end_notification_unusedFS_message",
+                sub: "FreeSpinBonus.FSB_end_notification_unusedFS_message1",
+            },
+        };
 
-        if (totalWin > 0) {
-            if (hasUsedAllBonusSpins) {
-                titleKey = "FreeSpinBonus.FSB_notification_para1a";
-                mainMessageKey = "FreeSpinBonus.FSB_end_notification";
-                subMessageKey = "FreeSpinBonus.FSB_end_notification_message";
-            } else {
-                titleKey = "FreeSpinBonus.FSB_end_notification_unusedFS";
-                mainMessageKey = "FreeSpinBonus.FSB_end_notification_unusedFS_message";
-                subMessageKey = "FreeSpinBonus.FSB_end_notification_unusedFS_message1";
-            }
-        } else {
-            titleKey = "FreeSpinBonus.FSB_end_notification_zero_win";
-            subMessageKey = "FreeSpinBonus.FSB_end_notification_zero_win_message";
-        }
+        const conditionKey = `${totalWin > 0 ? "win" : "zero"}_${hasUsedAllBonusSpins ? "allUsed" : "withRemaining"}`;
+        const { title, main, sub } = keyMap[conditionKey];
 
-        this.labelTitle.string = i18n.t(titleKey).toUpperCase();
-        this.labelMainMessage.string = mainMessageKey ? i18n.t(mainMessageKey) : "";
-        this.labelSubMessage.string = subMessageKey ? i18n.t(subMessageKey) : "";
+        this.labelTitle.string = i18n.t(title).toUpperCase();
+        this.labelMainMessage.string = main ? i18n.t(main) : "";
+        this.labelSubMessage.string = sub ? i18n.t(sub) : "";
     }
 
     private onCloseClicked() {

@@ -12,7 +12,7 @@ const { render, handle } = Observer;
 
 const { ccclass, property } = _decorator;
 
-@ccclass("PromotionEndedPopup")
+@ccclass("promotion-ended-popup")
 export default class PromotionEndedPopup extends ObserverComponent {
     @property(Label) labelTitle: Label = null;
     @property(Label) labelMainMessage: Label = null;

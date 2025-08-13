@@ -1,9 +1,9 @@
-import { _decorator, Node, instantiate, Prefab, Component, Vec3, tween } from "cc";
+import { _decorator, Node, instantiate, Prefab, Vec3, tween } from "cc";
 import { bundleManager } from "db://shared-components/shared/common-components/bundle-manager/bundle-manager";
 import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
 import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
 import Observer from "observer";
-import { FunctionUtils } from "db://shared-components/shared/utils/function-utils";
+import { AnimationUtils } from "db://shared-components/shared/utils/utils";
 import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
 import gc from "@sg/game-client-base";
 
@@ -44,10 +44,10 @@ export class FSBPromotionUIManager extends ObserverComponent {
     private freeSpinMessageNode: Node = null;
     private fsbPromotionInfoNode: Node = null;
     private turnOverRequiredNode: Node = null;
-    private UNIT_SECOND_EFFECT_UNBOX_GIFT = 2000;
-    private UNIT_SECOND_REDEEM_SUCCESS = 2000;
-    private UNIT_SECOND_ANIMATION_UNBOX_GIFT = 0.8;
-    private UNIT_SECOND_ANIMATION_REDEEM_SUCCESS = 0.6;
+    private readonly UNIT_SECOND_EFFECT_UNBOX_GIFT = 2000;
+    private readonly UNIT_SECOND_REDEEM_SUCCESS = 2000;
+    private readonly UNIT_SECOND_ANIMATION_UNBOX_GIFT = 0.8;
+    private readonly UNIT_SECOND_ANIMATION_REDEEM_SUCCESS = 0.6;
     onLoad() {
         this.createFsbPromotionContainer();
         this.createFsbPromotionPopupContainer();
@@ -151,7 +151,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
         }
     }
 
-    private async loadAndShowPromotionInfo(isAutoSpin?: boolean) {
+    private async loadAndShowPromotionInfo(isAutoSpin: boolean = false) {
         const delay = isAutoSpin ? 900 : 0;
 
         if (this.fsbPromotionInfoNode && this.fsbPromotionInfoNode.isValid) {
@@ -173,7 +173,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
             return;
         }
 
-        await FunctionUtils.delay(delay);
+        await AnimationUtils.delayTime(delay);
 
         this.fsbPromotionInfoNode.active = true;
         this.fsbPromotionInfoNode.setScale(new Vec3(0, 0, 0));
@@ -217,7 +217,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
         this.scheduleOnce(() => {
             this.openGiftCodeRedeemPopup();
         }, this.UNIT_SECOND_ANIMATION_UNBOX_GIFT);
-        await FunctionUtils.delay(this.UNIT_SECOND_EFFECT_UNBOX_GIFT);
+        await AnimationUtils.delayTime(this.UNIT_SECOND_EFFECT_UNBOX_GIFT);
 
         this.effectUnboxGiftNode.destroy();
         this.effectUnboxGiftNode = null;
@@ -237,7 +237,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
         this.scheduleOnce(() => {
             this.loadAndShowFsbBanner();
         }, this.UNIT_SECOND_ANIMATION_REDEEM_SUCCESS);
-        await FunctionUtils.delay(this.UNIT_SECOND_REDEEM_SUCCESS);
+        await AnimationUtils.delayTime(this.UNIT_SECOND_REDEEM_SUCCESS);
 
         this.effectRedeemSuccessNode.destroy();
         this.effectRedeemSuccessNode = null;
@@ -385,7 +385,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
     }
 
     private async loadPrefab(prefabPath: string): Promise<Prefab | null> {
-        return await bundleManager.loadAssetsFromBundle<Prefab>(BUNDLE_NAME, prefabPath, Prefab, null);
+        return bundleManager.loadAssetsFromBundle<Prefab>(BUNDLE_NAME, prefabPath, Prefab, null);
     }
 
     showGiftCode() {

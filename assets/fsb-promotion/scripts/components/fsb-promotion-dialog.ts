@@ -1,5 +1,5 @@
 import gc from "@sg/game-client-base";
-import { _decorator, Node, director, Tween, tween, UIOpacity } from "cc";
+import { _decorator, Node} from "cc";
 import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
 import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
 import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
@@ -8,8 +8,6 @@ import { Dialog } from "db://shared-components/shared/common-components/dialogs/
 import { DialogTransition } from "db://shared-components/shared/common-components/dialogs/transition/dialog-transition";
 import { CascadingUIStore } from "db://shared-cascading-slot/stores/cascading-ui-store";
 import { FSBPromotionHandlers } from "../handlers/fsb-promotion-handlers";
-const { Shared } = gc;
-const { utils } = Shared;
 const { ccclass, property } = _decorator;
 const { handle, render } = Observer;
 

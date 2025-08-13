@@ -84,7 +84,9 @@ export class FSBPromotionInfo extends ObserverComponent {
 
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent)
     onPendingUIEvent(event: { event: string; data?: any }) {
-        if (!event) return;
+        if (!event) {
+            return;
+        }
 
         const { event: type, data } = event;
 

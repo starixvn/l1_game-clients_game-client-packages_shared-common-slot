@@ -1,4 +1,3 @@
-import { _decorator } from "cc";
 import gc from "@sg/game-client-base";
 import mobx from "mobx";
 import { FSBPromotionStore } from "./fsb-promotion-store";

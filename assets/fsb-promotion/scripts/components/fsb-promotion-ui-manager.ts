@@ -29,6 +29,7 @@ const NODE_NAMES = {
     AUTO_SCALE_WIDGET: "auto-scale-widget",
     IN_GAME_MENU: "in-game-menu",
     OUTER_CONTAINER: "outer-container",
+    EFFECT_REDEEM_SUCCESS: "effect-redeem-success",
 } as const;
 
 @ccclass("FSBPromotionUIManager")
@@ -48,7 +49,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
     private readonly UNIT_SECOND_EFFECT_UNBOX_GIFT = 2;
     private readonly UNIT_SECOND_REDEEM_SUCCESS = 2;
     private readonly UNIT_SECOND_ANIMATION_UNBOX_GIFT = 0.8;
-    private readonly UNIT_SECOND_ANIMATION_REDEEM_SUCCESS = 0.6;
+    private readonly UNIT_SECOND_ANIMATION_REDEEM_SUCCESS = 0.3;
     onLoad() {
         this.createFsbPromotionContainer();
         this.createFsbPromotionPopupContainer();
@@ -225,6 +226,11 @@ export class FSBPromotionUIManager extends ObserverComponent {
     }
 
     private async loadAndPlayRedeemSuccess() {
+        if (this.redeemGiftCodePopupNode) {
+            this.redeemGiftCodePopupNode.destroy();
+            this.redeemGiftCodePopupNode = null;
+        }
+
         if (this.effectRedeemSuccessNode && this.effectRedeemSuccessNode.isValid) {
             this.effectRedeemSuccessNode.destroy();
             this.effectRedeemSuccessNode = null;
@@ -236,6 +242,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
         this.fsbPromotionContainer.addChild(effectNode);
         this.effectRedeemSuccessNode = effectNode;
         this.scheduleOnce(() => {
+            effectNode.getChildByName("bg")?.destroy();
             this.loadAndShowFsbBanner();
         }, this.UNIT_SECOND_ANIMATION_REDEEM_SUCCESS);
         await AnimationUtils.delayTime(this.UNIT_SECOND_REDEEM_SUCCESS);
@@ -419,6 +426,12 @@ export class FSBPromotionUIManager extends ObserverComponent {
             const fsbBannerNode = instantiate(prefab);
             this.fsbPromotionPopupContainer.addChild(fsbBannerNode);
             this.fsbBannerNode = fsbBannerNode;
+            
+            const effectReddeemSuccess = this.fsbPromotionPopupContainer.getChildByName(NODE_NAMES.EFFECT_REDEEM_SUCCESS);
+            if (effectReddeemSuccess) {
+                const inGameMenuIndex = effectReddeemSuccess.getSiblingIndex();
+                this.fsbBannerNode.setSiblingIndex(Math.max(0, inGameMenuIndex - 1));
+            }
         }
     }
 

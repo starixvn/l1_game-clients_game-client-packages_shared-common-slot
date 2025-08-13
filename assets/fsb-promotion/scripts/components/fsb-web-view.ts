@@ -16,17 +16,26 @@ export class FsbWebView extends LoadWebView {
         if (!promotionUrl) {
             return;
         }
-        this.changeWebViewLoadingTrue();
         this.showLoading();
         this.hideWebView();
         this.webView && (this.webView.url = promotionUrl);
     }
 
     showWebView() {
-        this.changeWebViewLoadingFalse();
         this.setOpacity(255);
         this.onWebViewLoaded();
     }
+
+    showLoading() {
+        this.nodeLoading.active = true;
+        this.changeWebViewLoadingTrue();
+    }
+
+    hideLoading() {
+        this.nodeLoading.active = false;
+        this.changeWebViewLoadingFalse();
+    }
+
 
     @handle(FSBPromotionUIStore, (store) => store.setWebViewLoading(false))
     changeWebViewLoadingFalse() {

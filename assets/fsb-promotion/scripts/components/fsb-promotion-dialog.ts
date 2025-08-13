@@ -61,11 +61,6 @@ export class FsbPromotionDialog extends ObserverComponent {
 
     @render(FSBPromotionUIStore, (store) => store.isWebViewLoading)
     controlButtonsVisibility(isWebViewLoading: boolean) {
-        if (isWebViewLoading) {
-            this.background.getComponent(DialogTransition)?.show(false);
-        } else {
-            this.background.getComponent(DialogTransition)?.show(true);
-        }
         if (this.playNow) {
             this.playNow.active = !isWebViewLoading && !this.activeDetailPromo;
         }
@@ -75,6 +70,8 @@ export class FsbPromotionDialog extends ObserverComponent {
         if (this.closeButton) {
             this.closeButton.active = this.activeDetailPromo;
         }
+        this.background.active = !isWebViewLoading;
+        this.background.getComponent(DialogTransition)?.show(!isWebViewLoading);
     }
 
     @render(FSBPromotionUIStore, (store) => store.activeDetailPromo)

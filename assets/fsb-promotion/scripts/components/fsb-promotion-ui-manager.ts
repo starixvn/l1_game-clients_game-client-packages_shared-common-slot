@@ -44,8 +44,8 @@ export class FSBPromotionUIManager extends ObserverComponent {
     private freeSpinMessageNode: Node = null;
     private fsbPromotionInfoNode: Node = null;
     private turnOverRequiredNode: Node = null;
-    private readonly UNIT_SECOND_EFFECT_UNBOX_GIFT = 2000;
-    private readonly UNIT_SECOND_REDEEM_SUCCESS = 2000;
+    private readonly UNIT_SECOND_EFFECT_UNBOX_GIFT = 2;
+    private readonly UNIT_SECOND_REDEEM_SUCCESS = 2;
     private readonly UNIT_SECOND_ANIMATION_UNBOX_GIFT = 0.8;
     private readonly UNIT_SECOND_ANIMATION_REDEEM_SUCCESS = 0.6;
     onLoad() {
@@ -152,7 +152,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
     }
 
     private async loadAndShowPromotionInfo(isAutoSpin = false) {
-        const delay = isAutoSpin ? 900 : 0;
+        const delay = isAutoSpin ? 0.9 : 0;
 
         if (this.fsbPromotionInfoNode && this.fsbPromotionInfoNode.isValid) {
             this.showPromotionInfoWithAnimation(delay, isAutoSpin);

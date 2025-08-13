@@ -55,9 +55,11 @@ export class FSBPromotionHandlers implements gc.Shared.IMultipleHandlers {
     handleClaimedBonusFailed(errorCode: string) {
         this.promotionStore.claimedBonusFailed = errorCode;
         if (errorCode === "SB3023") {
-            this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.EXPIRE_CLAIM_BONUS);
+            this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.EXPIRE_CLAIM_BONUS, errorCode);
         }
-        this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.SHOW_NOTICE_ERROR, errorCode);
+        else {
+            this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.SHOW_NOTICE_ERROR, errorCode);
+        }
     }
 
     resetRedeemSuccess() {

@@ -43,6 +43,7 @@ export default class TurnOverRequiredPanel extends ObserverComponent {
         }
         if (data.event === FreeSpinsPromotionEvents.EXPIRE_CLAIM_BONUS) {
             this.hidePanel();
+            this.showNoticeError(data.data as string);
         }
     }
 

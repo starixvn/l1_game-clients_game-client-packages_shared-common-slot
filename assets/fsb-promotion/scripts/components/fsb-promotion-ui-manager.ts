@@ -28,6 +28,7 @@ const NODE_NAMES = {
     CENTER: "center",
     AUTO_SCALE_WIDGET: "auto-scale-widget",
     IN_GAME_MENU: "in-game-menu",
+    OUTER_CONTAINER: "outer-container",
 } as const;
 
 @ccclass("FSBPromotionUIManager")
@@ -313,20 +314,26 @@ export class FSBPromotionUIManager extends ObserverComponent {
     }
 
     createFsbPromotionPopupContainer(): void {
-        const autoScaleWidget = this.findAutoScaleWidget();
-        if (!autoScaleWidget) {
-            throw new Error("Auto-scale widget not found");
+        const center = this.node.getChildByName(NODE_NAMES.CENTER);
+        if (!center) {
+            throw new Error("center not found");
         }
 
-        const existingContainer = autoScaleWidget.getChildByName(POPUP_CONTAINER_NAME);
-        if (existingContainer) {
-            this.fsbPromotionPopupContainer = existingContainer;
+        const existing = center.getChildByName(POPUP_CONTAINER_NAME);
+        if (existing) {
+            this.fsbPromotionPopupContainer = existing;
             return;
         }
 
-        const fsbPromotionPopupContainer = new Node(POPUP_CONTAINER_NAME);
-        autoScaleWidget.addChild(fsbPromotionPopupContainer);
-        this.fsbPromotionPopupContainer = fsbPromotionPopupContainer;
+        const popupNode = new Node(POPUP_CONTAINER_NAME);
+        center.addChild(popupNode);
+
+        const outer = center.getChildByName(NODE_NAMES.OUTER_CONTAINER);
+        if (outer) {
+            popupNode.setSiblingIndex(outer.getSiblingIndex());
+        }
+
+        this.fsbPromotionPopupContainer = popupNode;
     }
 
     private findAutoScaleWidget(): Node | null {

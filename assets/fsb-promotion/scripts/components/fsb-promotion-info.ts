@@ -105,8 +105,12 @@ export class FSBPromotionInfo extends ObserverComponent {
         }
     }
 
-    @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.OPEN_FREE_SPINS_PROMOTION))
-    onClickInfoIcon() {}
+    onClickInfoIcon() {
+        this.activeDetailPromo();
+        this.updatePromotionURL();
+        this.openFreeSpinsPromotion();
+
+    }
 
     @render(Bet.BetStore, (store) => store.lastReceivedBet, { fireImmediately: false })
     updataRemainingBonus(lastReceivedBet: any) {
@@ -130,4 +134,14 @@ export class FSBPromotionInfo extends ObserverComponent {
 
     @handle(FSBPromotionUIHandler, (handler) => handler.syncFSBBetControl())
     setBetControl() {}
+
+    @handle(FSBPromotionUIHandler, (handler) => handler.updatePromotionURL())
+    private updatePromotionURL() {}
+
+    @handle(FSBPromotionUIHandler, (handler) => handler.activeDetailPromo(true))
+    private activeDetailPromo() {}
+
+    
+    @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.OPEN_FREE_SPINS_PROMOTION))
+    private openFreeSpinsPromotion() {}
 }

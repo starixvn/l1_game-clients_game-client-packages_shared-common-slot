@@ -146,7 +146,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
         } else {
             const prefab = await this.loadPrefab(PREFAB_TURN_OVER_REQUIRED_PATH);
             const turnOverRequiredNode = instantiate(prefab);
-            this.fsbPromotionPopupContainer.addChild(turnOverRequiredNode);
+            this.fsbPromotionContainer.addChild(turnOverRequiredNode);
             this.turnOverRequiredNode = turnOverRequiredNode;
         }
     }
@@ -177,10 +177,10 @@ export class FSBPromotionUIManager extends ObserverComponent {
 
         this.fsbPromotionInfoNode.active = true;
         this.fsbPromotionInfoNode.setScale(new Vec3(0, 0, 0));
-
+        const timeShowNode = isAutoPlay ? 0.8 : 0.3;
         await new Promise<void>((resolve) => {
             tween(this.fsbPromotionInfoNode)
-                .to(0.8, { scale: new Vec3(1, 1, 1) }, { easing: "backOut" })
+                .to(timeShowNode, { scale: new Vec3(1, 1, 1) }, { easing: "backOut" })
                 .call(() => resolve())
                 .start();
         });

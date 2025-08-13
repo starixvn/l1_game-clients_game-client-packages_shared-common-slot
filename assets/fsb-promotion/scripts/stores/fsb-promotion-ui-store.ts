@@ -13,11 +13,11 @@ export const endpointConstants = {
 };
 
 export enum FSBPromotionState {
-    Idle = "IDLE", // Chưa bắt đầu
-    Ready = "READY", // Đã nhận khuyến mãi, chưa quay
-    Spinning = "SPINNING", // Đang quay FSB
-    Finished = "FINISHED", // Đã quay xong
-    Resumed = "RESUMED", // Resume từ giữa
+    Idle = "IDLE",
+    Ready = "READY",
+    Spinning = "SPINNING",
+    Finished = "FINISHED",
+    Resumed = "RESUMED",
 }
 
 export interface ITurnOverRequired {

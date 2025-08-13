@@ -1,4 +1,3 @@
-import gc from "@sg/game-client-base";
 import { _decorator, Node} from "cc";
 import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
 import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";

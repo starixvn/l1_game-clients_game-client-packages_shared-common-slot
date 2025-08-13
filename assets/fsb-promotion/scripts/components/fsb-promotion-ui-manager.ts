@@ -8,7 +8,7 @@ import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
 import gc from "@sg/game-client-base";
 
 const { handle, render } = Observer;
-const { ccclass, property } = _decorator;
+const { ccclass } = _decorator;
 
 // Constants
 const BUNDLE_NAME = "fsb-promotion-resource";
@@ -151,7 +151,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
         }
     }
 
-    private async loadAndShowPromotionInfo(isAutoSpin: boolean = false) {
+    private async loadAndShowPromotionInfo(isAutoSpin = false) {
         const delay = isAutoSpin ? 900 : 0;
 
         if (this.fsbPromotionInfoNode && this.fsbPromotionInfoNode.isValid) {

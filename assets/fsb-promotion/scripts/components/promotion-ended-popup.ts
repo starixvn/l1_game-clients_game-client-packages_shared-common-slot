@@ -12,8 +12,8 @@ const { render, handle } = Observer;
 
 const { ccclass, property } = _decorator;
 
-@ccclass("promotion-ended-popup")
-export default class PromotionEndedPopup extends ObserverComponent {
+@ccclass("promotion-end-popup")
+export default class PromotionEndPopup extends ObserverComponent {
     @property(Label) labelTitle: Label = null;
     @property(Label) labelMainMessage: Label = null;
     @property(Label) labelSubMessage: Label = null;
@@ -26,7 +26,7 @@ export default class PromotionEndedPopup extends ObserverComponent {
         if (!finishPromotion) {
             return;
         }
-        PromotionEndedPopup.hasShown = true;
+        PromotionEndPopup.hasShown = true;
         const { totalWin } = finishPromotion;
         this.labelTotalWin.string = gc.FormatUtils.numberWithCommas(totalWin, 2, false);
         this.node.active = true;

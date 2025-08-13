@@ -180,7 +180,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
 
         await new Promise<void>((resolve) => {
             tween(this.fsbPromotionInfoNode)
-                .to(0.3, { scale: new Vec3(1, 1, 1) }, { easing: "backOut" })
+                .to(0.8, { scale: new Vec3(1, 1, 1) }, { easing: "backOut" })
                 .call(() => resolve())
                 .start();
         });

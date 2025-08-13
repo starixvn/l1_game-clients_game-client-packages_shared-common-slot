@@ -8,7 +8,7 @@ import Observer from "observer";
 import { GameServiceMessageSlot } from "../../../game-message-slot";
 import { Dialog } from "db://shared-components/shared/common-components/dialogs/dialog";
 import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
-import { FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
+import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
 const { render, handle } = Observer;
 
 const { ccclass, property } = _decorator;
@@ -36,10 +36,14 @@ export default class PromotionEndPopup extends ObserverComponent {
         }
         PromotionEndPopup.hasShown = true;
         const { totalWin } = finishPromotion;
+        this.closeFSBBanner();
         this.labelTotalWin.string = gc.FormatUtils.numberWithCommas(totalWin, 2, false);
         this.node.active = true;
         this.setupContent(totalWin);
     }
+
+    @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.CLOSE_FSB_BANNER))
+    closeFSBBanner() {}
 
     private setupContent(totalWin: number) {
         const hasUsedAllBonusSpins = this.currentSpinCount === 0;

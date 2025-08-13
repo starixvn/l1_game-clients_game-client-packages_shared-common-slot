@@ -212,7 +212,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
         const prefab = await this.loadPrefab(PREFAB_EFFECT_UNBOX_GIFT_PATH);
         const effectNode = instantiate(prefab);
 
-        this.fsbPromotionContainer.addChild(effectNode);
+        this.fsbPromotionPopupContainer.addChild(effectNode);
         this.effectUnboxGiftNode = effectNode;
         this.scheduleOnce(() => {
             this.openGiftCodeRedeemPopup();

@@ -91,4 +91,11 @@ export class FsbPromotionDialog extends ObserverComponent {
     @handle(FSBPromotionHandlers, (handler) => handler.resetRedeemSuccess())
     resetRedeemSuccess() {
     }
+
+    @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.CLOSE_FSB_BANNER)
+    closeFSBBanner(shouldClose: boolean) {
+        if (shouldClose) {
+            this.closeDialog();
+        }
+    }
 }

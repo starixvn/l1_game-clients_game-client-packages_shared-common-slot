@@ -1,4 +1,4 @@
-import { _decorator, Node, instantiate, Prefab, Vec3, tween } from "cc";
+import { _decorator, Node, instantiate, Prefab, Vec3, tween, UITransform, Widget } from "cc";
 import { bundleManager } from "db://shared-components/shared/common-components/bundle-manager/bundle-manager";
 import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
 import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
@@ -322,6 +322,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
         const existing = center.getChildByName(POPUP_CONTAINER_NAME);
         if (existing) {
             this.fsbPromotionPopupContainer = existing;
+            this.ensureFullWidget(this.fsbPromotionPopupContainer);
             return;
         }
 
@@ -334,8 +335,38 @@ export class FSBPromotionUIManager extends ObserverComponent {
         }
 
         this.fsbPromotionPopupContainer = popupNode;
+        this.ensureFullWidget(this.fsbPromotionPopupContainer);
     }
 
+    ensureUITransform(n: Node) {
+        if (!n.getComponent(UITransform)) {
+            n.addComponent(UITransform);
+        }
+    }
+
+    ensureFullWidget(
+        n: Node,
+        opts?: {
+            target?: Node | null;
+            top?: number;
+            bottom?: number;
+            left?: number;
+            right?: number;
+            alignMode?: Widget.AlignMode;
+        }
+    ) {
+        this.ensureUITransform(n);
+        const w = n.getComponent(Widget) ?? n.addComponent(Widget);
+        w.target = opts?.target ?? null;
+        w.isAlignTop = w.isAlignBottom = w.isAlignLeft = w.isAlignRight = true;
+        w.top = opts?.top ?? 0;
+        w.bottom = opts?.bottom ?? 0;
+        w.left = opts?.left ?? 0;
+        w.right = opts?.right ?? 0;
+        w.alignMode = opts?.alignMode ?? Widget.AlignMode.ON_WINDOW_RESIZE;
+        w.updateAlignment();
+    }
+    
     private findAutoScaleWidget(): Node | null {
         const center = this.node.getChildByName(NODE_NAMES.CENTER);
         if (!center) {

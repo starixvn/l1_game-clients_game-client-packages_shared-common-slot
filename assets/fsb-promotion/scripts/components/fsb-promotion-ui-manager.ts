@@ -51,6 +51,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
     private readonly UNIT_SECOND_REDEEM_SUCCESS = 2;
     private readonly UNIT_SECOND_ANIMATION_UNBOX_GIFT = 0.8;
     private readonly UNIT_SECOND_ANIMATION_REDEEM_SUCCESS = 0.3;
+    private hasServerFinishPromotion = false;
     onLoad() {
         this.createFsbPromotionContainer();
         this.createFsbPromotionPopupContainer();
@@ -117,12 +118,13 @@ export class FSBPromotionUIManager extends ObserverComponent {
 
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.OPEN_PROMOTION_ENDED_POPUP)
     initPromotionEndedPopup(isOpenPromotionEndedPopup: boolean) {
-        if (isOpenPromotionEndedPopup) {
+        if (isOpenPromotionEndedPopup && this.hasServerFinishPromotion) {
             if (this.fsbPromotionInfoNode && this.fsbPromotionInfoNode.isValid) {
                 this.fsbPromotionInfoNode.destroy();
             }
             this.loadAndShowPromotionEndedPopup();
             this.fsbPromotionInfoNode = null;
+            this.hasServerFinishPromotion = false;
         }
     }
 
@@ -217,9 +219,14 @@ export class FSBPromotionUIManager extends ObserverComponent {
         }
     }
 
+    @render(FSBPromotionUIStore, (store) => store.hasServerFinishPromotion)
+    private handleHasServerFinishPromotion(hasServerFinishPromotion: boolean) {
+       this.hasServerFinishPromotion = hasServerFinishPromotion;
+    }
+
     @render(CascadingUIStore, (store) => store.isFreeSpinEffectCompleted)
     private handleFreeSpinEffectCompleted(isFreeSpinEffectCompleted: boolean) {
-        if (isFreeSpinEffectCompleted) {
+        if (isFreeSpinEffectCompleted && this.hasServerFinishPromotion) {
             this.tryShowPromotionEndedPopup();
         }
     }

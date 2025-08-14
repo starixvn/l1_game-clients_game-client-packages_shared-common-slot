@@ -190,6 +190,7 @@ export class FSBPromotionUIStore {
         }
 
         if (this.currentSpinCount >= 0 && this.fsbConsumedThisRound) {
+            this.cascadingUIStore.fsbPromotionInProgress = true;
             return FSBPromotionState.Spinning;
         }
 

@@ -69,6 +69,7 @@ export class FSBPromotionInfo extends ObserverComponent {
         if (isSpinOnFSBPromotionFirstTime) {
             this.scheduleOnce(() => {
                 this.setBetControl();
+                this.tryConsumeFSB();
                 this.placeBet();
             }, 0.8);
         }
@@ -76,7 +77,6 @@ export class FSBPromotionInfo extends ObserverComponent {
 
     @handle(AutoPlayHandler, (handler) => handler.placeBet())
     placeBet() {
-        this.tryConsumeFSB();
     }
 
     @handle(FSBPromotionUIHandler, (handler) => handler.tryConsumeFSB())
@@ -109,7 +109,6 @@ export class FSBPromotionInfo extends ObserverComponent {
         this.activeDetailPromo();
         this.updatePromotionURL();
         this.openFreeSpinsPromotion();
-
     }
 
     @render(Bet.BetStore, (store) => store.lastReceivedBet, { fireImmediately: false })
@@ -141,7 +140,6 @@ export class FSBPromotionInfo extends ObserverComponent {
     @handle(FSBPromotionUIHandler, (handler) => handler.activeDetailPromo(true))
     private activeDetailPromo() {}
 
-    
     @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.OPEN_FREE_SPINS_PROMOTION))
     private openFreeSpinsPromotion() {}
 }

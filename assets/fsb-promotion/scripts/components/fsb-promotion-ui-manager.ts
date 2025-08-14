@@ -126,6 +126,20 @@ export class FSBPromotionUIManager extends ObserverComponent {
         }
     }
 
+    @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.DESTROY_BANNER_NODE)
+    destroyBannerNode(shouldDestroy: boolean) {
+        if (shouldDestroy) {
+            this.fsbBannerNode = null;
+        }
+    }
+
+    @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.CLOSE_FSB_END_BANNER)
+    closePromotionEndedPopupNode(isCloseFSBBanner: boolean) {
+        if (isCloseFSBBanner) {
+            this.promotionEndedPopupNode.active = false;
+        }
+    }
+
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.OPEN_CLAIM_BONUS_NOTIFICATION)
     initClaimBonusNotification(isOpenClaimBonusNotification: boolean) {
         if (isOpenClaimBonusNotification) {

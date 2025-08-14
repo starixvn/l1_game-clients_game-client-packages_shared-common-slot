@@ -32,7 +32,7 @@ export class FsbPromotionDialog extends ObserverComponent {
     closeDialog() {
         this.node.getComponent(Dialog)?.hide();
         this.resetRedeemSuccess();
-        this.removeUIPendingEvent();
+        this.addPendingUIEvent();
     }
 
     playGameNow() {
@@ -97,7 +97,7 @@ export class FsbPromotionDialog extends ObserverComponent {
         }
     }
 
-    @handle(FSBPromotionUIHandler, (handler) => handler.removeUIPendingEvent())
-    removeUIPendingEvent() {
+    @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.DESTROY_BANNER_NODE))
+    addPendingUIEvent() {
     }
 }

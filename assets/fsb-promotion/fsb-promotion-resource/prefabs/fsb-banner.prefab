@@ -643,8 +643,8 @@
     },
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": 484.834,
-      "y": 257.115,
+      "x": 474.983,
+      "y": 253.718,
       "z": 0
     },
     "_lrot": {
@@ -818,7 +818,9 @@
     "_disabledSprite": null,
     "_duration": 0.1,
     "_zoomScale": 1.1,
-    "_target": null,
+    "_target": {
+      "__id__": 26
+    },
     "_id": ""
   },
   {
@@ -880,8 +882,6 @@
       "__id__": 0
     },
     "fileId": "edaqnyHg1C/oMmB7Io5LG4",
-    "instance": null,
-    "targetOverrides": null,
     "nestedPrefabInstanceRoots": null
   },
   {

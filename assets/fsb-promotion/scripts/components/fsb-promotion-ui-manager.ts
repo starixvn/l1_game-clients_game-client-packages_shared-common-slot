@@ -239,7 +239,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
         const prefab = await this.loadPrefab(PREFAB_EFFECT_REDEEM_SUCCESS_PATH);
         const effectNode = instantiate(prefab);
 
-        this.fsbPromotionContainer.addChild(effectNode);
+        this.fsbPromotionPopupContainer.addChild(effectNode);
         this.effectRedeemSuccessNode = effectNode;
         this.scheduleOnce(() => {
             effectNode.getChildByName("bg")?.destroy();

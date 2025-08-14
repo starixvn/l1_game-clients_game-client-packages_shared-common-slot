@@ -288,6 +288,10 @@ export class FSBPromotionUIStore {
         this.pendingUIEvent = { event, data };
     }
 
+    removePendingUIEvent() {
+        this.pendingUIEvent = null;
+    }
+
     isRedeemSuccess() {
         return this.pendingUIEvent?.event === FreeSpinsPromotionEvents.OPEN_FREE_SPINS_PROMOTION && this.fsbPromotionStore.isRedeemSuccess;
     }

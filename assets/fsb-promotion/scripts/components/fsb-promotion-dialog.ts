@@ -32,6 +32,7 @@ export class FsbPromotionDialog extends ObserverComponent {
     closeDialog() {
         this.node.getComponent(Dialog)?.hide();
         this.resetRedeemSuccess();
+        this.removeUIPendingEvent();
     }
 
     playGameNow() {
@@ -94,5 +95,9 @@ export class FsbPromotionDialog extends ObserverComponent {
         if (shouldClose) {
             this.closeDialog();
         }
+    }
+
+    @handle(FSBPromotionUIHandler, (handler) => handler.removeUIPendingEvent())
+    removeUIPendingEvent() {
     }
 }

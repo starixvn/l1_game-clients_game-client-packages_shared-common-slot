@@ -194,6 +194,10 @@ export class FSBPromotionUIHandler {
         this.fsbPromotionUIStore.addPendingUIEvent(event, data);
     }
 
+    public removeUIPendingEvent() {
+        this.fsbPromotionUIStore.removePendingUIEvent();
+    }
+
     isEligibleForTurnOverPanel() {
         return this.fsbPromotionStore.finishPromotion?.totalWin > 0 && this.fsbPromotionUIStore.currentSpinCount === 0;
     }
@@ -267,6 +271,7 @@ export class FSBPromotionUIHandler {
     setIsClickPlayNow(isClickPlayNow: boolean) {
         this.fsbPromotionUIStore.isClickPlayNow = isClickPlayNow;
     }
+
 
     /** ========== TURN OVER REQUIRED MANAGEMENT ========== */
 

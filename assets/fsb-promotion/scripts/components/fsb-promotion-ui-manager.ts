@@ -118,10 +118,10 @@ export class FSBPromotionUIManager extends ObserverComponent {
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.OPEN_PROMOTION_ENDED_POPUP)
     initPromotionEndedPopup(isOpenPromotionEndedPopup: boolean) {
         if (isOpenPromotionEndedPopup) {
-            this.loadAndShowPromotionEndedPopup();
             if (this.fsbPromotionInfoNode && this.fsbPromotionInfoNode.isValid) {
                 this.fsbPromotionInfoNode.destroy();
             }
+            this.loadAndShowPromotionEndedPopup();
             this.fsbPromotionInfoNode = null;
         }
     }

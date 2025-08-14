@@ -17,6 +17,7 @@ export class RedeemGiftCodePopup extends ObserverComponent {
     @property(Label)
     errorLabel: Label = null;
     private _debounceTimer: any = null;
+    private readonly _originalY = 0;
 
     onEnable() {
         this.errorLabel.string = "";
@@ -57,11 +58,7 @@ export class RedeemGiftCodePopup extends ObserverComponent {
             console.warn("Clipboard read failed", e);
         }
     }
-    triggerResize(editBox: EditBox) {
-        const upper = editBox?.string?.toUpperCase();
-        if (editBox?.string !== upper) {
-            editBox.string = upper;
-        }
+    onEditBoxFocus() {
         if (this._debounceTimer) {
             clearTimeout(this._debounceTimer);
         }
@@ -71,5 +68,20 @@ export class RedeemGiftCodePopup extends ObserverComponent {
             }
             window.dispatchEvent(new Event("resize"));
         }, 200);
+    }
+
+    onInputFinalized(editBox: EditBox) {
+        const upper = editBox.string.toUpperCase();
+        if (editBox.string !== upper) {
+            editBox.string = upper;
+        }
+
+        this.onEditBoxBlur();
+    }
+
+    onEditBoxBlur() {
+        if (sys.isMobile) {
+            this.node.y = this._originalY;
+        }
     }
 }

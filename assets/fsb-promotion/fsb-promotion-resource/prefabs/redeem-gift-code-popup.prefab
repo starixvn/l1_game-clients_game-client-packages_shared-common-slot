@@ -2064,7 +2064,7 @@
     },
     "component": "",
     "_componentId": "af9659tmTNJpKJkadVz9G4R",
-    "handler": "triggerResize",
+    "handler": "onEditBoxFocus",
     "customEventData": ""
   },
   {
@@ -2074,7 +2074,7 @@
     },
     "component": "",
     "_componentId": "af9659tmTNJpKJkadVz9G4R",
-    "handler": "triggerResize",
+    "handler": "onEditBoxFocus",
     "customEventData": ""
   },
   {
@@ -2084,7 +2084,7 @@
     },
     "component": "",
     "_componentId": "af9659tmTNJpKJkadVz9G4R",
-    "handler": "triggerResize",
+    "handler": "onInputFinalized",
     "customEventData": ""
   },
   {

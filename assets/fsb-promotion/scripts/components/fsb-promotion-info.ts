@@ -123,9 +123,9 @@ export class FSBPromotionInfo extends ObserverComponent {
     @handle(FSBPromotionUIHandler, (handler) => handler.undoLastFSBSpin())
     revertLastFSB() {}
 
-    @render(FSBPromotionUIStore, (store) => store.isEligibleForNextFSBSpin)
-    async autoTriggerNextFSBSpin(isUsedFSBPromotionBonus: boolean) {
-        if (isUsedFSBPromotionBonus) {
+    @render(FSBPromotionUIStore, (store) => [store.isEligibleForNextFSBSpin, store.hasServerFinishPromotion])
+    async autoTriggerNextFSBSpin(isUsedFSBPromotionBonus: boolean, hasServerFinishPromotion: boolean) {
+        if (isUsedFSBPromotionBonus && !hasServerFinishPromotion) {
             this.setBetControl();
             this.tryConsumeFSB();
             this.placeBet();

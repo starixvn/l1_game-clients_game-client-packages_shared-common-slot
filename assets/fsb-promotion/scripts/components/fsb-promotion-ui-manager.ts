@@ -5,6 +5,7 @@ import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-pro
 import Observer from "observer";
 import { AnimationUtils } from "db://shared-components/shared/utils/utils";
 import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
+import { CascadingUIStore } from "db://shared-cascading-slot/stores/cascading-ui-store";
 import gc from "@sg/game-client-base";
 
 const { handle, render } = Observer;
@@ -202,6 +203,16 @@ export class FSBPromotionUIManager extends ObserverComponent {
         }
     }
 
+    @render(CascadingUIStore, (store) => store.isFreeSpinEffectCompleted)
+    private handleFreeSpinEffectCompleted(isFreeSpinEffectCompleted: boolean) {
+        if (isFreeSpinEffectCompleted) {
+            this.tryShowPromotionEndedPopup();
+        }
+    }
+
+    @handle(FSBPromotionUIHandler, (handler) => handler.tryShowEndedPopup())
+    private tryShowPromotionEndedPopup() {}
+
     @handle(gc.Auth.AuthHandlers.GetBalance)
     getBalance() {}
 
@@ -242,7 +253,6 @@ export class FSBPromotionUIManager extends ObserverComponent {
         this.fsbPromotionPopupContainer.addChild(effectNode);
         this.effectRedeemSuccessNode = effectNode;
         this.scheduleOnce(() => {
-            effectNode.getChildByName("bg")?.destroy();
             this.loadAndShowFsbBanner();
         }, this.UNIT_SECOND_ANIMATION_REDEEM_SUCCESS);
         await AnimationUtils.delayTime(this.UNIT_SECOND_REDEEM_SUCCESS);

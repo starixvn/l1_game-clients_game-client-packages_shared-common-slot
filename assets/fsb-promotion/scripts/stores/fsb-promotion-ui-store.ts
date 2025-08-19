@@ -272,16 +272,11 @@ export class FSBPromotionUIStore {
     }
 
     undoLastFSBSpin(): boolean {
-        if (!this.fsbConsumedThisRound) {
-            return false;
-        }
-        this.fsbConsumedThisRound = false;
-
-        if (!this.featureExtraFSActive) {
+        if (this.fsbConsumedThisRound && !this.featureExtraFSActive) {
+            this.fsbConsumedThisRound = false;
             this.currentSpinCount++;
             return true;
         }
-        this.featureExtraFSActive = false;
         return false;
     }
 

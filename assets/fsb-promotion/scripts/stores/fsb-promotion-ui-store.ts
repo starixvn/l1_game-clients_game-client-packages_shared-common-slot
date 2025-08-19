@@ -102,8 +102,6 @@ export class FSBPromotionUIStore {
 
     public isClickPlayNow = false;
 
-    public featureExtraFSActive = false;
-
     // TurnOverRequired state properties
     private _toProgress: ITurnOverRequired = null;
     public readonly turnOverRequiredDataKey = [TurnOverRequiredDataKey.PROMOTION_TO_PROGRESS];
@@ -272,7 +270,7 @@ export class FSBPromotionUIStore {
     }
 
     undoLastFSBSpin(): boolean {
-        if (this.fsbConsumedThisRound && !this.featureExtraFSActive) {
+        if (this.fsbConsumedThisRound && !this.resumedFSBPromotion) {
             this.fsbConsumedThisRound = false;
             this.currentSpinCount++;
             return true;

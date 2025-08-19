@@ -50,7 +50,6 @@ export class FSBPromotionUIManager extends ObserverComponent {
     private readonly UNIT_SECOND_EFFECT_UNBOX_GIFT = 2;
     private readonly UNIT_SECOND_REDEEM_SUCCESS = 2;
     private readonly UNIT_SECOND_ANIMATION_UNBOX_GIFT = 0.8;
-    private readonly UNIT_SECOND_ANIMATION_REDEEM_SUCCESS = 0.3;
     private hasServerFinishPromotion = false;
     onLoad() {
         this.createFsbPromotionContainer();
@@ -266,9 +265,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
 
         this.fsbPromotionPopupContainer.addChild(effectNode);
         this.effectRedeemSuccessNode = effectNode;
-        this.scheduleOnce(() => {
-            this.loadAndShowFsbBanner();
-        }, this.UNIT_SECOND_ANIMATION_REDEEM_SUCCESS);
+        this.loadAndShowFsbBanner();
         await AnimationUtils.delayTime(this.UNIT_SECOND_REDEEM_SUCCESS);
 
         this.effectRedeemSuccessNode.destroy();

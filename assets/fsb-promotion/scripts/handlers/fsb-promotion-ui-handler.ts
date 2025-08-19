@@ -242,7 +242,7 @@ export class FSBPromotionUIHandler {
         if (!this.fsbPromotionUIStore.isUpdateTotalWin) {
             return;
         }
-
+        this.fsbPromotionUIStore.featureExtraFSActive = totalFreeSpins > 0;
         this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.UPDATE_TOTAL_WIN, win);
         const isLastFreeSpin = totalFreeSpins === 0;
         if (isLastFreeSpin) {

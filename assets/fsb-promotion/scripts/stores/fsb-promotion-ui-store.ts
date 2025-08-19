@@ -66,7 +66,7 @@ export const FreeSpinsPromotionEvents = {
     HIDE_GIFT_CODE_ICON: "HIDE_GIFT_CODE_ICON",
     EFFECT_REDEEM_SUCCESS: "EFFECT_REDEEM_SUCCESS",
     CLOSE_FSB_BANNER: "CLOSE_FSB_BANNER",
-    CLOSE_FSB_END_BANNER: "CLOSE_FSB_END_BANNER"
+    CLOSE_FSB_END_BANNER: "CLOSE_FSB_END_BANNER",
 };
 
 @injectable()
@@ -101,6 +101,8 @@ export class FSBPromotionUIStore {
     public pendingOpenTOAfterFinish = false;
 
     public isClickPlayNow = false;
+
+    public featureExtraFSActive = false;
 
     // TurnOverRequired state properties
     private _toProgress: ITurnOverRequired = null;
@@ -269,12 +271,17 @@ export class FSBPromotionUIStore {
         return false;
     }
 
-    undoLastFSBSpin() {
-        if (this.fsbConsumedThisRound) {
+    undoLastFSBSpin(): boolean {
+        if (!this.fsbConsumedThisRound) {
+            return false;
+        }
+        this.fsbConsumedThisRound = false;
+
+        if (!this.featureExtraFSActive) {
             this.currentSpinCount++;
-            this.fsbConsumedThisRound = false;
             return true;
         }
+        this.featureExtraFSActive = false;
         return false;
     }
 

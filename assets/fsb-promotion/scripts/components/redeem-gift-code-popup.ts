@@ -1,5 +1,5 @@
 import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
-import { _decorator, EditBox, Label, sys } from "cc";
+import { _decorator, EditBox, Label, sys, Node as CCNode } from "cc";
 import Observer from "observer";
 import gc from "@sg/game-client-base";
 import { FSBPromotionStore } from "../stores/fsb-promotion-store";
@@ -16,21 +16,38 @@ export class RedeemGiftCodePopup extends ObserverComponent {
 
     @property(Label)
     errorLabel: Label = null;
+
+    @property(CCNode)
+    contentNode: CCNode = null;
+
     private _debounceTimer: any = null;
-    private readonly _originalY = 0;
+    private _originalY = 0;
+
+    private _isKeyboardOpen = false;
 
     onEnable() {
         this.errorLabel.string = "";
+        this._originalY = this.contentNode.position.y;
     }
 
     @handle(FSBPromotionUIHandler, (handle, giftCode: string) => handle.redeemGiftCode(giftCode))
-    @handle(FSBPromotionUIHandler, (handle) => handle.resetFSBRedemptionState())
-    onClickRedeemGifCode() {
+    redeemGifCode() {
         return this.giftCodeInput.string.trim().toUpperCase();
+    }
+
+    @handle(FSBPromotionUIHandler, (handle) => handle.resetFSBRedemptionState())
+    resetFSBRedemptionState() {}
+
+    onClickRedeemGifCode() {
+        this.redeemGifCode();
+        this.resetFSBRedemptionState();
     }
 
     @handle(gc.Audios.AudioHandler, (handle) => handle.playSFX(gc.Audios.AudioIds.CLICK))
     onClosePopup() {
+        if (this._isKeyboardOpen) {
+            return;
+        }
         this.node.getComponent(Dialog)?.hide();
     }
 
@@ -64,7 +81,8 @@ export class RedeemGiftCodePopup extends ObserverComponent {
         }
         this._debounceTimer = setTimeout(() => {
             if (sys.isMobile) {
-                this.node.y += 200;
+                this.contentNode.y += 200;
+                this._isKeyboardOpen = true;
             }
             window.dispatchEvent(new Event("resize"));
         }, 200);
@@ -81,7 +99,10 @@ export class RedeemGiftCodePopup extends ObserverComponent {
 
     onEditBoxBlur() {
         if (sys.isMobile) {
-            this.node.y = this._originalY;
+            this.scheduleOnce(() => {
+                this.contentNode.y = this._originalY;
+                this._isKeyboardOpen = false;
+            }, 0.2);
         }
     }
 }

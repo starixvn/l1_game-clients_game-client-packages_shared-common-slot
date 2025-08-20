@@ -262,7 +262,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
 
         const prefab = await this.loadPrefab(PREFAB_EFFECT_REDEEM_SUCCESS_PATH);
         const effectNode = instantiate(prefab);
-
+        this.playSoundEffect();
         this.fsbPromotionPopupContainer.addChild(effectNode);
         this.effectRedeemSuccessNode = effectNode;
         this.loadAndShowFsbBanner();
@@ -331,6 +331,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
     }
 
     private async loadAndShowClaimBonusNotification() {
+        this.playSoundEffect();
         if (this.claimBonusNotificationNode) {
             this.claimBonusNotificationNode.active = true;
         } else {
@@ -478,4 +479,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
             node = null;
         }
     }
+
+    @handle(gc.Audios.AudioHandler, (handler) => handler.playSFX("fsb-promotion"))
+    playSoundEffect() {}
 }

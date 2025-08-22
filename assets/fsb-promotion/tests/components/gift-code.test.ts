@@ -68,7 +68,6 @@ describe("GiftCode", () => {
     let mockIcon: any;
     let mockDraggableItem: any;
     let mockTouchCallback: any;
-    let mockScheduleOnce: jest.Mock;
 
     beforeEach(() => {
         // Reset all mocks
@@ -87,18 +86,13 @@ describe("GiftCode", () => {
             touchCallback: mockTouchCallback
         };
 
-        // Create mock scheduleOnce
-        mockScheduleOnce = jest.fn();
-
         // Create component instance
         component = new GiftCode();
         component.icon = mockIcon;
         component.getComponent = jest.fn() as any;
         
-        // Add scheduleOnce method if it doesn't exist
-        if (!component.scheduleOnce) {
-            (component as any).scheduleOnce = jest.fn();
-        }
+        // Add scheduleOnce method - required for component functionality
+        (component as any).scheduleOnce = jest.fn();
 
         // Mock methods that will be handled by decorators
         component['openGiftCodeRedeemPopup'] = jest.fn();
@@ -195,7 +189,7 @@ describe("GiftCode", () => {
 
             // Assert
             expect(component['openGiftCodeRedeemPopup']).not.toHaveBeenCalled();
-            expect(mockScheduleOnce).not.toHaveBeenCalled();
+            expect((component as any).scheduleOnce).not.toHaveBeenCalled();
         });
 
         it("should return early when cascading state is SPINNING", () => {
@@ -207,7 +201,7 @@ describe("GiftCode", () => {
 
             // Assert
             expect(component['openGiftCodeRedeemPopup']).not.toHaveBeenCalled();
-            expect(mockScheduleOnce).not.toHaveBeenCalled();
+            expect((component as any).scheduleOnce).not.toHaveBeenCalled();
         });
 
         it("should return early when both isProcessing is true and state is SPINNING", () => {
@@ -220,7 +214,20 @@ describe("GiftCode", () => {
 
             // Assert
             expect(component['openGiftCodeRedeemPopup']).not.toHaveBeenCalled();
-            expect(mockScheduleOnce).not.toHaveBeenCalled();
+            expect((component as any).scheduleOnce).not.toHaveBeenCalled();
+        });
+
+        it("should successfully execute when conditions are met", () => {
+            // Arrange - conditions are already set in beforeEach
+            // isProcessing = false, cascadingState = NOT_READY_BET
+
+            // Act
+            component.onClickGiftCode();
+
+            // Assert
+            expect(component['isProcessing']).toBe(true);
+            expect(component['openGiftCodeRedeemPopup']).toHaveBeenCalled();
+            expect((component as any).scheduleOnce).toHaveBeenCalledWith(expect.any(Function), 1);
         });
     });
 
@@ -287,7 +294,7 @@ describe("GiftCode", () => {
 
             // Assert - second click should be ignored
             expect(component['openGiftCodeRedeemPopup']).not.toHaveBeenCalled();
-            expect(mockScheduleOnce).not.toHaveBeenCalled();
+            expect((component as any).scheduleOnce).not.toHaveBeenCalled();
         });
     });
 

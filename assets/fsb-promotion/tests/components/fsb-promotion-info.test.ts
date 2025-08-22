@@ -184,10 +184,8 @@ describe("FSBPromotionInfo", () => {
         component.labelTotalBet = mockLabelTotalBet;
         component.getComponent = jest.fn().mockReturnValue(mockDraggableItem) as any;
         
-        // Add scheduleOnce method if it doesn't exist
-        if (!component.scheduleOnce) {
-            (component as any).scheduleOnce = jest.fn();
-        }
+        // Add scheduleOnce method - required for component functionality
+        (component as any).scheduleOnce = jest.fn();
 
         // Mock handler methods
         component.setCurrentSpinCount = jest.fn().mockImplementation((count) => count) as any;

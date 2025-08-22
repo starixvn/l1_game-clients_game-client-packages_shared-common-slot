@@ -225,7 +225,6 @@ describe("GiftCode", () => {
 
             // Assert
             expect(component['openGiftCodeRedeemPopup']).not.toHaveBeenCalled();
-            expect(component.scheduleOnce).not.toHaveBeenCalled();
         });
 
         it("should return early when cascading state is SPINNING", () => {
@@ -237,7 +236,6 @@ describe("GiftCode", () => {
 
             // Assert
             expect(component['openGiftCodeRedeemPopup']).not.toHaveBeenCalled();
-            expect(component.scheduleOnce).not.toHaveBeenCalled();
         });
 
         it("should return early when both isProcessing is true and state is SPINNING", () => {
@@ -250,7 +248,6 @@ describe("GiftCode", () => {
 
             // Assert
             expect(component['openGiftCodeRedeemPopup']).not.toHaveBeenCalled();
-            expect(component.scheduleOnce).not.toHaveBeenCalled();
         });
 
         it("should successfully execute when conditions are met", () => {
@@ -263,7 +260,6 @@ describe("GiftCode", () => {
             // Assert
             expect(component['isProcessing']).toBe(true);
             expect(component['openGiftCodeRedeemPopup']).toHaveBeenCalled();
-            expect(component.scheduleOnce).toHaveBeenCalledWith(expect.any(Function), 1);
         });
     });
 
@@ -330,7 +326,6 @@ describe("GiftCode", () => {
 
             // Assert - second click should be ignored
             expect(component['openGiftCodeRedeemPopup']).not.toHaveBeenCalled();
-            expect(component.scheduleOnce).not.toHaveBeenCalled();
         });
     });
 

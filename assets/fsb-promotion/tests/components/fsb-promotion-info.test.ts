@@ -183,9 +183,7 @@ describe("FSBPromotionInfo", () => {
         component.labelFSB = mockLabelFSB;
         component.labelTotalBet = mockLabelTotalBet;
         component.getComponent = jest.fn().mockReturnValue(mockDraggableItem) as any;
-        
-        // Add scheduleOnce method - required for component functionality
-        (component as any).scheduleOnce = jest.fn();
+        component.scheduleOnce = jest.fn();
 
         // Mock handler methods
         component.setCurrentSpinCount = jest.fn().mockImplementation((count) => count) as any;

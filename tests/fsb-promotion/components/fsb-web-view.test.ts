@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach, jest } from "@jest/globals";
-import { FsbWebView } from "../../scripts/components/fsb-web-view";
+import { FsbWebView } from "../../../assets/fsb-promotion/scripts/components/fsb-web-view";
 
 // Mock decorators first
 jest.mock("reflect-metadata", () => ({
@@ -40,7 +40,7 @@ jest.mock("db://shared-components/shared/common-components/web-view/load-web-vie
     }
 }));
 
-jest.mock("../../scripts/stores/fsb-promotion-ui-store", () => ({
+jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store", () => ({
     FSBPromotionUIStore: jest.fn(),
 }));
 

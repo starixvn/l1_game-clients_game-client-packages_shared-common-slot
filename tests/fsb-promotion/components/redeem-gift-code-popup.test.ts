@@ -41,15 +41,15 @@ jest.mock("db://shared-components/shared/common-components/dialogs/dialog", () =
     Dialog: jest.fn(),
 }));
 
-jest.mock("../../scripts/stores/fsb-promotion-store", () => ({
+jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-store", () => ({
     FSBPromotionStore: jest.fn(),
 }));
 
-jest.mock("../../scripts/handlers/fsb-promotion-ui-handler", () => ({
+jest.mock("../../../assets/fsb-promotion/scripts/handlers/fsb-promotion-ui-handler", () => ({
     FSBPromotionUIHandler: jest.fn(),
 }));
 
-jest.mock("../../scripts/stores/fsb-promotion-ui-store", () => ({
+jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store", () => ({
     FreeSpinsPromotionEvents: {
         REDEMPTION_NOTICE: "REDEMPTION_NOTICE",
     },

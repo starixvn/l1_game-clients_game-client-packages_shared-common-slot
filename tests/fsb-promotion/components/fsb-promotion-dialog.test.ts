@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach, jest } from "@jest/globals";
-import { FsbPromotionDialog } from "../../scripts/components/fsb-promotion-dialog";
+import { FsbPromotionDialog } from "../../../assets/fsb-promotion/scripts/components/fsb-promotion-dialog";
 
 // Mock decorators
 jest.mock("reflect-metadata", () => ({
@@ -60,9 +60,9 @@ jest.mock("db://shared-cascading-slot/cascading-slot-utils", () => ({
     SlotNotification: {},
 }));
 
-jest.mock("../../scripts/stores/fsb-promotion-ui-store");
-jest.mock("../../scripts/handlers/fsb-promotion-ui-handler");
-jest.mock("../../scripts/handlers/fsb-promotion-handlers");
+jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store");
+jest.mock("../../../assets/fsb-promotion/scripts/handlers/fsb-promotion-ui-handler");
+jest.mock("../../../assets/fsb-promotion/scripts/handlers/fsb-promotion-handlers");
 jest.mock("db://shared-cascading-slot/stores/cascading-ui-store");
 
 describe("FsbPromotionDialog", () => {

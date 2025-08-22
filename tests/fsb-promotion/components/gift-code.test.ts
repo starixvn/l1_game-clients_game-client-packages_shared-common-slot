@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach, jest } from "@jest/globals";
-import { GiftCode } from "../../scripts/components/gift-code";
+import { GiftCode } from "../../../assets/fsb-promotion/scripts/components/gift-code";
 import { Node } from "cc";
 import DraggableItem from "db://shared-components/shared/common-components/draggable/draggable-item";
 import { CascadingSlotState } from "db://shared-cascading-slot/cascading-slot-state";
@@ -40,8 +40,8 @@ jest.mock("db://shared-components/shared/common-components/observer-component/sc
         scheduleOnce = jest.fn();
     },
 }));
-jest.mock("../../scripts/stores/fsb-promotion-ui-store");
-jest.mock("../../scripts/handlers/fsb-promotion-ui-handler");
+jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store");
+jest.mock("../../../assets/fsb-promotion/scripts/handlers/fsb-promotion-ui-handler");
 jest.mock("observer", () => ({
     __esModule: true,
     default: {

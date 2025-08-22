@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { FSBPromotionHandlers } from "../../scripts/handlers/fsb-promotion-handlers";
-import { RedeemStatus } from "../../scripts/stores/fsb-promotion-store";
-import { FreeSpinsPromotionEvents } from "../../scripts/stores/fsb-promotion-ui-store";
-import { GameServiceMessageSlot } from "../../../game-message-slot";
+import { FSBPromotionHandlers } from "../../../assets/fsb-promotion/scripts/handlers/fsb-promotion-handlers";
+import { RedeemStatus } from "../../../assets/fsb-promotion/scripts/stores/fsb-promotion-store";
+import { FreeSpinsPromotionEvents } from "../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store";
+import { GameServiceMessageSlot } from "../../../assets/game-message-slot";
 
 // Mock dependencies
 jest.mock("@sg/game-client-base", () => ({
@@ -23,7 +23,7 @@ jest.mock("inversify", () => ({
 }));
 
 // Mock the stores to avoid decorator issues
-jest.mock("../../scripts/stores/fsb-promotion-store", () => ({
+jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-store", () => ({
     FSBPromotionStore: jest.fn(),
     RedeemStatus: {
         Idle: 0,
@@ -32,7 +32,7 @@ jest.mock("../../scripts/stores/fsb-promotion-store", () => ({
     },
 }));
 
-jest.mock("../../scripts/stores/fsb-promotion-ui-store", () => ({
+jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store", () => ({
     FSBPromotionUIStore: jest.fn(),
     FreeSpinsPromotionEvents: {
         OPEN_PROMOTION_INFO: "OPEN_PROMOTION_INFO",
@@ -52,11 +52,11 @@ jest.mock("../../scripts/stores/fsb-promotion-ui-store", () => ({
     },
 }));
 
-jest.mock("../../scripts/handlers/fsb-promotion-ui-handler", () => ({
+jest.mock("../../../assets/fsb-promotion/scripts/handlers/fsb-promotion-ui-handler", () => ({
     FSBPromotionUIHandler: jest.fn(),
 }));
 
-jest.mock("../../../game-message-slot", () => ({
+jest.mock("../../../assets/game-message-slot", () => ({
     GameServiceMessageSlot: {
         Promotion: {
             eventName: "Promotion",

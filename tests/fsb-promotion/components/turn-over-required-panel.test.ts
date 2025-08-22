@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { FreeSpinsPromotionEvents } from "../../scripts/stores/fsb-promotion-ui-store";
-import { GameServiceMessageSlot } from "../../../game-message-slot";
+import { GameServiceMessageSlot } from "../../../assets/game-message-slot";
 
 // Mock dependencies
 jest.mock("@sg/game-client-base", () => ({
@@ -41,12 +40,12 @@ jest.mock("db://i18n/LanguageData", () => ({
     t: jest.fn((key) => key),
 }));
 
-jest.mock("../../scripts/components/simple-claim-button", () => ({
+jest.mock("../../../assets/fsb-promotion/scripts/components/simple-claim-button", () => ({
     default: jest.fn(),
 }));
 
 // Mock the stores to avoid decorator issues
-jest.mock("../../scripts/stores/fsb-promotion-ui-store", () => ({
+jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store", () => ({
     FSBPromotionUIStore: jest.fn(),
     FreeSpinsPromotionEvents: {
         SHOW_NOTICE_ERROR: "SHOW_NOTICE_ERROR",
@@ -59,15 +58,15 @@ jest.mock("../../scripts/stores/fsb-promotion-ui-store", () => ({
     },
 }));
 
-jest.mock("../../scripts/stores/fsb-promotion-store", () => ({
+jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-store", () => ({
     FSBPromotionStore: jest.fn(),
 }));
 
-jest.mock("../../scripts/handlers/fsb-promotion-ui-handler", () => ({
+jest.mock("../../../assets/fsb-promotion/scripts/handlers/fsb-promotion-ui-handler", () => ({
     FSBPromotionUIHandler: jest.fn(),
 }));
 
-jest.mock("../../../game-message-slot", () => ({
+jest.mock("../../../assets/game-message-slot", () => ({
     GameServiceMessageSlot: {
         PromotionTOProgress: {
             eventName: "PromotionTOProgress",
@@ -216,7 +215,7 @@ describe("TurnOverRequiredPanel", () => {
 
     describe("Event Constants Tests", () => {
         it("should have correct event constants", () => {
-            const { FreeSpinsPromotionEvents } = require("../../scripts/stores/fsb-promotion-ui-store");
+            const { FreeSpinsPromotionEvents } = require("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store");
             
             expect(FreeSpinsPromotionEvents.SHOW_NOTICE_ERROR).toBe("SHOW_NOTICE_ERROR");
             expect(FreeSpinsPromotionEvents.EXPIRE_CLAIM_BONUS).toBe("EXPIRE_CLAIM_BONUS");
@@ -230,7 +229,7 @@ describe("TurnOverRequiredPanel", () => {
 
     describe("Game Service Message Tests", () => {
         it("should have correct game service message structure", () => {
-            const { GameServiceMessageSlot } = require("../../../game-message-slot");
+            const { GameServiceMessageSlot } = require("../../../assets/game-message-slot");
             
             expect(GameServiceMessageSlot.PromotionTOProgress.eventName).toBe("PromotionTOProgress");
         });
@@ -327,7 +326,7 @@ describe("TurnOverRequiredPanel", () => {
         });
 
         it("should handle error scenarios", () => {
-            const { FreeSpinsPromotionEvents } = require("../../scripts/stores/fsb-promotion-ui-store");
+            const { FreeSpinsPromotionEvents } = require("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store");
 
             // Handle show notice error
             const showErrorData = { 

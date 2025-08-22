@@ -44,7 +44,7 @@ jest.mock("db://shared-components/shared/common-components/observer-component/sc
 }));
 
 // Mock stores
-jest.mock("../../scripts/stores/fsb-promotion-ui-store", () => ({
+jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store", () => ({
     FSBPromotionUIStore: {},
     FreeSpinsPromotionEvents: {
         EFFECT_UNBOX_GIFT: "EFFECT_UNBOX_GIFT"

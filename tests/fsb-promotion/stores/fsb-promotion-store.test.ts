@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { FSBPromotionStore, RedeemStatus } from "../../scripts/stores/fsb-promotion-store";
-import { GameServiceMessageSlot } from "../../../game-message-slot";
+import { FSBPromotionStore, RedeemStatus } from "../../../assets/fsb-promotion/scripts/stores/fsb-promotion-store";
+import { GameServiceMessageSlot } from "../../../assets/game-message-slot";
 
 // Mock dependencies
 jest.mock("mobx");

@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { FSBPromotionUIStore, FSBPromotionState, FreeSpinsPromotionEvents, TurnOverRequiredDataKey, endpointConstants } from "../../scripts/stores/fsb-promotion-ui-store";
+import { FSBPromotionUIStore, FSBPromotionState, FreeSpinsPromotionEvents, TurnOverRequiredDataKey, endpointConstants } from "../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store";
 import gc from "@sg/game-client-base";
 
 // Mock dependencies
 jest.mock("@sg/game-client-base");
-jest.mock("../../scripts/stores/fsb-promotion-store", () => ({
+jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-store", () => ({
     FSBPromotionStore: jest.fn().mockImplementation(() => ({
         promotion: null,
         finishPromotion: null,

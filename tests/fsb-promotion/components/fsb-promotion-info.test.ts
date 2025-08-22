@@ -1,7 +1,7 @@
 import { describe, expect, it, beforeEach, jest } from "@jest/globals";
-import { FSBPromotionInfo } from "../../scripts/components/fsb-promotion-info";
-import { GameServiceMessageSlot } from "../../../game-message-slot";
-import { FreeSpinsPromotionEvents } from "../../scripts/stores/fsb-promotion-ui-store";
+import { FSBPromotionInfo } from "../../../assets/fsb-promotion/scripts/components/fsb-promotion-info";
+import { GameServiceMessageSlot } from "../../../assets/game-message-slot";
+import { FreeSpinsPromotionEvents } from "../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store";
 
 // Mock decorators first
 jest.mock("reflect-metadata", () => ({
@@ -118,8 +118,8 @@ jest.mock("db://shared-components/shared/common-components/draggable/draggable-i
     default: jest.fn(),
 }));
 
-jest.mock("../../scripts/stores/fsb-promotion-store");
-jest.mock("../../../game-message-slot");
+jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-store");
+jest.mock("../../../assets/game-message-slot");
 jest.mock("observer", () => ({
     __esModule: true,
     default: {
@@ -129,8 +129,8 @@ jest.mock("observer", () => ({
 }));
 
 jest.mock("db://shared-cascading-slot/handlers/auto-play-handlers");
-jest.mock("../../scripts/stores/fsb-promotion-ui-store");
-jest.mock("../../scripts/handlers/fsb-promotion-ui-handler");
+jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store");
+jest.mock("../../../assets/fsb-promotion/scripts/handlers/fsb-promotion-ui-handler");
 
 // Mock cascading slot dependencies
 jest.mock("db://shared-cascading-slot/cascading-slot-utils", () => ({
@@ -244,7 +244,7 @@ describe("FSBPromotionInfo", () => {
             onPendingUIEvent(event) {
                 if (!event) return;
                 
-                const FreeSpinsPromotionEvents = require("../../scripts/stores/fsb-promotion-ui-store").FreeSpinsPromotionEvents;
+                const FreeSpinsPromotionEvents = require("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store").FreeSpinsPromotionEvents;
                 
                 switch (event.event) {
                     case FreeSpinsPromotionEvents.UPDATE_FSB_COUNT:

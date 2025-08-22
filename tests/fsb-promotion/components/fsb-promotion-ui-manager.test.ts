@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach, jest } from "@jest/globals";
-import { FSBPromotionUIStore, FSBPromotionState, FreeSpinsPromotionEvents } from "../../scripts/stores/fsb-promotion-ui-store";
+import { FSBPromotionUIStore, FSBPromotionState, FreeSpinsPromotionEvents } from "../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store";
 
 // Mock decorators first
 jest.mock("reflect-metadata", () => ({
@@ -74,7 +74,7 @@ jest.mock("mobx", () => ({
     makeAutoObservable: jest.fn(),
 }));
 
-jest.mock("../../scripts/stores/fsb-promotion-store", () => ({
+jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-store", () => ({
     FSBPromotionStore: function MockFSBPromotionStore() {
         return {
             promotion: null,

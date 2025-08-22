@@ -1,7 +1,7 @@
 import { describe, expect, it, beforeEach, jest } from "@jest/globals";
-import PromotionEndPopup from "../../scripts/components/promotion-end-popup";
+import PromotionEndPopup from "../../../assets/fsb-promotion/scripts/components/promotion-end-popup";
 import { Node, Label, Button } from "cc";
-import { GameServiceMessageSlot } from "../../../game-message-slot";
+import { GameServiceMessageSlot } from "../../../assets/game-message-slot";
 import { Auth } from "@sg/game-client-base";
 
 // Mock decorators first
@@ -91,8 +91,8 @@ jest.mock("db://shared-components/shared/common-components/observer-component/sc
     ObserverComponent: class MockObserverComponent {},
 }));
 jest.mock("db://i18n/LanguageData");
-jest.mock("../../scripts/stores/fsb-promotion-store");
-jest.mock("../../scripts/handlers/fsb-promotion-handlers");
+jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-store");
+jest.mock("../../../assets/fsb-promotion/scripts/handlers/fsb-promotion-handlers");
 jest.mock("observer", () => ({
     __esModule: true,
     default: {
@@ -100,12 +100,12 @@ jest.mock("observer", () => ({
         handle: jest.fn(() => jest.fn()),
     },
 }));
-jest.mock("../../../game-message-slot");
+jest.mock("../../../assets/game-message-slot");
 jest.mock("db://shared-components/shared/common-components/dialogs/dialog", () => ({
     Dialog: jest.fn(),
 }));
-jest.mock("../../scripts/handlers/fsb-promotion-ui-handler");
-jest.mock("../../scripts/stores/fsb-promotion-ui-store");
+jest.mock("../../../assets/fsb-promotion/scripts/handlers/fsb-promotion-ui-handler");
+jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store");
 
 // Mock cascading slot dependencies
 jest.mock("db://shared-cascading-slot/stores/cascading-ui-store");

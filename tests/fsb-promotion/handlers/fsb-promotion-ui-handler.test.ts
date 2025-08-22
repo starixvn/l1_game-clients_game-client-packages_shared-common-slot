@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { FSBPromotionUIHandler } from "../../scripts/handlers/fsb-promotion-ui-handler";
-import { RedeemStatus } from "../../scripts/stores/fsb-promotion-store";
-import { FreeSpinsPromotionEvents } from "../../scripts/stores/fsb-promotion-ui-store";
-import { GameClientMessageSlot } from "../../../game-message-slot";
+import { FSBPromotionUIHandler } from "../../../assets/fsb-promotion/scripts/handlers/fsb-promotion-ui-handler";
+import { RedeemStatus } from "../../../assets/fsb-promotion/scripts/stores/fsb-promotion-store";
+import { FreeSpinsPromotionEvents } from "../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store";
+import { GameClientMessageSlot } from "../../../assets/game-message-slot";
 
 // Mock dependencies
 jest.mock("@sg/game-client-base", () => ({
@@ -50,7 +50,7 @@ jest.mock("db://shared-cascading-slot/handlers/bet-control-handlers");
 jest.mock("db://shared-cascading-slot/stores/cascading-ui-store");
 
 // Mock the stores to avoid decorator issues
-jest.mock("../../scripts/stores/fsb-promotion-store", () => ({
+jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-store", () => ({
     FSBPromotionStore: jest.fn(),
     RedeemStatus: {
         Idle: 0,
@@ -59,7 +59,7 @@ jest.mock("../../scripts/stores/fsb-promotion-store", () => ({
     },
 }));
 
-jest.mock("../../scripts/stores/fsb-promotion-ui-store", () => ({
+jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store", () => ({
     FSBPromotionUIStore: jest.fn(),
     FreeSpinsPromotionEvents: {
         OPEN_PROMOTION_INFO: "OPEN_PROMOTION_INFO",
@@ -81,7 +81,7 @@ jest.mock("../../scripts/stores/fsb-promotion-ui-store", () => ({
     },
 }));
 
-jest.mock("../../../game-message-slot", () => ({
+jest.mock("../../../assets/game-message-slot", () => ({
     GameClientMessageSlot: {
         ClaimBonusWin: {
             eventName: "ClaimBonusWin",

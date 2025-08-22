@@ -54,15 +54,15 @@ jest.mock("db://shared-components/shared/common-components/dialogs/dialog", () =
 }));
 
 // Mock stores and handlers
-jest.mock("../../scripts/stores/fsb-promotion-ui-store", () => ({
+jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store", () => ({
     FSBPromotionUIStore: {},
     FreeSpinsPromotionEvents: {
         UPDATE_BALANCE_BONUS: "UPDATE_BALANCE_BONUS"
     }
 }));
 
-jest.mock("../../scripts/stores/fsb-promotion-store");
-jest.mock("../../scripts/handlers/fsb-promotion-ui-handler");
+jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-store");
+jest.mock("../../../assets/fsb-promotion/scripts/handlers/fsb-promotion-ui-handler");
 jest.mock("db://shared-cascading-slot/handlers/cascading-ui-handler");
 
 describe("ClaimBonusNotificationPopup", () => {

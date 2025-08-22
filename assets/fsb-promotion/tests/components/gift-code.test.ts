@@ -94,6 +94,11 @@ describe("GiftCode", () => {
         component = new GiftCode();
         component.icon = mockIcon;
         component.getComponent = jest.fn() as any;
+        
+        // Add scheduleOnce method if it doesn't exist
+        if (!component.scheduleOnce) {
+            (component as any).scheduleOnce = jest.fn();
+        }
 
         // Mock methods that will be handled by decorators
         component['openGiftCodeRedeemPopup'] = jest.fn();

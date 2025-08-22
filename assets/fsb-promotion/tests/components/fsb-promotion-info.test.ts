@@ -183,7 +183,11 @@ describe("FSBPromotionInfo", () => {
         component.labelFSB = mockLabelFSB;
         component.labelTotalBet = mockLabelTotalBet;
         component.getComponent = jest.fn().mockReturnValue(mockDraggableItem) as any;
-        component.scheduleOnce = jest.fn();
+        
+        // Add scheduleOnce method if it doesn't exist
+        if (!component.scheduleOnce) {
+            (component as any).scheduleOnce = jest.fn();
+        }
 
         // Mock handler methods
         component.setCurrentSpinCount = jest.fn().mockImplementation((count) => count) as any;
@@ -368,7 +372,7 @@ describe("FSBPromotionInfo", () => {
             component.spinOnFSBPromotionFirstTime(true);
 
             // Assert
-            expect(component.scheduleOnce).toHaveBeenCalledWith(expect.any(Function), 0.8);
+            expect((component as any).scheduleOnce).toHaveBeenCalledWith(expect.any(Function), 0.8);
         });
 
         it("should not schedule actions when isSpinOnFSBPromotionFirstTime is false", () => {
@@ -376,13 +380,13 @@ describe("FSBPromotionInfo", () => {
             component.spinOnFSBPromotionFirstTime(false);
 
             // Assert
-            expect(component.scheduleOnce).not.toHaveBeenCalled();
+            expect((component as any).scheduleOnce).not.toHaveBeenCalled();
         });
 
         it("should execute scheduled actions correctly", () => {
             // Arrange
             let scheduledCallback: any;
-            component.scheduleOnce = jest.fn().mockImplementation((callback: any) => {
+            (component as any).scheduleOnce = jest.fn().mockImplementation((callback: any) => {
                 scheduledCallback = callback;
             });
             

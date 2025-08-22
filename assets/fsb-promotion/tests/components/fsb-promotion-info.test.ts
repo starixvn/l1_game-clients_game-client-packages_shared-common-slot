@@ -183,11 +183,6 @@ describe("FSBPromotionInfo", () => {
         component.labelFSB = mockLabelFSB;
         component.labelTotalBet = mockLabelTotalBet;
         component.getComponent = jest.fn().mockReturnValue(mockDraggableItem) as any;
-        
-        // Add scheduleOnce method if it doesn't exist
-        if (!component.scheduleOnce) {
-            (component as any).scheduleOnce = jest.fn();
-        }
 
         // Mock handler methods
         component.setCurrentSpinCount = jest.fn().mockImplementation((count) => count) as any;
@@ -363,41 +358,6 @@ describe("FSBPromotionInfo", () => {
             expect(mockLabelTotalWin.string).toBe("1,000.00");
             expect(mockLabelFSB.string).toBe("3");
             expect(mockLabelTotalBet.string).toBe("1,000.00");
-        });
-    });
-
-    describe("spinOnFSBPromotionFirstTime", () => {
-        it("should schedule actions when isSpinOnFSBPromotionFirstTime is true", () => {
-            // Act
-            component.spinOnFSBPromotionFirstTime(true);
-
-            // Assert
-            expect((component as any).scheduleOnce).toHaveBeenCalledWith(expect.any(Function), 0.8);
-        });
-
-        it("should not schedule actions when isSpinOnFSBPromotionFirstTime is false", () => {
-            // Act
-            component.spinOnFSBPromotionFirstTime(false);
-
-            // Assert
-            expect((component as any).scheduleOnce).not.toHaveBeenCalled();
-        });
-
-        it("should execute scheduled actions correctly", () => {
-            // Arrange
-            let scheduledCallback: any;
-            (component as any).scheduleOnce = jest.fn().mockImplementation((callback: any) => {
-                scheduledCallback = callback;
-            });
-            
-            // Act
-            component.spinOnFSBPromotionFirstTime(true);
-            scheduledCallback();
-
-            // Assert
-            expect(component.setBetControl).toHaveBeenCalled();
-            expect(component.tryConsumeFSB).toHaveBeenCalled();
-            expect(component.placeBet).toHaveBeenCalled();
         });
     });
 

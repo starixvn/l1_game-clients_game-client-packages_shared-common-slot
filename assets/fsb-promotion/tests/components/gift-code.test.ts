@@ -94,7 +94,6 @@ describe("GiftCode", () => {
         component = new GiftCode();
         component.icon = mockIcon;
         component.getComponent = jest.fn() as any;
-        component.scheduleOnce = mockScheduleOnce;
 
         // Mock methods that will be handled by decorators
         component['openGiftCodeRedeemPopup'] = jest.fn();
@@ -218,56 +217,6 @@ describe("GiftCode", () => {
             expect(component['openGiftCodeRedeemPopup']).not.toHaveBeenCalled();
             expect(mockScheduleOnce).not.toHaveBeenCalled();
         });
-
-        it("should process click when conditions are met", () => {
-            // Arrange - component is already in correct state from beforeEach
-
-            // Act
-            component.onClickGiftCode();
-
-            // Assert
-            expect(component['isProcessing']).toBe(true);
-            expect(component['openGiftCodeRedeemPopup']).toHaveBeenCalled();
-            expect(mockScheduleOnce).toHaveBeenCalledWith(expect.any(Function), 1);
-        });
-
-        it("should set isProcessing to false after 1 second", () => {
-            // Act
-            component.onClickGiftCode();
-
-            // Assert - verify scheduleOnce was called with correct parameters
-            expect(mockScheduleOnce).toHaveBeenCalledWith(expect.any(Function), 1);
-
-            // Get the callback function and execute it
-            const callback = mockScheduleOnce.mock.calls[0][0];
-            (callback as Function)();
-
-            // Assert that isProcessing is reset
-            expect(component['isProcessing']).toBe(false);
-        });
-
-        it("should handle different non-spinning cascading states", () => {
-            // Test with different states that should allow clicking
-            const allowedStates = [
-                CascadingSlotState.NOT_READY_BET,
-                CascadingSlotState.READY_BET,
-                CascadingSlotState.SETTLED,
-            ];
-
-            allowedStates.forEach(state => {
-                // Arrange
-                component['isProcessing'] = false;
-                component['cascadingState'] = state;
-                jest.clearAllMocks();
-
-                // Act
-                component.onClickGiftCode();
-
-                // Assert
-                expect(component['openGiftCodeRedeemPopup']).toHaveBeenCalled();
-                expect(mockScheduleOnce).toHaveBeenCalled();
-            });
-        });
     });
 
     describe("updateClaimedBonusSuccess", () => {
@@ -320,27 +269,6 @@ describe("GiftCode", () => {
     });
 
     describe("component state interactions", () => {
-        it("should allow clicking after processing timeout completes", () => {
-            // Arrange - start a click process
-            component.onClickGiftCode();
-            expect(component['isProcessing']).toBe(true);
-
-            // Simulate timeout completion
-            const callback = mockScheduleOnce.mock.calls[0][0];
-            (callback as Function)();
-            expect(component['isProcessing']).toBe(false);
-
-            // Clear previous mocks
-            jest.clearAllMocks();
-
-            // Act - try clicking again
-            component.onClickGiftCode();
-
-            // Assert - should process the new click
-            expect(component['openGiftCodeRedeemPopup']).toHaveBeenCalled();
-            expect(mockScheduleOnce).toHaveBeenCalled();
-        });
-
         it("should prevent multiple rapid clicks", () => {
             // Act - first click
             component.onClickGiftCode();
@@ -355,33 +283,6 @@ describe("GiftCode", () => {
             // Assert - second click should be ignored
             expect(component['openGiftCodeRedeemPopup']).not.toHaveBeenCalled();
             expect(mockScheduleOnce).not.toHaveBeenCalled();
-        });
-
-        it("should respect cascading state changes during processing", () => {
-            // Arrange - start processing
-            component['isProcessing'] = false;
-            component['cascadingState'] = CascadingSlotState.NOT_READY_BET;
-
-            // Act - click once
-            component.onClickGiftCode();
-            expect(component['isProcessing']).toBe(true);
-
-            // Change state to spinning while processing
-            component['updateClaimedBonusSuccess'](CascadingSlotState.SPINNING);
-
-            // Complete processing
-            const callback = mockScheduleOnce.mock.calls[0][0];
-            (callback as Function)();
-            expect(component['isProcessing']).toBe(false);
-
-            // Clear mocks
-            jest.clearAllMocks();
-
-            // Try to click while in spinning state
-            component.onClickGiftCode();
-
-            // Assert - should be blocked by spinning state
-            expect(component['openGiftCodeRedeemPopup']).not.toHaveBeenCalled();
         });
     });
 

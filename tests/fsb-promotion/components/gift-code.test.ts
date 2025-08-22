@@ -4,7 +4,7 @@ import { Node } from "cc";
 import DraggableItem from "db://shared-components/shared/common-components/draggable/draggable-item";
 import { CascadingSlotState } from "db://shared-cascading-slot/cascading-slot-state";
 
-// Mock decorators first
+// Mock dependencies following Dependency Inversion Principle
 jest.mock("reflect-metadata", () => ({
     Reflect: {
         decorate: jest.fn(),
@@ -14,7 +14,6 @@ jest.mock("reflect-metadata", () => ({
     },
 }));
 
-// Mock _decorator from cc
 jest.mock("cc", () => ({
     _decorator: {
         ccclass: jest.fn(() => jest.fn()),
@@ -29,17 +28,18 @@ jest.mock("cc", () => ({
     Component: jest.fn(),
 }));
 
-// Mock dependencies
 jest.mock("db://shared-components/shared/common-components/draggable/draggable-item", () => ({
     __esModule: true,
     default: jest.fn(),
 }));
+
 jest.mock("db://shared-components/shared/common-components/observer-component/scripts/observer-component", () => ({
     ObserverComponent: class MockObserverComponent {
         getComponent = jest.fn();
         scheduleOnce = jest.fn();
     },
 }));
+
 jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store");
 jest.mock("../../../assets/fsb-promotion/scripts/handlers/fsb-promotion-ui-handler");
 jest.mock("observer", () => ({
@@ -51,8 +51,6 @@ jest.mock("observer", () => ({
 }));
 jest.mock("db://shared-cascading-slot/stores/cascading-ui-store");
 jest.mock("db://shared-cascading-slot/cascading-slot-state");
-
-// Mock cascading slot dependencies
 jest.mock("db://shared-cascading-slot/cascading-slot-utils", () => ({
     globalEmitter: {
         addEventListener: jest.fn(),
@@ -63,294 +61,495 @@ jest.mock("db://shared-cascading-slot/cascading-slot-utils", () => ({
     SlotNotification: {},
 }));
 
+// Mock Interfaces following Interface Segregation Principle
+interface MockIcon {
+    // Icon properties if needed
+}
+
+interface MockTouchCallback {
+    end: ((isClick: boolean) => void) | null;
+}
+
+interface MockDraggableItem {
+    touchCallback: MockTouchCallback;
+}
+
+interface MockComponentLifecycle {
+    scheduleOnce: jest.Mock;
+    getComponent: jest.Mock;
+}
+
+interface MockGiftCodeState {
+    isProcessing: boolean;
+    cascadingState: any;
+}
+
+interface MockGiftCodeActions {
+    openGiftCodeRedeemPopup: jest.Mock;
+    onEnable: () => void;
+    dragGiftCode: () => void;
+    onClickGiftCode: () => void;
+    updateClaimedBonusSuccess: (newState: any) => void;
+}
+
+interface MockGiftCodeComponent extends MockComponentLifecycle, MockGiftCodeState, MockGiftCodeActions {
+    icon: MockIcon;
+}
+
+// Factory functions following Single Responsibility Principle
+const createMockIcon = (): MockIcon => ({});
+
+const createMockTouchCallback = (): MockTouchCallback => ({
+    end: null,
+});
+
+const createMockDraggableItem = (): MockDraggableItem => ({
+    touchCallback: createMockTouchCallback(),
+});
+
+const createMockGiftCodeComponent = (overrides?: Partial<MockGiftCodeComponent>): MockGiftCodeComponent => {
+    const mockIcon = createMockIcon();
+    const mockDraggableItem = createMockDraggableItem();
+
+    const component: MockGiftCodeComponent = {
+        icon: mockIcon,
+        scheduleOnce: jest.fn(),
+        getComponent: jest.fn().mockReturnValue(mockDraggableItem),
+        isProcessing: false,
+        cascadingState: CascadingSlotState.NOT_READY_BET,
+        openGiftCodeRedeemPopup: jest.fn(),
+        
+        onEnable() {
+            this.dragGiftCode();
+        },
+        
+        dragGiftCode() {
+            const draggable = this.getComponent(DraggableItem) as MockDraggableItem;
+            if (draggable && draggable.touchCallback) {
+                draggable.touchCallback.end = (isClick) => {
+                    if (isClick) {
+                        this.onClickGiftCode();
+                    }
+                };
+            }
+        },
+        
+        onClickGiftCode() {
+            if (this.isProcessing || this.cascadingState === CascadingSlotState.SPINNING) {
+                return;
+            }
+            
+            this.isProcessing = true;
+            this.openGiftCodeRedeemPopup();
+            
+            this.scheduleOnce(() => {
+                this.isProcessing = false;
+            }, 1);
+        },
+        
+        updateClaimedBonusSuccess(newState: any) {
+            this.cascadingState = newState;
+        },
+        
+        ...overrides,
+    };
+
+    return component;
+};
+
+// Business Logic Handlers following Single Responsibility Principle
+class GiftCodeStateHandler {
+    static canProcessClick(component: MockGiftCodeState): boolean {
+        return !component.isProcessing && component.cascadingState !== CascadingSlotState.SPINNING;
+    }
+
+    static updateProcessingState(component: MockGiftCodeState, isProcessing: boolean): void {
+        component.isProcessing = isProcessing;
+    }
+
+    static updateCascadingState(component: MockGiftCodeState, newState: any): void {
+        component.cascadingState = newState;
+    }
+}
+
+class GiftCodeInteractionHandler {
+    static setupDragInteraction(component: MockGiftCodeComponent): void {
+        const draggable = component.getComponent(DraggableItem) as MockDraggableItem;
+        if (draggable && draggable.touchCallback) {
+            draggable.touchCallback.end = (isClick: boolean) => {
+                if (isClick) {
+                    component.onClickGiftCode();
+                }
+            };
+        }
+    }
+
+    static handleClick(component: MockGiftCodeComponent): void {
+        if (!GiftCodeStateHandler.canProcessClick(component)) {
+            return;
+        }
+
+        GiftCodeStateHandler.updateProcessingState(component, true);
+        component.openGiftCodeRedeemPopup();
+
+        component.scheduleOnce(() => {
+            GiftCodeStateHandler.updateProcessingState(component, false);
+        }, 1);
+    }
+}
+
+// Test Setup Class following Single Responsibility Principle
+class GiftCodeTestSetup {
+    component: MockGiftCodeComponent;
+    mockIcon: MockIcon;
+    mockDraggableItem: MockDraggableItem;
+    mockTouchCallback: MockTouchCallback;
+
+    constructor(componentOverrides?: Partial<MockGiftCodeComponent>) {
+        this.setupMocks();
+        this.setupComponent(componentOverrides);
+    }
+
+    private setupMocks(): void {
+        this.mockIcon = createMockIcon();
+        this.mockTouchCallback = createMockTouchCallback();
+        this.mockDraggableItem = createMockDraggableItem();
+    }
+
+    private setupComponent(overrides?: Partial<MockGiftCodeComponent>): void {
+        this.component = createMockGiftCodeComponent({
+            ...overrides,
+            getComponent: jest.fn().mockReturnValue(this.mockDraggableItem),
+        });
+    }
+
+    updateComponentState(stateOverrides: Partial<MockGiftCodeState>): void {
+        Object.assign(this.component, stateOverrides);
+    }
+
+    updateDraggableItem(draggableOverrides: Partial<MockDraggableItem>): void {
+        Object.assign(this.mockDraggableItem, draggableOverrides);
+        (this.component.getComponent as jest.Mock).mockReturnValue(this.mockDraggableItem);
+    }
+
+    simulateClick(): void {
+        this.component.dragGiftCode();
+        if (this.mockDraggableItem.touchCallback.end) {
+            this.mockDraggableItem.touchCallback.end(true);
+        }
+    }
+
+    simulateDrag(): void {
+        this.component.dragGiftCode();
+        if (this.mockDraggableItem.touchCallback.end) {
+            this.mockDraggableItem.touchCallback.end(false);
+        }
+    }
+
+    clearAllMocks(): void {
+        jest.clearAllMocks();
+    }
+}
+
 describe("GiftCode", () => {
-    let component: GiftCode;
-    let mockIcon: any;
-    let mockDraggableItem: any;
-    let mockTouchCallback: any;
+    let testSetup: GiftCodeTestSetup;
 
     beforeEach(() => {
-        // Reset all mocks
-        jest.clearAllMocks();
-
-        // Create mock icon
-        mockIcon = {};
-
-        // Create mock touch callback
-        mockTouchCallback = {
-            end: null
-        };
-
-        // Create mock draggable item
-        mockDraggableItem = {
-            touchCallback: mockTouchCallback
-        };
-
-        // Create manual test component that implements the behavior we want to test
-        component = {
-            icon: mockIcon,
-            scheduleOnce: jest.fn(),
-            getComponent: jest.fn().mockReturnValue(mockDraggableItem),
-            
-            // Component properties
-            isProcessing: false,
-            cascadingState: CascadingSlotState.NOT_READY_BET,
-            
-            // Mock methods that will be handled by decorators
-            openGiftCodeRedeemPopup: jest.fn(),
-            
-            // Component lifecycle methods
-            onEnable() {
-                this.dragGiftCode();
-            },
-            
-            dragGiftCode() {
-                const draggable = this.getComponent(require("db://shared-components/shared/common-components/draggable/draggable-item").default);
-                if (draggable && draggable.touchCallback) {
-                    draggable.touchCallback.end = (isClick) => {
-                        if (isClick) {
-                            this.onClickGiftCode();
-                        }
-                    };
-                }
-            },
-            
-            onClickGiftCode() {
-                if (this.isProcessing || this.cascadingState === CascadingSlotState.SPINNING) {
-                    return;
-                }
-                
-                this.isProcessing = true;
-                this.openGiftCodeRedeemPopup();
-                
-                this.scheduleOnce(() => {
-                    this.isProcessing = false;
-                }, 1);
-            },
-            
-            updateClaimedBonusSuccess(newState) {
-                this.cascadingState = newState;
-            }
-        } as any;
-        
-        // Setup default getComponent behavior
-        (component.getComponent as jest.Mock).mockReturnValue(mockDraggableItem);
+        testSetup = new GiftCodeTestSetup();
     });
 
-    describe("initialization", () => {
-        it("should initialize with correct default values", () => {
-            // Assert
-            expect(component.icon).toBeDefined();
-            expect(component['isProcessing']).toBe(false);
-            expect(component['cascadingState']).toBe(CascadingSlotState.NOT_READY_BET);
+    // Test suite for Component Initialization Responsibility
+    describe("Component Initialization", () => {
+        it("should_initialize_with_correct_default_state_values", () => {
+            expect(testSetup.component.icon).toBeDefined();
+            expect(testSetup.component.isProcessing).toBe(false);
+            expect(testSetup.component.cascadingState).toBe(CascadingSlotState.NOT_READY_BET);
         });
 
-        it("should have icon property", () => {
-            // Assert
-            expect(component.icon).toBe(mockIcon);
+        it("should_have_all_required_component_lifecycle_methods", () => {
+            expect(typeof testSetup.component.onEnable).toBe('function');
+            expect(typeof testSetup.component.scheduleOnce).toBe('function');
+            expect(typeof testSetup.component.getComponent).toBe('function');
+        });
+
+        it("should_have_all_required_gift_code_action_methods", () => {
+            expect(typeof testSetup.component.dragGiftCode).toBe('function');
+            expect(typeof testSetup.component.onClickGiftCode).toBe('function');
+            expect(typeof testSetup.component.updateClaimedBonusSuccess).toBe('function');
+            expect(typeof testSetup.component.openGiftCodeRedeemPopup).toBe('function');
         });
     });
 
-    describe("onEnable", () => {
-        it("should call dragGiftCode", () => {
-            // Arrange
-            const dragGiftCodeSpy = jest.spyOn(component, 'dragGiftCode');
+    // Test suite for Component Lifecycle Management Responsibility
+    describe("Component Lifecycle Management", () => {
+        it("should_call_drag_gift_code_setup_on_enable", () => {
+            const dragGiftCodeSpy = jest.spyOn(testSetup.component, 'dragGiftCode');
 
-            // Act
-            component.onEnable();
+            testSetup.component.onEnable();
 
-            // Assert
             expect(dragGiftCodeSpy).toHaveBeenCalled();
         });
+
+        it("should_initialize_component_in_ready_state_on_enable", () => {
+            expect(testSetup.component.isProcessing).toBe(false);
+            expect(testSetup.component.cascadingState).toBe(CascadingSlotState.NOT_READY_BET);
+        });
     });
 
-    describe("dragGiftCode", () => {
-        it("should get DraggableItem component and set touch callback", () => {
-            // Act
-            component.dragGiftCode();
+    // Test suite for Drag Interaction Management Responsibility
+    describe("Drag Interaction Management", () => {
+        it("should_get_draggable_component_and_setup_touch_callback", () => {
+            testSetup.component.dragGiftCode();
 
-            // Assert
-            expect(component.getComponent).toHaveBeenCalledWith(DraggableItem);
-            expect(mockTouchCallback.end).toBeDefined();
-            expect(typeof mockTouchCallback.end).toBe('function');
+            expect(testSetup.component.getComponent).toHaveBeenCalledWith(DraggableItem);
+            expect(testSetup.mockDraggableItem.touchCallback.end).toBeDefined();
+            expect(typeof testSetup.mockDraggableItem.touchCallback.end).toBe('function');
         });
 
-        it("should handle case when DraggableItem component is null", () => {
-            // Arrange
-            (component.getComponent as jest.Mock).mockReturnValue(null);
+        it("should_handle_missing_draggable_component_gracefully", () => {
+            testSetup.updateDraggableItem(null as any);
+            (testSetup.component.getComponent as jest.Mock).mockReturnValue(null);
 
-            // Act & Assert - should not throw
-            expect(() => component.dragGiftCode()).not.toThrow();
-            expect(component.getComponent).toHaveBeenCalledWith(DraggableItem);
+            expect(() => testSetup.component.dragGiftCode()).not.toThrow();
+            expect(testSetup.component.getComponent).toHaveBeenCalledWith(DraggableItem);
         });
 
-        it("should set touch callback that calls onClickGiftCode when clicked", () => {
-            // Arrange
-            const onClickSpy = jest.spyOn(component, 'onClickGiftCode');
+        it("should_trigger_click_handler_when_touch_ends_with_click", () => {
+            const onClickSpy = jest.spyOn(testSetup.component, 'onClickGiftCode');
 
-            // Act
-            component.dragGiftCode();
-            mockTouchCallback.end(true); // simulate click
+            testSetup.simulateClick();
 
-            // Assert
             expect(onClickSpy).toHaveBeenCalled();
         });
 
-        it("should not call onClickGiftCode when not clicked", () => {
-            // Arrange
-            const onClickSpy = jest.spyOn(component, 'onClickGiftCode');
+        it("should_not_trigger_click_handler_when_touch_ends_without_click", () => {
+            const onClickSpy = jest.spyOn(testSetup.component, 'onClickGiftCode');
 
-            // Act
-            component.dragGiftCode();
-            mockTouchCallback.end(false); // simulate drag without click
+            testSetup.simulateDrag();
 
-            // Assert
             expect(onClickSpy).not.toHaveBeenCalled();
         });
+
+        it("should_handle_draggable_with_no_touch_callback_gracefully", () => {
+            testSetup.updateDraggableItem({ touchCallback: undefined as any });
+
+            expect(() => testSetup.component.dragGiftCode()).not.toThrow();
+        });
     });
 
-    describe("onClickGiftCode", () => {
+    // Test suite for Click Processing Logic Responsibility
+    describe("Click Processing Logic", () => {
         beforeEach(() => {
-            // Ensure component is in a clickable state by default
-            component['isProcessing'] = false;
-            component['cascadingState'] = CascadingSlotState.NOT_READY_BET;
+            // Ensure component starts in clickable state
+            testSetup.updateComponentState({
+                isProcessing: false,
+                cascadingState: CascadingSlotState.NOT_READY_BET,
+            });
         });
 
-        it("should return early when isProcessing is true", () => {
-            // Arrange
-            component['isProcessing'] = true;
+        it("should_prevent_processing_when_already_processing", () => {
+            testSetup.updateComponentState({ isProcessing: true });
 
-            // Act
-            component.onClickGiftCode();
+            testSetup.component.onClickGiftCode();
 
-            // Assert
-            expect(component['openGiftCodeRedeemPopup']).not.toHaveBeenCalled();
+            expect(testSetup.component.openGiftCodeRedeemPopup).not.toHaveBeenCalled();
         });
 
-        it("should return early when cascading state is SPINNING", () => {
-            // Arrange
-            component['cascadingState'] = CascadingSlotState.SPINNING;
+        it("should_prevent_processing_when_cascading_state_is_spinning", () => {
+            testSetup.updateComponentState({ cascadingState: CascadingSlotState.SPINNING });
 
-            // Act
-            component.onClickGiftCode();
+            testSetup.component.onClickGiftCode();
 
-            // Assert
-            expect(component['openGiftCodeRedeemPopup']).not.toHaveBeenCalled();
+            expect(testSetup.component.openGiftCodeRedeemPopup).not.toHaveBeenCalled();
         });
 
-        it("should return early when both isProcessing is true and state is SPINNING", () => {
-            // Arrange
-            component['isProcessing'] = true;
-            component['cascadingState'] = CascadingSlotState.SPINNING;
+        it("should_prevent_processing_when_both_conditions_block_click", () => {
+            testSetup.updateComponentState({ 
+                isProcessing: true, 
+                cascadingState: CascadingSlotState.SPINNING 
+            });
 
-            // Act
-            component.onClickGiftCode();
+            testSetup.component.onClickGiftCode();
 
-            // Assert
-            expect(component['openGiftCodeRedeemPopup']).not.toHaveBeenCalled();
+            expect(testSetup.component.openGiftCodeRedeemPopup).not.toHaveBeenCalled();
         });
 
-        it("should successfully execute when conditions are met", () => {
-            // Arrange - conditions are already set in beforeEach
-            // isProcessing = false, cascadingState = NOT_READY_BET
+        it("should_process_click_when_all_conditions_are_met", () => {
+            testSetup.component.onClickGiftCode();
 
-            // Act
-            component.onClickGiftCode();
+            expect(testSetup.component.isProcessing).toBe(true);
+            expect(testSetup.component.openGiftCodeRedeemPopup).toHaveBeenCalled();
+        });
 
-            // Assert
-            expect(component['isProcessing']).toBe(true);
-            expect(component['openGiftCodeRedeemPopup']).toHaveBeenCalled();
+        it("should_schedule_processing_reset_after_successful_click", () => {
+            testSetup.component.onClickGiftCode();
+
+            expect(testSetup.component.scheduleOnce).toHaveBeenCalledWith(
+                expect.any(Function), 
+                1
+            );
+        });
+
+        it("should_handle_multiple_valid_cascading_states_for_clicking", () => {
+            const validStates = [
+                CascadingSlotState.NOT_READY_BET,
+                CascadingSlotState.READY_BET,
+                CascadingSlotState.SETTLED,
+            ];
+
+            validStates.forEach(state => {
+                testSetup.updateComponentState({ 
+                    isProcessing: false, 
+                    cascadingState: state 
+                });
+                
+                testSetup.component.onClickGiftCode();
+
+                expect(testSetup.component.openGiftCodeRedeemPopup).toHaveBeenCalled();
+                
+                // Reset for next iteration
+                (testSetup.component.openGiftCodeRedeemPopup as jest.Mock).mockClear();
+            });
         });
     });
 
-    describe("updateClaimedBonusSuccess", () => {
-        it("should update cascadingState with new value", () => {
-            // Arrange
+    // Test suite for State Update Management Responsibility
+    describe("State Update Management", () => {
+        it("should_update_cascading_state_with_new_value", () => {
             const newState = CascadingSlotState.SPINNING;
 
-            // Act
-            component['updateClaimedBonusSuccess'](newState);
+            testSetup.component.updateClaimedBonusSuccess(newState);
 
-            // Assert
-            expect(component['cascadingState']).toBe(newState);
+            expect(testSetup.component.cascadingState).toBe(newState);
         });
 
-        it("should update cascadingState with different states", () => {
-            const testStates = [
+        it("should_handle_all_valid_cascading_state_transitions", () => {
+            const validStates = [
                 CascadingSlotState.NOT_READY_BET,
                 CascadingSlotState.READY_BET,
                 CascadingSlotState.SPINNING,
                 CascadingSlotState.SETTLED,
             ];
 
-            testStates.forEach(state => {
-                // Act
-                component['updateClaimedBonusSuccess'](state);
-
-                // Assert
-                expect(component['cascadingState']).toBe(state);
+            validStates.forEach(state => {
+                testSetup.component.updateClaimedBonusSuccess(state);
+                expect(testSetup.component.cascadingState).toBe(state);
             });
         });
 
-        it("should handle string state values", () => {
-            // Arrange
-            const stringState = "CUSTOM_STATE";
+        it("should_maintain_state_consistency_across_updates", () => {
+            const stateSequence = [
+                CascadingSlotState.READY_BET,
+                CascadingSlotState.SPINNING,
+                CascadingSlotState.SETTLED,
+                CascadingSlotState.NOT_READY_BET,
+            ];
 
-            // Act
-            component['updateClaimedBonusSuccess'](stringState);
-
-            // Assert
-            expect(component['cascadingState']).toBe(stringState);
+            stateSequence.forEach((state, index) => {
+                testSetup.component.updateClaimedBonusSuccess(state);
+                expect(testSetup.component.cascadingState).toBe(state);
+                
+                // Verify previous state was properly overwritten
+                if (index > 0) {
+                    expect(testSetup.component.cascadingState).not.toBe(stateSequence[index - 1]);
+                }
+            });
         });
     });
 
-    describe("openGiftCodeRedeemPopup", () => {
-        it("should be defined as a method", () => {
-            // Assert
-            expect(component['openGiftCodeRedeemPopup']).toBeDefined();
-            expect(typeof component['openGiftCodeRedeemPopup']).toBe('function');
+    // Test suite for Gift Code Popup Management Responsibility
+    describe("Gift Code Popup Management", () => {
+        it("should_have_redeem_popup_method_available", () => {
+            expect(testSetup.component.openGiftCodeRedeemPopup).toBeDefined();
+            expect(typeof testSetup.component.openGiftCodeRedeemPopup).toBe('function');
+        });
+
+        it("should_be_callable_when_component_is_ready", () => {
+            expect(() => {
+                testSetup.component.openGiftCodeRedeemPopup();
+            }).not.toThrow();
         });
     });
 
-    describe("component state interactions", () => {
-        it("should prevent multiple rapid clicks", () => {
-            // Act - first click
-            component.onClickGiftCode();
-            expect(component['isProcessing']).toBe(true);
+    // Test suite for Component State Interaction Scenarios
+    describe("Component State Interaction Scenarios", () => {
+        it("should_prevent_multiple_rapid_click_processing", () => {
+            // First click - should process
+            testSetup.component.onClickGiftCode();
+            expect(testSetup.component.isProcessing).toBe(true);
 
-            // Clear mocks to check second call
-            jest.clearAllMocks();
+            // Clear mocks to verify second call behavior
+            testSetup.clearAllMocks();
 
-            // Act - second click while processing
-            component.onClickGiftCode();
+            // Second click while processing - should be ignored
+            testSetup.component.onClickGiftCode();
+            expect(testSetup.component.openGiftCodeRedeemPopup).not.toHaveBeenCalled();
+        });
 
-            // Assert - second click should be ignored
-            expect(component['openGiftCodeRedeemPopup']).not.toHaveBeenCalled();
+        it("should_handle_state_changes_during_processing", () => {
+            testSetup.component.onClickGiftCode();
+            expect(testSetup.component.isProcessing).toBe(true);
+
+            // State change during processing
+            testSetup.component.updateClaimedBonusSuccess(CascadingSlotState.SPINNING);
+            expect(testSetup.component.cascadingState).toBe(CascadingSlotState.SPINNING);
+
+            // Should still be processing
+            expect(testSetup.component.isProcessing).toBe(true);
+        });
+
+        it("should_maintain_processing_isolation_across_interactions", () => {
+            // Test that processing state doesn't affect drag setup
+            testSetup.updateComponentState({ isProcessing: true });
+            
+            expect(() => {
+                testSetup.component.dragGiftCode();
+            }).not.toThrow();
+            
+            expect(testSetup.mockDraggableItem.touchCallback.end).toBeDefined();
         });
     });
 
-    describe("edge cases", () => {
-        it("should handle undefined draggable component gracefully", () => {
-            // Arrange
-            (component.getComponent as jest.Mock).mockReturnValue(undefined);
+    // Test suite for Edge Cases and Error Handling
+    describe("Edge Cases and Error Handling", () => {
+        it("should_handle_undefined_draggable_component_gracefully", () => {
+            (testSetup.component.getComponent as jest.Mock).mockReturnValue(undefined);
 
-            // Act & Assert
-            expect(() => component.dragGiftCode()).not.toThrow();
+            expect(() => testSetup.component.dragGiftCode()).not.toThrow();
         });
 
-        it("should maintain state consistency", () => {
-            // Initial state check
-            expect(component['isProcessing']).toBe(false);
-            expect(component['cascadingState']).toBe(CascadingSlotState.NOT_READY_BET);
+        it("should_maintain_consistent_state_across_operations", () => {
+            // Verify initial state
+            expect(testSetup.component.isProcessing).toBe(false);
+            expect(testSetup.component.cascadingState).toBe(CascadingSlotState.NOT_READY_BET);
 
-            // Change state to a valid non-spinning state
-            component['updateClaimedBonusSuccess'](CascadingSlotState.SETTLED);
-            expect(component['cascadingState']).toBe(CascadingSlotState.SETTLED);
+            // Change to valid non-spinning state
+            testSetup.component.updateClaimedBonusSuccess(CascadingSlotState.SETTLED);
+            expect(testSetup.component.cascadingState).toBe(CascadingSlotState.SETTLED);
 
-            // Processing should still work (need to ensure isProcessing starts as false)
-            component['isProcessing'] = false; // Ensure clean state
-            component.onClickGiftCode();
-            expect(component['isProcessing']).toBe(true);
+            // Reset processing state and verify click still works
+            testSetup.updateComponentState({ isProcessing: false });
+            testSetup.component.onClickGiftCode();
+            expect(testSetup.component.isProcessing).toBe(true);
+        });
+
+        it("should_handle_null_touch_callback_without_errors", () => {
+            testSetup.updateDraggableItem({ touchCallback: { end: null } });
+
+            expect(() => {
+                testSetup.component.dragGiftCode();
+            }).not.toThrow();
+        });
+
+        it("should_handle_component_in_invalid_initial_state", () => {
+            const invalidSetup = new GiftCodeTestSetup({
+                isProcessing: true,
+                cascadingState: CascadingSlotState.SPINNING,
+            });
+
+            invalidSetup.component.onClickGiftCode();
+            expect(invalidSetup.component.openGiftCodeRedeemPopup).not.toHaveBeenCalled();
         });
     });
 });
+

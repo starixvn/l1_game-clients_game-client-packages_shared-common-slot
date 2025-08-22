@@ -19,45 +19,195 @@ jest.mock("db://assets/game/scripts/game-settings", () => ({
     }
 }));
 
+// Test interfaces for better abstraction (DIP)
+interface MockFSBPromotionStore {
+    promotion: any;
+    finishPromotion: any;
+    isRedeemSuccess: boolean;
+    isClaimed: boolean;
+}
+
+interface MockCascadingUIStore {
+    isUsedFSBPromotionBonus: boolean;
+    fsbPromotionInProgress: boolean;
+}
+
+interface MockSiteConfigs {
+    systemType: string;
+}
+
+// Test factory for creating mock dependencies (SRP)
+class TestDependencyFactory {
+    static createFSBPromotionStore(overrides: Partial<MockFSBPromotionStore> = {}): MockFSBPromotionStore {
+        return {
+            promotion: null,
+            finishPromotion: null,
+            isRedeemSuccess: false,
+            isClaimed: false,
+            ...overrides
+        };
+    }
+
+    static createCascadingUIStore(overrides: Partial<MockCascadingUIStore> = {}): MockCascadingUIStore {
+        return {
+            isUsedFSBPromotionBonus: false,
+            fsbPromotionInProgress: false,
+            ...overrides
+        };
+    }
+
+    static createSiteConfigs(overrides: Partial<MockSiteConfigs> = {}): MockSiteConfigs {
+        return {
+            systemType: "NORMAL",
+            ...overrides
+        };
+    }
+
+    static createStorageManager(returnValue: any = null) {
+        return {
+            get: jest.fn().mockReturnValue(returnValue)
+        };
+    }
+}
+
+// Test helper for store setup (SRP)
+class FSBPromotionUIStoreTestHelper {
+    static createStore(
+        fsbPromotionStore?: MockFSBPromotionStore,
+        cascadingUIStore?: MockCascadingUIStore,
+        siteConfigs?: MockSiteConfigs
+    ): FSBPromotionUIStore {
+        const store = new FSBPromotionUIStore();
+        
+        // Inject dependencies
+        (store as any).fsbPromotionStore = fsbPromotionStore || TestDependencyFactory.createFSBPromotionStore();
+        (store as any).cascadingUIStore = cascadingUIStore || TestDependencyFactory.createCascadingUIStore();
+        (store as any).siteConfigs = siteConfigs || TestDependencyFactory.createSiteConfigs();
+        
+        return store;
+    }
+
+    static setupStorageManager(returnValue: any = null): void {
+        (gc.StorageManager as any) = TestDependencyFactory.createStorageManager(returnValue);
+    }
+}
+
+// Test scenario builders for complex test setups (SRP)
+class FSBPromotionScenarioBuilder {
+    // Scenario: FSB ready to spin
+    static createReadyToSpinScenario(): {
+        store: FSBPromotionUIStore;
+        fsbStore: MockFSBPromotionStore;
+        cascadingStore: MockCascadingUIStore;
+    } {
+        const fsbStore = TestDependencyFactory.createFSBPromotionStore({
+            promotion: { promotionId: "123", initialBonusItem: 5 }
+        });
+        const cascadingStore = TestDependencyFactory.createCascadingUIStore({
+            isUsedFSBPromotionBonus: true
+        });
+        const siteConfigs = TestDependencyFactory.createSiteConfigs();
+
+        const store = FSBPromotionUIStoreTestHelper.createStore(fsbStore, cascadingStore, siteConfigs);
+        store.currentSpinCount = 5;
+        store.isFSBInfoReady = true;
+
+        return { store, fsbStore, cascadingStore };
+    }
+
+    // Scenario: FSB spinning in progress
+    static createSpinningScenario(): {
+        store: FSBPromotionUIStore;
+        fsbStore: MockFSBPromotionStore;
+        cascadingStore: MockCascadingUIStore;
+    } {
+        const fsbStore = TestDependencyFactory.createFSBPromotionStore({
+            promotion: { promotionId: "123", initialBonusItem: 5 }
+        });
+        const cascadingStore = TestDependencyFactory.createCascadingUIStore();
+        const store = FSBPromotionUIStoreTestHelper.createStore(fsbStore, cascadingStore);
+        
+        store.currentSpinCount = 3;
+        store.fsbConsumedThisRound = true;
+
+        return { store, fsbStore, cascadingStore };
+    }
+
+    // Scenario: FSB finished
+    static createFinishedScenario(): {
+        store: FSBPromotionUIStore;
+        fsbStore: MockFSBPromotionStore;
+    } {
+        const fsbStore = TestDependencyFactory.createFSBPromotionStore({
+            promotion: { promotionId: "123", initialBonusItem: 5 },
+            finishPromotion: { totalWin: 100 }
+        });
+        const store = FSBPromotionUIStoreTestHelper.createStore(fsbStore);
+        
+        store.hasServerFinishPromotion = true;
+        store.currentSpinCount = 0;
+
+        return { store, fsbStore };
+    }
+
+    // Scenario: Turn over progress eligible
+    static createTurnOverEligibleScenario(): {
+        store: FSBPromotionUIStore;
+        fsbStore: MockFSBPromotionStore;
+        cascadingStore: MockCascadingUIStore;
+    } {
+        const fsbStore = TestDependencyFactory.createFSBPromotionStore({
+            finishPromotion: { totalWin: 100 },
+            isClaimed: true
+        });
+        const cascadingStore = TestDependencyFactory.createCascadingUIStore({
+            isUsedFSBPromotionBonus: true
+        });
+        const store = FSBPromotionUIStoreTestHelper.createStore(fsbStore, cascadingStore);
+        
+        store.currentSpinCount = 0;
+        store.isFSBInfoReady = false;
+        store.isClickPlayNow = true;
+
+        return { store, fsbStore, cascadingStore };
+    }
+
+    // Scenario: SC system type (should skip promo)
+    static createSCSystemScenario(): {
+        store: FSBPromotionUIStore;
+        siteConfigs: MockSiteConfigs;
+    } {
+        const siteConfigs = TestDependencyFactory.createSiteConfigs({ systemType: "SC" });
+        const store = FSBPromotionUIStoreTestHelper.createStore(undefined, undefined, siteConfigs);
+
+        return { store, siteConfigs };
+    }
+}
+
 describe("FSBPromotionUIStore", () => {
     let store: FSBPromotionUIStore;
-    let mockFSBPromotionStore: any;
-    let mockCascadingUIStore: any;
-    let mockSiteConfigs: any;
+    let mockFSBPromotionStore: MockFSBPromotionStore;
+    let mockCascadingUIStore: MockCascadingUIStore;
+    let mockSiteConfigs: MockSiteConfigs;
 
     beforeEach(() => {
         // Reset mocks
         jest.clearAllMocks();
 
-        // Setup mock dependencies
-        mockFSBPromotionStore = {
-            promotion: null,
-            finishPromotion: null,
-            isRedeemSuccess: false,
-            isClaimed: false
-        } as any;
+        // Setup default dependencies using factory (DIP)
+        mockFSBPromotionStore = TestDependencyFactory.createFSBPromotionStore();
+        mockCascadingUIStore = TestDependencyFactory.createCascadingUIStore();
+        mockSiteConfigs = TestDependencyFactory.createSiteConfigs();
 
-        mockCascadingUIStore = {
-            isUsedFSBPromotionBonus: false,
-            fsbPromotionInProgress: false
-        } as any;
+        // Setup storage manager
+        FSBPromotionUIStoreTestHelper.setupStorageManager();
 
-        mockSiteConfigs = {
-            systemType: "NORMAL"
-        };
-
-        // Mock gc.StorageManager
-        (gc.StorageManager as any) = {
-            get: jest.fn().mockReturnValue(null)
-        };
-
-        // Create store instance
-        store = new FSBPromotionUIStore();
-        
-        // Manually inject dependencies since we're not using the DI container in tests
-        (store as any).fsbPromotionStore = mockFSBPromotionStore;
-        (store as any).cascadingUIStore = mockCascadingUIStore;
-        (store as any).siteConfigs = mockSiteConfigs;
+        // Create store with dependencies (SRP)
+        store = FSBPromotionUIStoreTestHelper.createStore(
+            mockFSBPromotionStore,
+            mockCascadingUIStore,
+            mockSiteConfigs
+        );
     });
 
     describe("constructor and initial state", () => {
@@ -238,33 +388,47 @@ describe("FSBPromotionUIStore", () => {
         });
     });
 
-    describe("isEligibleForNextFSBSpin", () => {
-        it("should return false when FSB not used", () => {
-            (mockCascadingUIStore as any).isUsedFSBPromotionBonus = false;
-            store.currentSpinCount = 5;
-            store.isFSBInfoReady = true;
-            expect(store.isEligibleForNextFSBSpin).toBe(false);
-        });
+    // Focused tests for FSB eligibility (SRP)
+    describe("FSB Spin Eligibility", () => {
+        describe("isEligibleForNextFSBSpin", () => {
+            it("should return false when FSB bonus is not used", () => {
+                const cascadingStore = TestDependencyFactory.createCascadingUIStore({
+                    isUsedFSBPromotionBonus: false
+                });
+                const testStore = FSBPromotionUIStoreTestHelper.createStore(undefined, cascadingStore);
+                testStore.currentSpinCount = 5;
+                testStore.isFSBInfoReady = true;
 
-        it("should return false when spin count is 0", () => {
-            (mockCascadingUIStore as any).isUsedFSBPromotionBonus = true;
-            store.currentSpinCount = 0;
-            store.isFSBInfoReady = true;
-            expect(store.isEligibleForNextFSBSpin).toBe(false);
-        });
+                expect(testStore.isEligibleForNextFSBSpin).toBe(false);
+            });
 
-        it("should return false when FSB info not ready", () => {
-            (mockCascadingUIStore as any).isUsedFSBPromotionBonus = true;
-            store.currentSpinCount = 5;
-            store.isFSBInfoReady = false;
-            expect(store.isEligibleForNextFSBSpin).toBe(false);
-        });
+            it("should return false when spin count is depleted", () => {
+                const cascadingStore = TestDependencyFactory.createCascadingUIStore({
+                    isUsedFSBPromotionBonus: true
+                });
+                const testStore = FSBPromotionUIStoreTestHelper.createStore(undefined, cascadingStore);
+                testStore.currentSpinCount = 0;
+                testStore.isFSBInfoReady = true;
 
-        it("should return true when all conditions met", () => {
-            (mockCascadingUIStore as any).isUsedFSBPromotionBonus = true;
-            store.currentSpinCount = 5;
-            store.isFSBInfoReady = true;
-            expect(store.isEligibleForNextFSBSpin).toBe(true);
+                expect(testStore.isEligibleForNextFSBSpin).toBe(false);
+            });
+
+            it("should return false when FSB info is not ready", () => {
+                const cascadingStore = TestDependencyFactory.createCascadingUIStore({
+                    isUsedFSBPromotionBonus: true
+                });
+                const testStore = FSBPromotionUIStoreTestHelper.createStore(undefined, cascadingStore);
+                testStore.currentSpinCount = 5;
+                testStore.isFSBInfoReady = false;
+
+                expect(testStore.isEligibleForNextFSBSpin).toBe(false);
+            });
+
+            it("should return true when all conditions are satisfied", () => {
+                const { store: testStore } = FSBPromotionScenarioBuilder.createReadyToSpinScenario();
+
+                expect(testStore.isEligibleForNextFSBSpin).toBe(true);
+            });
         });
     });
 
@@ -312,50 +476,68 @@ describe("FSBPromotionUIStore", () => {
         });
     });
 
-    describe("fsbState", () => {
-        it("should return Idle when no promotion", () => {
-            mockFSBPromotionStore.promotion = null;
-            expect(store.fsbState).toBe(FSBPromotionState.Idle);
+    // Focused tests for FSB state management (SRP)
+    describe("FSB State Management", () => {
+        describe("fsbState", () => {
+            it("should return Idle when no promotion exists", () => {
+                const fsbStore = TestDependencyFactory.createFSBPromotionStore({
+                    promotion: null
+                });
+                const testStore = FSBPromotionUIStoreTestHelper.createStore(fsbStore);
+
+                expect(testStore.fsbState).toBe(FSBPromotionState.Idle);
+            });
+
+            it("should return Finished when server has confirmed promotion end", () => {
+                const { store: testStore } = FSBPromotionScenarioBuilder.createFinishedScenario();
+
+                expect(testStore.fsbState).toBe(FSBPromotionState.Finished);
+            });
+
+            it("should return Resumed when FSB promotion is being resumed", () => {
+                const fsbStore = TestDependencyFactory.createFSBPromotionStore({
+                    promotion: { promotionId: "123" }
+                });
+                const testStore = FSBPromotionUIStoreTestHelper.createStore(fsbStore);
+                testStore.resumedFSBPromotion = true;
+
+                expect(testStore.fsbState).toBe(FSBPromotionState.Resumed);
+            });
+
+            it("should return Spinning when currently consuming FSB spins", () => {
+                const { store: testStore } = FSBPromotionScenarioBuilder.createSpinningScenario();
+
+                expect(testStore.fsbState).toBe(FSBPromotionState.Spinning);
+            });
+
+            it("should return Ready when FSB spins are available but not consumed", () => {
+                const { store: testStore } = FSBPromotionScenarioBuilder.createReadyToSpinScenario();
+                testStore.fsbConsumedThisRound = false; // Ensure not consumed
+
+                expect(testStore.fsbState).toBe(FSBPromotionState.Ready);
+            });
+
+            it("should return Idle when spin count is negative", () => {
+                const fsbStore = TestDependencyFactory.createFSBPromotionStore({
+                    promotion: { promotionId: "123" }
+                });
+                const testStore = FSBPromotionUIStoreTestHelper.createStore(fsbStore);
+                testStore.currentSpinCount = -1;
+
+                expect(testStore.fsbState).toBe(FSBPromotionState.Idle);
+            });
         });
 
-        it("should return Finished when hasServerFinishPromotion is true", () => {
-            (mockFSBPromotionStore as any).promotion = {};
-            store.hasServerFinishPromotion = true;
-            expect(store.fsbState).toBe(FSBPromotionState.Finished);
-        });
-
-        it("should return Resumed when resumedFSBPromotion is true", () => {
-            (mockFSBPromotionStore as any).promotion = {};
-            store.resumedFSBPromotion = true;
-            expect(store.fsbState).toBe(FSBPromotionState.Resumed);
-        });
-
-        it("should return Spinning when currentSpinCount >= 0 and fsbConsumedThisRound is true", () => {
-            (mockFSBPromotionStore as any).promotion = {};
-            store.currentSpinCount = 5;
-            store.fsbConsumedThisRound = true;
-            expect(store.fsbState).toBe(FSBPromotionState.Spinning);
-        });
-
-        it("should return Ready when currentSpinCount >= 0 and fsbConsumedThisRound is false", () => {
-            (mockFSBPromotionStore as any).promotion = {};
-            store.currentSpinCount = 5;
-            store.fsbConsumedThisRound = false;
-            expect(store.fsbState).toBe(FSBPromotionState.Ready);
-        });
-
-        it("should return Idle when currentSpinCount < 0", () => {
-            (mockFSBPromotionStore as any).promotion = {};
-            store.currentSpinCount = -1;
-            expect(store.fsbState).toBe(FSBPromotionState.Idle);
-        });
-
-        it("should set cascadingUIStore.fsbPromotionInProgress to true when spinning", () => {
-            (mockFSBPromotionStore as any).promotion = {};
-            store.currentSpinCount = 5;
-            store.fsbConsumedThisRound = true;
-            store.fsbState; // Trigger the getter
-            expect(mockCascadingUIStore.fsbPromotionInProgress).toBe(true);
+        describe("FSB state side effects", () => {
+            it("should update cascading UI store when spinning", () => {
+                const { store: testStore, cascadingStore } = FSBPromotionScenarioBuilder.createSpinningScenario();
+                
+                // Trigger the state getter to cause side effect
+                const state = testStore.fsbState;
+                
+                expect(state).toBe(FSBPromotionState.Spinning);
+                expect(cascadingStore.fsbPromotionInProgress).toBe(true);
+            });
         });
     });
 
@@ -474,36 +656,62 @@ describe("FSBPromotionUIStore", () => {
         });
     });
 
-    describe("shouldSkipPromo", () => {
-        it("should return false when no storage data and not SC system", () => {
-            (gc.StorageManager.get as jest.Mock).mockReturnValue(null);
-            mockSiteConfigs.systemType = "NORMAL";
-            (mockFSBPromotionStore as any).promotion = { isGiftCode: false };
-            expect(store.shouldSkipPromo()).toBe(false);
-        });
+    // Focused tests for promotion skip logic (SRP)
+    describe("Promotion Skip Logic", () => {
+        describe("shouldSkipPromo", () => {
+            it("should not skip when no storage preference and normal system", () => {
+                FSBPromotionUIStoreTestHelper.setupStorageManager(null);
+                const fsbStore = TestDependencyFactory.createFSBPromotionStore({
+                    promotion: { isGiftCode: false }
+                });
+                const siteConfigs = TestDependencyFactory.createSiteConfigs({
+                    systemType: "NORMAL"
+                });
+                const testStore = FSBPromotionUIStoreTestHelper.createStore(fsbStore, undefined, siteConfigs);
 
-        it("should return true when dontShowAgain is true and not gift code", () => {
-            (gc.StorageManager.get as jest.Mock).mockReturnValue({ dontShowAgain: true });
-            mockSiteConfigs.systemType = "NORMAL";
-            (mockFSBPromotionStore as any).promotion = { isGiftCode: false };
-            expect(store.shouldSkipPromo()).toBe(true);
-        });
+                expect(testStore.shouldSkipPromo()).toBe(false);
+            });
 
-        it("should return false when dontShowAgain is true but is gift code", () => {
-            (gc.StorageManager.get as jest.Mock).mockReturnValue({ dontShowAgain: true });
-            mockSiteConfigs.systemType = "NORMAL";
-            (mockFSBPromotionStore as any).promotion = { isGiftCode: true };
-            expect(store.shouldSkipPromo()).toBe(false);
-        });
+            it("should skip when user chose don't show again for non-gift promotions", () => {
+                FSBPromotionUIStoreTestHelper.setupStorageManager({ dontShowAgain: true });
+                const fsbStore = TestDependencyFactory.createFSBPromotionStore({
+                    promotion: { isGiftCode: false }
+                });
+                const siteConfigs = TestDependencyFactory.createSiteConfigs({
+                    systemType: "NORMAL"
+                });
+                const testStore = FSBPromotionUIStoreTestHelper.createStore(fsbStore, undefined, siteConfigs);
 
-        it("should return true when system type is SC", () => {
-            mockSiteConfigs.systemType = "SC";
-            expect(store.shouldSkipPromo()).toBe(true);
-        });
+                expect(testStore.shouldSkipPromo()).toBe(true);
+            });
 
-        it("should return true when system type is sc (case insensitive)", () => {
-            mockSiteConfigs.systemType = "sc";
-            expect(store.shouldSkipPromo()).toBe(true);
+            it("should not skip gift code promotions even when don't show again is set", () => {
+                FSBPromotionUIStoreTestHelper.setupStorageManager({ dontShowAgain: true });
+                const fsbStore = TestDependencyFactory.createFSBPromotionStore({
+                    promotion: { isGiftCode: true }
+                });
+                const siteConfigs = TestDependencyFactory.createSiteConfigs({
+                    systemType: "NORMAL"
+                });
+                const testStore = FSBPromotionUIStoreTestHelper.createStore(fsbStore, undefined, siteConfigs);
+
+                expect(testStore.shouldSkipPromo()).toBe(false);
+            });
+
+            it("should skip for SC system type (uppercase)", () => {
+                const { store: testStore } = FSBPromotionScenarioBuilder.createSCSystemScenario();
+
+                expect(testStore.shouldSkipPromo()).toBe(true);
+            });
+
+            it("should skip for SC system type (lowercase)", () => {
+                const siteConfigs = TestDependencyFactory.createSiteConfigs({ 
+                    systemType: "sc" 
+                });
+                const testStore = FSBPromotionUIStoreTestHelper.createStore(undefined, undefined, siteConfigs);
+
+                expect(testStore.shouldSkipPromo()).toBe(true);
+            });
         });
     });
 
@@ -712,53 +920,84 @@ describe("FSBPromotionUIStore", () => {
         });
     });
 
-    describe("shouldOpenPromotionInfo", () => {
-        it("should return true when all conditions are met", () => {
-            (mockCascadingUIStore as any).isUsedFSBPromotionBonus = true;
-            (mockFSBPromotionStore as any).isClaimed = true;
-            store.isFSBInfoReady = false;
-            store.isClickPlayNow = true;
-            expect(store.shouldOpenPromotionInfo).toBe(true);
-        });
+    // Focused tests for promotion info opening logic (SRP)
+    describe("Promotion Info Opening Logic", () => {
+        describe("shouldOpenPromotionInfo", () => {
+            it("should open when all conditions are satisfied", () => {
+                const { store: testStore } = FSBPromotionScenarioBuilder.createTurnOverEligibleScenario();
 
-        it("should return false when FSB not used", () => {
-            (mockCascadingUIStore as any).isUsedFSBPromotionBonus = false;
-            (mockFSBPromotionStore as any).isClaimed = true;
-            store.isFSBInfoReady = false;
-            store.isClickPlayNow = true;
-            expect(store.shouldOpenPromotionInfo).toBe(false);
-        });
+                expect(testStore.shouldOpenPromotionInfo).toBe(true);
+            });
 
-        it("should return false when not claimed", () => {
-            (mockCascadingUIStore as any).isUsedFSBPromotionBonus = true;
-            (mockFSBPromotionStore as any).isClaimed = false;
-            store.isFSBInfoReady = false;
-            store.isClickPlayNow = true;
-            expect(store.shouldOpenPromotionInfo).toBe(false);
-        });
+            it("should not open when FSB bonus is not used", () => {
+                const fsbStore = TestDependencyFactory.createFSBPromotionStore({
+                    isClaimed: true
+                });
+                const cascadingStore = TestDependencyFactory.createCascadingUIStore({
+                    isUsedFSBPromotionBonus: false
+                });
+                const testStore = FSBPromotionUIStoreTestHelper.createStore(fsbStore, cascadingStore);
+                testStore.isFSBInfoReady = false;
+                testStore.isClickPlayNow = true;
 
-        it("should return false when FSB info is ready", () => {
-            (mockCascadingUIStore as any).isUsedFSBPromotionBonus = true;
-            (mockFSBPromotionStore as any).isClaimed = true;
-            store.isFSBInfoReady = true;
-            store.isClickPlayNow = true;
-            expect(store.shouldOpenPromotionInfo).toBe(false);
-        });
+                expect(testStore.shouldOpenPromotionInfo).toBe(false);
+            });
 
-        it("should return false when not clicked play now", () => {
-            (mockCascadingUIStore as any).isUsedFSBPromotionBonus = true;
-            (mockFSBPromotionStore as any).isClaimed = true;
-            store.isFSBInfoReady = false;
-            store.isClickPlayNow = false;
-            expect(store.shouldOpenPromotionInfo).toBe(false);
-        });
+            it("should not open when promotion is not claimed", () => {
+                const fsbStore = TestDependencyFactory.createFSBPromotionStore({
+                    isClaimed: false
+                });
+                const cascadingStore = TestDependencyFactory.createCascadingUIStore({
+                    isUsedFSBPromotionBonus: true
+                });
+                const testStore = FSBPromotionUIStoreTestHelper.createStore(fsbStore, cascadingStore);
+                testStore.isFSBInfoReady = false;
+                testStore.isClickPlayNow = true;
 
-        it("should handle undefined values gracefully", () => {
-            (mockCascadingUIStore as any).isUsedFSBPromotionBonus = undefined;
-            (mockFSBPromotionStore as any).isClaimed = undefined;
-            store.isFSBInfoReady = undefined;
-            store.isClickPlayNow = undefined;
-            expect(store.shouldOpenPromotionInfo).toBe(false);
+                expect(testStore.shouldOpenPromotionInfo).toBe(false);
+            });
+
+            it("should not open when FSB info is already ready", () => {
+                const fsbStore = TestDependencyFactory.createFSBPromotionStore({
+                    isClaimed: true
+                });
+                const cascadingStore = TestDependencyFactory.createCascadingUIStore({
+                    isUsedFSBPromotionBonus: true
+                });
+                const testStore = FSBPromotionUIStoreTestHelper.createStore(fsbStore, cascadingStore);
+                testStore.isFSBInfoReady = true; // Already ready
+                testStore.isClickPlayNow = true;
+
+                expect(testStore.shouldOpenPromotionInfo).toBe(false);
+            });
+
+            it("should not open when play now was not clicked", () => {
+                const fsbStore = TestDependencyFactory.createFSBPromotionStore({
+                    isClaimed: true
+                });
+                const cascadingStore = TestDependencyFactory.createCascadingUIStore({
+                    isUsedFSBPromotionBonus: true
+                });
+                const testStore = FSBPromotionUIStoreTestHelper.createStore(fsbStore, cascadingStore);
+                testStore.isFSBInfoReady = false;
+                testStore.isClickPlayNow = false; // Not clicked
+
+                expect(testStore.shouldOpenPromotionInfo).toBe(false);
+            });
+
+            it("should handle undefined dependency values gracefully", () => {
+                const fsbStore = TestDependencyFactory.createFSBPromotionStore({
+                    isClaimed: undefined as any
+                });
+                const cascadingStore = TestDependencyFactory.createCascadingUIStore({
+                    isUsedFSBPromotionBonus: undefined as any
+                });
+                const testStore = FSBPromotionUIStoreTestHelper.createStore(fsbStore, cascadingStore);
+                testStore.isFSBInfoReady = undefined as any;
+                testStore.isClickPlayNow = undefined as any;
+
+                expect(testStore.shouldOpenPromotionInfo).toBe(false);
+            });
         });
     });
 
@@ -799,67 +1038,134 @@ describe("FSBPromotionUIStore", () => {
         });
     });
 
-    describe("integration scenarios", () => {
-        it("should handle complete FSB promotion lifecycle", () => {
-            // Initial state
-            expect(store.fsbState).toBe(FSBPromotionState.Idle);
+    // Integration scenarios focused by business workflow (SRP)
+    describe("FSB Promotion Lifecycle Integration", () => {
+        describe("complete promotion lifecycle", () => {
+            it("should transition from Idle to Ready when promotion is received", () => {
+                const testStore = FSBPromotionUIStoreTestHelper.createStore();
+                
+                // Initial state - no promotion
+                expect(testStore.fsbState).toBe(FSBPromotionState.Idle);
 
-            // Receive promotion
-            (mockFSBPromotionStore as any).promotion = {};
-            store.currentSpinCount = 5;
-            expect(store.fsbState).toBe(FSBPromotionState.Ready);
+                // Receive promotion and set spin count
+                const fsbStore = TestDependencyFactory.createFSBPromotionStore({
+                    promotion: { promotionId: "123", initialBonusItem: 5 }
+                });
+                (testStore as any).fsbPromotionStore = fsbStore;
+                testStore.currentSpinCount = 5;
+                
+                expect(testStore.fsbState).toBe(FSBPromotionState.Ready);
+            });
 
-            // Start spinning
-            store.fsbConsumedThisRound = true;
-            expect(store.fsbState).toBe(FSBPromotionState.Spinning);
+            it("should transition from Ready to Spinning when FSB is consumed", () => {
+                const { store: testStore } = FSBPromotionScenarioBuilder.createReadyToSpinScenario();
+                
+                // Start spinning by consuming FSB
+                testStore.fsbConsumedThisRound = true;
+                
+                expect(testStore.fsbState).toBe(FSBPromotionState.Spinning);
+            });
 
-            // Finish promotion
-            store.hasServerFinishPromotion = true;
-            expect(store.fsbState).toBe(FSBPromotionState.Finished);
+            it("should transition to Finished when server confirms end", () => {
+                const { store: testStore } = FSBPromotionScenarioBuilder.createSpinningScenario();
+                
+                // Server confirms promotion end
+                testStore.hasServerFinishPromotion = true;
+                
+                expect(testStore.fsbState).toBe(FSBPromotionState.Finished);
+            });
         });
 
-        it("should handle FSB consumption workflow", () => {
-            store.currentSpinCount = 3;
-            store.fsbConsumedThisRound = false;
+        describe("FSB spin consumption workflow", () => {
+            it("should consume FSB spin successfully when conditions are met", () => {
+                const testStore = FSBPromotionUIStoreTestHelper.createStore();
+                testStore.currentSpinCount = 3;
+                testStore.fsbConsumedThisRound = false;
 
-            // Consume first FSB
-            expect(store.tryConsumeFSB()).toBe(true);
-            expect(store.currentSpinCount).toBe(2);
-            expect(store.fsbConsumedThisRound).toBe(true);
+                const result = testStore.tryConsumeFSB();
 
-            // Try to consume again (should fail)
-            expect(store.tryConsumeFSB()).toBe(false);
-            expect(store.currentSpinCount).toBe(2);
+                expect(result).toBe(true);
+                expect(testStore.currentSpinCount).toBe(2);
+                expect(testStore.fsbConsumedThisRound).toBe(true);
+            });
 
-            // Undo last spin
-            expect(store.undoLastFSBSpin()).toBe(true);
-            expect(store.currentSpinCount).toBe(3);
-            expect(store.fsbConsumedThisRound).toBe(false);
+            it("should prevent double consumption within same round", () => {
+                const testStore = FSBPromotionUIStoreTestHelper.createStore();
+                testStore.currentSpinCount = 3;
+                testStore.fsbConsumedThisRound = true; // Already consumed
 
-            // Commit FSB
-            store.fsbConsumedThisRound = true;
-            store.commitFSB();
-            expect(store.fsbConsumedThisRound).toBe(false);
+                const result = testStore.tryConsumeFSB();
+
+                expect(result).toBe(false);
+                expect(testStore.currentSpinCount).toBe(3);
+                expect(testStore.fsbConsumedThisRound).toBe(true);
+            });
+
+            it("should support undo functionality for last spin", () => {
+                const testStore = FSBPromotionUIStoreTestHelper.createStore();
+                testStore.currentSpinCount = 2;
+                testStore.fsbConsumedThisRound = true;
+                testStore.resumedFSBPromotion = false;
+
+                const result = testStore.undoLastFSBSpin();
+
+                expect(result).toBe(true);
+                expect(testStore.currentSpinCount).toBe(3);
+                expect(testStore.fsbConsumedThisRound).toBe(false);
+            });
+
+            it("should commit FSB consumption for next round", () => {
+                const testStore = FSBPromotionUIStoreTestHelper.createStore();
+                testStore.fsbConsumedThisRound = true;
+
+                testStore.commitFSB();
+
+                expect(testStore.fsbConsumedThisRound).toBe(false);
+            });
         });
 
-        it("should handle turn over progress updates", () => {
-            const initialData = { win: 100, totalTO: 1000, minTO: 100, progress: 0.1 };
-            const updatedData = { win: 200, totalTO: 1000, minTO: 100, progress: 0.2 };
+        describe("turn over progress tracking workflow", () => {
+            it("should update progress when data changes", () => {
+                const testStore = FSBPromotionUIStoreTestHelper.createStore();
+                const initialData = { win: 100, totalTO: 1000, minTO: 100, progress: 0.1 };
 
-            // Initial update
-            expect(store.updateTOProgress(initialData)).toBe(true);
-            expect(store.toProgress).toEqual(initialData);
+                const result = testStore.updateTOProgress(initialData);
 
-            // Update with changes
-            expect(store.updateTOProgress(updatedData)).toBe(true);
-            expect(store.toProgress).toEqual(updatedData);
+                expect(result).toBe(true);
+                expect(testStore.toProgress).toEqual(initialData);
+            });
 
-            // Update with same data
-            expect(store.updateTOProgress(updatedData)).toBe(false);
+            it("should detect changes in progress data", () => {
+                const testStore = FSBPromotionUIStoreTestHelper.createStore();
+                const initialData = { win: 100, totalTO: 1000, minTO: 100, progress: 0.1 };
+                const updatedData = { win: 200, totalTO: 1000, minTO: 100, progress: 0.2 };
 
-            // Reset
-            store.resetTOProgress();
-            expect(store.toProgress).toBeNull();
+                testStore.updateTOProgress(initialData);
+                const result = testStore.updateTOProgress(updatedData);
+
+                expect(result).toBe(true);
+                expect(testStore.toProgress).toEqual(updatedData);
+            });
+
+            it("should ignore identical progress updates", () => {
+                const testStore = FSBPromotionUIStoreTestHelper.createStore();
+                const progressData = { win: 100, totalTO: 1000, minTO: 100, progress: 0.1 };
+
+                testStore.updateTOProgress(progressData);
+                const result = testStore.updateTOProgress(progressData);
+
+                expect(result).toBe(false);
+            });
+
+            it("should support progress reset functionality", () => {
+                const testStore = FSBPromotionUIStoreTestHelper.createStore();
+                const progressData = { win: 100, totalTO: 1000, minTO: 100, progress: 0.1 };
+
+                testStore.updateTOProgress(progressData);
+                testStore.resetTOProgress();
+
+                expect(testStore.toProgress).toBeNull();
+            });
         });
     });
 });

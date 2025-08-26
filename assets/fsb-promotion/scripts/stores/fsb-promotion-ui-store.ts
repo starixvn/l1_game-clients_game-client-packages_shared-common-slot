@@ -3,7 +3,7 @@ import mobx from "mobx";
 import { FSBPromotionStore } from "./fsb-promotion-store";
 import inversify from "inversify";
 import { settings } from "db://assets/game/scripts/game-settings";
-import { CascadingUIStore } from "db://shared-cascading-slot/stores/cascading-ui-store";
+//import { CascadingUIStore } from "db://shared-cascading-slot/stores/cascading-ui-store";
 
 const { injectable, inject } = inversify;
 
@@ -73,7 +73,7 @@ export const FreeSpinsPromotionEvents = {
 export class FSBPromotionUIStore {
     @inject(gc.Configs.SiteConfigs) protected readonly siteConfigs: gc.Configs.SiteConfigs;
     @inject(FSBPromotionStore) protected readonly fsbPromotionStore: FSBPromotionStore;
-    @inject(CascadingUIStore) protected readonly cascadingUIStore: CascadingUIStore;
+    //@inject(CascadingUIStore) protected readonly cascadingUIStore: CascadingUIStore;
 
     constructor() {
         mobx.makeAutoObservable(this);
@@ -166,7 +166,8 @@ export class FSBPromotionUIStore {
     }
 
     get isEligibleForNextFSBSpin() {
-        return this.cascadingUIStore.isUsedFSBPromotionBonus && this.currentSpinCount > 0 && this.isFSBInfoReady;
+        //return this.cascadingUIStore.isUsedFSBPromotionBonus && this.currentSpinCount > 0 && this.isFSBInfoReady;
+        return this.currentSpinCount > 0 && this.isFSBInfoReady;
     }
 
     get isFSBPromotionInProgress() {
@@ -190,7 +191,7 @@ export class FSBPromotionUIStore {
         }
 
         if (this.currentSpinCount >= 0 && this.fsbConsumedThisRound) {
-            this.cascadingUIStore.fsbPromotionInProgress = true;
+            //this.cascadingUIStore.fsbPromotionInProgress = true;
             return FSBPromotionState.Spinning;
         }
 
@@ -308,11 +309,12 @@ export class FSBPromotionUIStore {
         this.isWebViewLoading = isLoading;
     }
     get shouldOpenPromotionInfo(): boolean {
-        const isFSBUsed = this.cascadingUIStore?.isUsedFSBPromotionBonus ?? false;
+        //const isFSBUsed = this.cascadingUIStore?.isUsedFSBPromotionBonus ?? false;
         const isClaimed = this.fsbPromotionStore?.isClaimed ?? false;
         const isFSBInfoReady = this.isFSBInfoReady ?? false;
         const isClickPlayNow = this.isClickPlayNow ?? false;
 
-        return isFSBUsed && isClaimed && !isFSBInfoReady && isClickPlayNow;
+        //return isFSBUsed && isClaimed && !isFSBInfoReady && isClickPlayNow;
+        return isClaimed && !isFSBInfoReady && isClickPlayNow;
     }
 }

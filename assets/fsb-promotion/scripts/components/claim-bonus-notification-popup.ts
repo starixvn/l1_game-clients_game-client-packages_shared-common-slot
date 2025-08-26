@@ -6,7 +6,7 @@ import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
 import { FreeSpinsPromotionEvents } from "../stores/fsb-promotion-ui-store";
 import { ObserverComponent } from 'db://shared-components/shared/common-components/observer-component/scripts/observer-component';
 import { FSBPromotionStore } from "../stores/fsb-promotion-store";
-import { CascadingUIHandler } from "db://shared-cascading-slot/handlers/cascading-ui-handler";
+//import { CascadingUIHandler } from "db://shared-cascading-slot/handlers/cascading-ui-handler";
  
 const { ccclass, property } = _decorator;
 const { handle, render } = Observer;
@@ -26,7 +26,7 @@ export default class ClaimBonusNotificationPopup extends ObserverComponent {
         this.handleChangeUserBalance(true);
     }
 
-    @handle(CascadingUIHandler, (handler) => handler.handleChangeUserBalance(true))
+    //@handle(CascadingUIHandler, (handler) => handler.handleChangeUserBalance(true))
     handleChangeUserBalance(change: boolean) {
         return change;
     }

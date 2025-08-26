@@ -3,8 +3,8 @@ import gc from "@sg/game-client-base";
 import inversify from "inversify";
 import { FSBPromotionStore, RedeemStatus } from "../stores/fsb-promotion-store";
 import { GameClientMessageSlot } from "../../../game-message-slot";
-import { BetControlHandlers } from "db://shared-cascading-slot/handlers/bet-control-handlers";
-import { CascadingUIStore } from "db://shared-cascading-slot/stores/cascading-ui-store";
+//import { BetControlHandlers } from "db://shared-cascading-slot/handlers/bet-control-handlers";
+//import { CascadingUIStore } from "db://shared-cascading-slot/stores/cascading-ui-store";
 import mobx from "mobx";
 
 const { injectable, inject } = inversify;
@@ -16,8 +16,8 @@ export class FSBPromotionUIHandler {
     @inject(FSBPromotionStore) protected readonly fsbPromotionStore: FSBPromotionStore;
     @inject(FSBPromotionUIStore) protected readonly fsbPromotionUIStore: FSBPromotionUIStore;
     @inject(gc.Auth.AuthStore) protected readonly authStore: gc.Auth.AuthStore;
-    @inject(BetControlHandlers) protected readonly betControlHandlers: BetControlHandlers;
-    @inject(CascadingUIStore) protected readonly cascadingUIStore: CascadingUIStore;
+    //@inject(BetControlHandlers) protected readonly betControlHandlers: BetControlHandlers;
+    //@inject(CascadingUIStore) protected readonly cascadingUIStore: CascadingUIStore;
     @inject(gc.Notices.NoticeErrorsHandlers.AutoSignOutHandler)
     protected readonly noticeErrorsHandlers: gc.Notices.NoticeErrorsHandlers.AutoSignOutHandler;
 
@@ -83,7 +83,7 @@ export class FSBPromotionUIHandler {
             this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_FREE_SPINS_PROMOTION);
             this.fsbPromotionUIStore.promotionUrl = this.getPromoUrl();
         } else {
-            this.cascadingUIStore.fsbPromotionInProgress = true;
+            //this.cascadingUIStore.fsbPromotionInProgress = true;
             this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO);
         }
     }
@@ -96,10 +96,10 @@ export class FSBPromotionUIHandler {
     /** ========== URL HELPERS ========== */
 
     private buildPromotionSiteUrl() {
-        if (this.siteConfigs.subPromotionDomain) {
+        if (this.siteConfigs.subDomain) {
             const ssl = this.siteConfigs.ssl;
             const rootDomain = gc.UrlUtils.getRootDomain(this.siteConfigs);
-            const subPromotionDomainText = `${this.siteConfigs.subPromotionDomain}.`;
+            const subPromotionDomainText = `${this.siteConfigs.subDomain}.`;
             return `${"http"}${ssl ? "s" : ""}://${subPromotionDomainText}${rootDomain}`;
         }
         return this.buildProxyUrl(`/promotion`);
@@ -187,7 +187,7 @@ export class FSBPromotionUIHandler {
         if (!this.fsbPromotionUIStore.fsbConsumedThisRound) {
             this.tryShowEndedPopup();
         }
-        this.cascadingUIStore.fsbPromotionInProgress = false;
+        //this.cascadingUIStore.fsbPromotionInProgress = false;
     }
 
     public changeUIPendingEvent(event: string, data?: any) {
@@ -235,7 +235,7 @@ export class FSBPromotionUIHandler {
     }
 
     syncFSBBetControl() {
-        this.betControlHandlers.init(this.fsbPromotionStore.promotion.coinValue, this.fsbPromotionStore.promotion.betLevel);
+        //this.betControlHandlers.init(this.fsbPromotionStore.promotion.coinValue, this.fsbPromotionStore.promotion.betLevel);
     }
 
     updateTotalWin({ win, totalFreeSpins }: { win: number; totalFreeSpins: number }) {
@@ -254,7 +254,7 @@ export class FSBPromotionUIHandler {
     triggerFSBManual() {
         if (
             this.fsbPromotionUIStore.fsbConsumedThisRound ||
-            this.cascadingUIStore.isFreeSpins ||
+            //this.cascadingUIStore.isFreeSpins ||
             this.fsbPromotionUIStore.currentSpinCount <= 0 ||
             this.fsbPromotionUIStore.resumedFSBPromotion
         ) {

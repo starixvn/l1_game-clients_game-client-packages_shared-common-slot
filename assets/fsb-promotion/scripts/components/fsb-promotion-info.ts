@@ -4,7 +4,7 @@ import DraggableItem from "db://shared-components/shared/common-components/dragg
 import { FSBPromotionStore } from "../stores/fsb-promotion-store";
 import { GameServiceMessageSlot } from "../../../game-message-slot";
 import Observer from "observer";
-//import { AutoPlayHandler } from "db://shared-cascading-slot/handlers/auto-play-handlers";
+import { AutoPlayHandler } from "db://shared-cascading-slot/handlers/auto-play-handlers";
 import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
 import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
 import gc from "@sg/game-client-base";
@@ -75,7 +75,7 @@ export class FSBPromotionInfo extends ObserverComponent {
         }
     }
 
-    //@handle(AutoPlayHandler, (handler) => handler.placeBet())
+    @handle(AutoPlayHandler, (handler) => handler.placeBet())
     placeBet() {}
 
     @handle(FSBPromotionUIHandler, (handler) => handler.tryConsumeFSB())

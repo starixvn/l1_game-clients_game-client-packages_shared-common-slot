@@ -4,8 +4,8 @@ import { ObserverComponent } from 'db://shared-components/shared/common-componen
 import { FreeSpinsPromotionEvents } from '../stores/fsb-promotion-ui-store';
 import { FSBPromotionUIHandler } from '../handlers/fsb-promotion-ui-handler';
 import Observer from 'observer';
-//import { CascadingUIStore } from 'db://shared-cascading-slot/stores/cascading-ui-store';
-//import { CascadingSlotState } from 'db://shared-cascading-slot/cascading-slot-state';
+import { CascadingUIStore } from 'db://shared-cascading-slot/stores/cascading-ui-store';
+import { CascadingSlotState } from 'db://shared-cascading-slot/cascading-slot-state';
 const { ccclass, property } = _decorator;
 const { handle, render } = Observer;
 
@@ -15,7 +15,7 @@ export class GiftCode extends ObserverComponent {
     @property(Node)
     icon: Node = null;
     private isProcessing = false;
-    //private cascadingState = CascadingSlotState.NOT_READY_BET;
+    private cascadingState = CascadingSlotState.NOT_READY_BET;
 
 
 
@@ -46,10 +46,10 @@ export class GiftCode extends ObserverComponent {
         }, 1);
     }
 
-   /*  @render(CascadingUIStore, (store) => store.cascadingState)
+    @render(CascadingUIStore, (store) => store.cascadingState)
     private updateClaimedBonusSuccess(cascadingState: string) {
         this.cascadingState = cascadingState;
-    } */
+    }
 
     @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.EFFECT_UNBOX_GIFT))
     private openGiftCodeRedeemPopup() {

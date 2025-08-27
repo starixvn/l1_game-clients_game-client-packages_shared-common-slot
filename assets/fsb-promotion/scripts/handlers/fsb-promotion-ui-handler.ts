@@ -1,10 +1,16 @@
-import { FreeSpinsPromotionEvents, endpointConstants, FSBPromotionUIStore, ITurnOverRequired } from "../stores/fsb-promotion-ui-store";
+import {
+    FreeSpinsPromotionEvents,
+    endpointConstants,
+    FSBPromotionUIStore,
+    ITurnOverRequired,
+    FreeSpinSignal,
+    FreeSpinSource,
+} from "../stores/fsb-promotion-ui-store";
 import gc from "@sg/game-client-base";
 import inversify from "inversify";
 import { FSBPromotionStore, RedeemStatus } from "../stores/fsb-promotion-store";
 import { GameClientMessageSlot } from "../../../game-message-slot";
-//import { BetControlHandlers } from "db://shared-cascading-slot/handlers/bet-control-handlers";
-//import { CascadingUIStore } from "db://shared-cascading-slot/stores/cascading-ui-store";
+import { BetControlHandlers } from "db://shared-cascading-slot/handlers/bet-control-handlers";
 import mobx from "mobx";
 
 const { injectable, inject } = inversify;
@@ -16,21 +22,12 @@ export class FSBPromotionUIHandler {
     @inject(FSBPromotionStore) protected readonly fsbPromotionStore: FSBPromotionStore;
     @inject(FSBPromotionUIStore) protected readonly fsbPromotionUIStore: FSBPromotionUIStore;
     @inject(gc.Auth.AuthStore) protected readonly authStore: gc.Auth.AuthStore;
-    //@inject(BetControlHandlers) protected readonly betControlHandlers: BetControlHandlers;
-    //@inject(CascadingUIStore) protected readonly cascadingUIStore: CascadingUIStore;
+    @inject(BetControlHandlers) protected readonly betControlHandlers: BetControlHandlers;
     @inject(gc.Notices.NoticeErrorsHandlers.AutoSignOutHandler)
     protected readonly noticeErrorsHandlers: gc.Notices.NoticeErrorsHandlers.AutoSignOutHandler;
 
     constructor() {
         setTimeout(() => {
-            mobx.reaction(
-                () => this.fsbPromotionUIStore.shouldOpenPromotionInfo,
-                (shouldOpenPromotionInfo) => {
-                    if (shouldOpenPromotionInfo) {
-                        this.changeUIPendingEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO);
-                    }
-                }
-            );
             mobx.reaction(
                 () => this.fsbPromotionUIStore.isTrialMode,
                 (trial, prev) => {
@@ -83,7 +80,7 @@ export class FSBPromotionUIHandler {
             this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_FREE_SPINS_PROMOTION);
             this.fsbPromotionUIStore.promotionUrl = this.getPromoUrl();
         } else {
-            //this.cascadingUIStore.fsbPromotionInProgress = true;
+            this.fsbPromotionUIStore.fsbPromotionInProgress = true;
             this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO);
         }
     }
@@ -187,7 +184,7 @@ export class FSBPromotionUIHandler {
         if (!this.fsbPromotionUIStore.fsbConsumedThisRound) {
             this.tryShowEndedPopup();
         }
-        //this.cascadingUIStore.fsbPromotionInProgress = false;
+        this.fsbPromotionUIStore.fsbPromotionInProgress = false;
     }
 
     public changeUIPendingEvent(event: string, data?: any) {
@@ -235,7 +232,7 @@ export class FSBPromotionUIHandler {
     }
 
     syncFSBBetControl() {
-        //this.betControlHandlers.init(this.fsbPromotionStore.promotion.coinValue, this.fsbPromotionStore.promotion.betLevel);
+        this.betControlHandlers.init(this.fsbPromotionStore.promotion.coinValue, this.fsbPromotionStore.promotion.betLevel);
     }
 
     updateTotalWin({ win, totalFreeSpins }: { win: number; totalFreeSpins: number }) {
@@ -254,7 +251,7 @@ export class FSBPromotionUIHandler {
     triggerFSBManual() {
         if (
             this.fsbPromotionUIStore.fsbConsumedThisRound ||
-            //this.cascadingUIStore.isFreeSpins ||
+            this.fsbPromotionUIStore.isFreeSpinInGame ||
             this.fsbPromotionUIStore.currentSpinCount <= 0 ||
             this.fsbPromotionUIStore.resumedFSBPromotion
         ) {
@@ -273,6 +270,10 @@ export class FSBPromotionUIHandler {
         this.fsbPromotionUIStore.isClickPlayNow = isClickPlayNow;
     }
 
+    public handleFreeSpin(signal: FreeSpinSignal) {
+        const { source, active } = signal;
+        this.fsbPromotionUIStore.setActiveFreeSpin(source, active);
+    }
 
     /** ========== TURN OVER REQUIRED MANAGEMENT ========== */
 
@@ -298,6 +299,10 @@ export class FSBPromotionUIHandler {
 
     public handleTrialMode(isTrialMode: boolean) {
         this.fsbPromotionUIStore.isTrialMode = isTrialMode;
+    }
+
+    public setShowFreeSpinMessage(isShowFreeSpinMessage: boolean) {
+        this.fsbPromotionUIStore.isShowFreeSpinMessage = isShowFreeSpinMessage;
     }
 
     public claimedBonusSuccess() {

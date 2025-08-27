@@ -40,6 +40,7 @@ export default class PromotionEndPopup extends ObserverComponent {
         this.labelTotalWin.string = gc.FormatUtils.numberWithCommas(totalWin, 2, false);
         this.node.active = true;
         this.setupContent(totalWin);
+        this.setShowFreeSpinMessage();
     }
 
     @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.CLOSE_FSB_END_BANNER))
@@ -89,4 +90,7 @@ export default class PromotionEndPopup extends ObserverComponent {
 
     @handle(FSBPromotionUIHandler, (handler) => handler.openTurnOverRequired("end-promotion"))
     private openTurnOverRequired() {}
+
+    @handle(FSBPromotionUIHandler, (handler) => handler.setShowFreeSpinMessage(false))
+    setShowFreeSpinMessage() {}
 }

@@ -204,7 +204,9 @@ export class FSBPromotionUIManager extends ObserverComponent {
         }
     }
 
-    @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.SPIN_ON_FSB_PROMOTION_FIRST_TIME))
+    @handle(FSBPromotionUIHandler, (handler) =>
+        handler.changeUIPendingEvent(FreeSpinsPromotionEvents.SPIN_ON_FSB_PROMOTION_FIRST_TIME, { delayMs: 800, isPlaceBet: true })
+    )
     spinOnFSBPromotionFirstTime() {}
 
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.UPDATE_BALANCE_BONUS)

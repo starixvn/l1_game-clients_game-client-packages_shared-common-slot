@@ -112,8 +112,6 @@ export class FSBPromotionUIStore {
 
     public isShowFreeSpinMessage = false;
 
-    public fsbPromotionInProgress = false;
-
     // TurnOverRequired state properties
     private _toProgress: ITurnOverRequired = null;
     public readonly turnOverRequiredDataKey = [TurnOverRequiredDataKey.PROMOTION_TO_PROGRESS];
@@ -230,7 +228,6 @@ export class FSBPromotionUIStore {
         }
 
         if (this.currentSpinCount >= 0 && this.fsbConsumedThisRound) {
-            this.fsbPromotionInProgress = true;
             return FSBPromotionState.Spinning;
         }
 

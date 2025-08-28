@@ -4,7 +4,6 @@ import DraggableItem from "db://shared-components/shared/common-components/dragg
 import { FSBPromotionStore } from "../stores/fsb-promotion-store";
 import { GameServiceMessageSlot } from "../../../game-message-slot";
 import Observer from "observer";
-import { AutoPlayHandler } from "db://shared-cascading-slot/handlers/auto-play-handlers";
 import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
 import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
 import gc from "@sg/game-client-base";
@@ -64,22 +63,6 @@ export class FSBPromotionInfo extends ObserverComponent {
         return remainingBonusItems;
     }
 
-    @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.SPIN_ON_FSB_PROMOTION_FIRST_TIME)
-    spinOnFSBPromotionFirstTime(isSpinOnFSBPromotionFirstTime: boolean) {
-        if (isSpinOnFSBPromotionFirstTime) {
-            this.scheduleOnce(() => {
-                this.setBetControl();
-                this.tryConsumeFSB();
-                this.placeBet();
-            }, 0.8);
-        }
-    }
-
-    @handle(AutoPlayHandler, (handler) => handler.placeBet())
-    placeBet() {}
-
-    @handle(FSBPromotionUIHandler, (handler) => handler.tryConsumeFSB())
-    tryConsumeFSB() {}
 
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent)
     onPendingUIEvent(event: { event: string; data?: any }) {
@@ -120,18 +103,6 @@ export class FSBPromotionInfo extends ObserverComponent {
 
     @handle(FSBPromotionUIHandler, (handler) => handler.undoLastFSBSpin())
     revertLastFSB() {}
-
-    @render(FSBPromotionUIStore, (store) => [store.isEligibleForNextFSBSpin, store.hasServerFinishPromotion])
-    async autoTriggerNextFSBSpin([isEligibleForNextFSBSpin, hasServerFinishPromotion]: [boolean, boolean]) {
-        if (isEligibleForNextFSBSpin && !hasServerFinishPromotion) {
-            this.setBetControl();
-            this.tryConsumeFSB();
-            this.placeBet();
-        }
-    }
-
-    @handle(FSBPromotionUIHandler, (handler) => handler.syncFSBBetControl())
-    setBetControl() {}
 
     @handle(FSBPromotionUIHandler, (handler) => handler.updatePromotionURL())
     private updatePromotionURL() {}

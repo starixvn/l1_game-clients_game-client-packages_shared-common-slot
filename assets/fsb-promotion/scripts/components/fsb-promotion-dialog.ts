@@ -5,7 +5,6 @@ import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
 import Observer from "observer";
 import { Dialog } from "db://shared-components/shared/common-components/dialogs/dialog";
 import { DialogTransition } from "db://shared-components/shared/common-components/dialogs/transition/dialog-transition";
-import { CascadingUIStore } from "db://shared-cascading-slot/stores/cascading-ui-store";
 import { FSBPromotionHandlers } from "../handlers/fsb-promotion-handlers";
 const { ccclass, property } = _decorator;
 const { handle, render } = Observer;
@@ -49,7 +48,7 @@ export class FsbPromotionDialog extends ObserverComponent {
     @handle(FSBPromotionUIHandler, (handle) => handle.setIsClickPlayNow(true))
     onPlayGameNow() {}
 
-      @render(CascadingUIStore, (store) => store.isFreeSpins)
+      @render(FSBPromotionUIStore, (store) => store.isFreeSpinInGame)
     checkFeeSpinInGame(isFreeSpins: boolean) {
         if (isFreeSpins) {
             this.isFreeSpins = true;

@@ -19,6 +19,8 @@ export class FSBPromotionInfo extends ObserverComponent {
     @property(Label) labelTotalBet: Label = null;
     private readonly BET_MULTIPLIER = 20;
 
+    private readonly DEFAULT_LINES = 25;
+
     private totalWin = 0;
 
     onEnable() {
@@ -39,7 +41,7 @@ export class FSBPromotionInfo extends ObserverComponent {
 
     @render(FSBPromotionStore, (store) => store.promotion)
     onFSBPromotionInfo(promotion: GameServiceMessageSlot.Promotion) {
-        const { coinValue = 0, betLevel = 0, totalWin = 0, remainingBonusItems = 0 } = promotion;
+        const { coinValue, betLevel = 0, totalWin = 0, remainingBonusItems = 0 } = promotion;
         this.totalWin = totalWin;
         const totalBet = this.calculateTotalBet(coinValue, betLevel);
         this.updateUI({ totalWin, remainingBonusItems, totalBet });
@@ -47,6 +49,9 @@ export class FSBPromotionInfo extends ObserverComponent {
     }
 
     private calculateTotalBet(coinValue: number, betLevel: number): number {
+        if (!coinValue) {
+            return +(betLevel * this.DEFAULT_LINES);
+        }
         return +(betLevel * coinValue * this.BET_MULTIPLIER).toFixed(1);
     }
 
@@ -62,7 +67,6 @@ export class FSBPromotionInfo extends ObserverComponent {
     setCurrentSpinCount(remainingBonusItems: number) {
         return remainingBonusItems;
     }
-
 
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent)
     onPendingUIEvent(event: { event: string; data?: any }) {

@@ -5,7 +5,6 @@ import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-pro
 import Observer from "observer";
 import { AnimationUtils } from "db://shared-components/shared/utils/utils";
 import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
-import { CascadingUIStore } from "db://shared-cascading-slot/stores/cascading-ui-store";
 import gc from "@sg/game-client-base";
 
 const { handle, render } = Observer;
@@ -221,7 +220,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
         this.hasServerFinishPromotion = hasServerFinishPromotion;
     }
 
-    @render(CascadingUIStore, (store) => store.isFreeSpinEffectCompleted)
+    @render(FSBPromotionUIStore, (store) => store.isUsedFSBPromotionBonus)
     private handleFreeSpinEffectCompleted(isFreeSpinEffectCompleted: boolean) {
         if (isFreeSpinEffectCompleted && this.hasServerFinishPromotion) {
             this.tryShowPromotionEndedPopup();

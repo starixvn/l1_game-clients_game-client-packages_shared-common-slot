@@ -287,7 +287,7 @@ export class FSBPromotionUIStore {
             return false;
         }
         const { isClaimed, remainingBonusItems, initialBonusItem } = this.fsbPromotionStore.promotion;
-        return isClaimed && remainingBonusItems < initialBonusItem;
+        return isClaimed && remainingBonusItems < initialBonusItem && !this.hasServerFinishPromotion;
     }
 
     shouldSkipPromo(): boolean {

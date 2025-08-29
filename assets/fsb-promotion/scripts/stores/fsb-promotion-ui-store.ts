@@ -210,7 +210,7 @@ export class FSBPromotionUIStore {
     }
 
     get isFSBPromotionInProgress() {
-        return this.fsbState === FSBPromotionState.Ready || this.fsbState === FSBPromotionState.Spinning;
+        return this.fsbState === FSBPromotionState.Ready || this.fsbState === FSBPromotionState.Spinning || this.isPromotionConsumed();
     }
     get isUpdateTotalWin() {
         return this.fsbConsumedThisRound || this.resumedFSBPromotion;
@@ -280,6 +280,11 @@ export class FSBPromotionUIStore {
 
     hasPromo(): boolean {
         return !!this.fsbPromotionStore.promotion;
+    }
+
+    isPromotionConsumed(): boolean {
+        const { isClaimed, remainingBonusItems, initialBonusItem } = this.fsbPromotionStore.promotion;
+        return isClaimed && remainingBonusItems < initialBonusItem;
     }
 
     shouldSkipPromo(): boolean {

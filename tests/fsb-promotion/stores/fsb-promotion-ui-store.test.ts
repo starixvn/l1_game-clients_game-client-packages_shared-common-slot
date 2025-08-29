@@ -436,14 +436,22 @@ describe("FSBPromotionUIStore", () => {
 
     describe("isFSBPromotionInProgress", () => {
         it("should return true when state is Ready", () => {
-            mockFSBPromotionStore.promotion = {}; // Set promotion to enable FSB state
+            mockFSBPromotionStore.promotion = {
+                isClaimed: false,
+                remainingBonusItems: 1,
+                initialBonusItem: 1
+            }; // Set promotion to enable FSB state
             store.currentSpinCount = 5;
             store.fsbConsumedThisRound = false;
             expect(store.isFSBPromotionInProgress).toBe(true);
         });
 
         it("should return true when state is Spinning", () => {
-            mockFSBPromotionStore.promotion = {}; // Set promotion to enable FSB state
+            mockFSBPromotionStore.promotion = {
+                isClaimed: true,
+                remainingBonusItems: 1,
+                initialBonusItem: 1
+            }; // Set promotion to enable FSB state
             store.currentSpinCount = 5;
             store.fsbConsumedThisRound = true;
             expect(store.isFSBPromotionInProgress).toBe(true);
@@ -451,11 +459,21 @@ describe("FSBPromotionUIStore", () => {
 
         it("should return false when state is Idle", () => {
             store.currentSpinCount = -1;
+            mockFSBPromotionStore.promotion = {
+                isClaimed: false,
+                remainingBonusItems: 1,
+                initialBonusItem: 1
+            }; // Set promotion to enable FSB state
             expect(store.isFSBPromotionInProgress).toBe(false);
         });
 
         it("should return false when state is Finished", () => {
             store.hasServerFinishPromotion = true;
+            mockFSBPromotionStore.promotion = {
+                isClaimed: true,
+                remainingBonusItems: 1,
+                initialBonusItem: 1
+            }; // Set promotion to enable FSB state
             expect(store.isFSBPromotionInProgress).toBe(false);
         });
     });

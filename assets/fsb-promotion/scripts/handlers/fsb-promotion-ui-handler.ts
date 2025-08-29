@@ -321,4 +321,8 @@ export class FSBPromotionUIHandler {
             }
         }
     }
+
+    public handleChangeUserBalance(change: boolean) {
+        this.fsbPromotionUIStore.changeUserBalance = change;
+    }
 }

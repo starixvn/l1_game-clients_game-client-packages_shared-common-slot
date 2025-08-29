@@ -99,6 +99,8 @@ export class FSBPromotionUIStore {
     public resumedFSBPromotion = false;
     public hasServerFinishPromotion = false;
     public fsbConsumedThisRound = false;
+    public changeUserBalance = false;
+    public isSpinningFSB = false;
     public promotionUrl = "";
     public gameOffers: { name: string; gameId: number }[] = [{ name: settings.name.toLowerCase(), gameId: settings.id }];
     public isWebViewLoading = false;

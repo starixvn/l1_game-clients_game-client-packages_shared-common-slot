@@ -508,7 +508,7 @@ describe("FSBPromotionUIStore", () => {
                 {
                     description: "state is Ready",
                     setup: {
-                        fsbPromotionStore: { promotion: { id: "test" } },
+                        fsbPromotionStore: { promotion: { id: "test", isClaimed: false, remainingBonusItems: 0, initialBonusItem: 0 } },
                         storeProps: { currentSpinCount: 3, fsbConsumedThisRound: false }
                     },
                     expected: true

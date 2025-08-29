@@ -283,6 +283,9 @@ export class FSBPromotionUIStore {
     }
 
     isPromotionConsumed(): boolean {
+        if (!this.fsbPromotionStore.promotion) {
+            return false;
+        }
         const { isClaimed, remainingBonusItems, initialBonusItem } = this.fsbPromotionStore.promotion;
         return isClaimed && remainingBonusItems < initialBonusItem;
     }

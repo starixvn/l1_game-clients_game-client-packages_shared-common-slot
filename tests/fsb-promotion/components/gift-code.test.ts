@@ -2,7 +2,14 @@ import { describe, expect, it, beforeEach, jest } from "@jest/globals";
 import { GiftCode } from "../../../assets/fsb-promotion/scripts/components/gift-code";
 import { Node } from "cc";
 import DraggableItem from "db://shared-components/shared/common-components/draggable/draggable-item";
-import { CascadingSlotState } from "db://shared-cascading-slot/cascading-slot-state";
+
+// Mock CascadingSlotState enum - not available in current codebase
+enum CascadingSlotState {
+    NOT_READY_BET = "NOT_READY_BET",
+    READY_BET = "READY_BET", 
+    SPINNING = "SPINNING",
+    SETTLED = "SETTLED"
+}
 
 // Mock dependencies following Dependency Inversion Principle
 jest.mock("reflect-metadata", () => ({
@@ -48,17 +55,6 @@ jest.mock("observer", () => ({
         render: jest.fn(() => jest.fn()),
         handle: jest.fn(() => jest.fn()),
     },
-}));
-jest.mock("db://shared-cascading-slot/stores/cascading-ui-store");
-jest.mock("db://shared-cascading-slot/cascading-slot-state");
-jest.mock("db://shared-cascading-slot/cascading-slot-utils", () => ({
-    globalEmitter: {
-        addEventListener: jest.fn(),
-        removeEventListener: jest.fn(),
-        dispatchEvent: jest.fn(),
-    },
-    SlotClientEvent: {},
-    SlotNotification: {},
 }));
 
 // Mock Interfaces following Interface Segregation Principle

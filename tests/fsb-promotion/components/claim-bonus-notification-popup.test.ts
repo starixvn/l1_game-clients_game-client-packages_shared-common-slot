@@ -57,7 +57,7 @@ jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store",
 
 jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-store");
 jest.mock("../../../assets/fsb-promotion/scripts/handlers/fsb-promotion-ui-handler");
-jest.mock("db://shared-cascading-slot/handlers/cascading-ui-handler");
+// Removed cascading slot dependencies - not available in current codebase
 
 // Mock Interfaces following Interface Segregation Principle
 interface MockLabel {

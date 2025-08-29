@@ -107,17 +107,7 @@ jest.mock("db://shared-components/shared/common-components/dialogs/dialog", () =
 jest.mock("../../../assets/fsb-promotion/scripts/handlers/fsb-promotion-ui-handler");
 jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store");
 
-// Mock cascading slot dependencies
-jest.mock("db://shared-cascading-slot/stores/cascading-ui-store");
-jest.mock("db://shared-cascading-slot/cascading-slot-utils", () => ({
-    globalEmitter: {
-        addEventListener: jest.fn(),
-        removeEventListener: jest.fn(),
-        dispatchEvent: jest.fn(),
-    },
-    SlotClientEvent: {},
-    SlotNotification: {},
-}));
+// Additional test dependencies are handled by existing mocks above
 
 // Mock Dependency Factories (SRP - Single Responsibility for creating mocks)
 // Moved after jest.mock() calls to avoid hoisting issues

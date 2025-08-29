@@ -398,20 +398,9 @@ jest.mock("observer", () => ({
     },
 }));
 
-jest.mock("db://shared-cascading-slot/handlers/auto-play-handlers");
+// Mock FSB promotion dependencies
 jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store");
 jest.mock("../../../assets/fsb-promotion/scripts/handlers/fsb-promotion-ui-handler");
-
-// Mock cascading slot dependencies
-jest.mock("db://shared-cascading-slot/cascading-slot-utils", () => ({
-    globalEmitter: {
-        addEventListener: jest.fn(),
-        removeEventListener: jest.fn(),
-        dispatchEvent: jest.fn(),
-    },
-    SlotClientEvent: {},
-    SlotNotification: {},
-}));
 
 // SOLID: Dependency Inversion - Test context setup
 class PromotionInfoTestContext {

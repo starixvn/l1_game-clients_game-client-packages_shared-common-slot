@@ -26,8 +26,7 @@ jest.mock("inversify", () => ({
     inject: jest.fn(() => (target: any, propertyKey: string) => {}),
 }));
 
-jest.mock("db://shared-cascading-slot/handlers/bet-control-handlers");
-jest.mock("db://shared-cascading-slot/stores/cascading-ui-store");
+// Removed cascading slot dependencies - not available in current codebase
 
 jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-store", () => ({
     FSBPromotionStore: jest.fn(),

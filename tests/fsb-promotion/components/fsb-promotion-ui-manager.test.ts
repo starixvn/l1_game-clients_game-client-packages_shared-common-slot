@@ -97,14 +97,7 @@ jest.mock("db://assets/game/scripts/game-settings", () => ({
     },
 }));
 
-jest.mock("db://shared-cascading-slot/stores/cascading-ui-store", () => ({
-    CascadingUIStore: function MockCascadingUIStore() {
-        return {
-            isUsedFSBPromotionBonus: false,
-            fsbPromotionInProgress: false,
-        };
-    },
-}));
+// Removed cascading slot dependencies - not available in current codebase
 
 // Mock Factories (SRP - Single responsibility for creating mocks)
 class MockDependencyFactory {

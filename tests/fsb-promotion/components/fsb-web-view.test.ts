@@ -149,16 +149,7 @@ jest.mock("observer", () => ({
     },
 }));
 
-// Mock cascading slot dependencies
-jest.mock("db://shared-cascading-slot/cascading-slot-utils", () => ({
-    globalEmitter: {
-        addEventListener: jest.fn(),
-        removeEventListener: jest.fn(),
-        dispatchEvent: jest.fn(),
-    },
-    SlotClientEvent: {},
-    SlotNotification: {},
-}));
+// Removed cascading slot dependencies - not available in current codebase
 
 // SOLID: Dependency Inversion - Test context setup
 class WebViewTestContext {

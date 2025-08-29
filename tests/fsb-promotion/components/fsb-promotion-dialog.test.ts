@@ -46,20 +46,10 @@ jest.mock("db://shared-components/shared/common-components/dialogs/transition/di
     DialogTransition: jest.fn(),
 }));
 
-jest.mock("db://shared-cascading-slot/cascading-slot-utils", () => ({
-    globalEmitter: {
-        addEventListener: jest.fn(),
-        removeEventListener: jest.fn(),
-        dispatchEvent: jest.fn(),
-    },
-    SlotClientEvent: {},
-    SlotNotification: {},
-}));
-
+// Mock FSB promotion dependencies
 jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store");
 jest.mock("../../../assets/fsb-promotion/scripts/handlers/fsb-promotion-ui-handler");
 jest.mock("../../../assets/fsb-promotion/scripts/handlers/fsb-promotion-handlers");
-jest.mock("db://shared-cascading-slot/stores/cascading-ui-store");
 
 // Mock Interfaces following Interface Segregation Principle
 interface MockDialog {

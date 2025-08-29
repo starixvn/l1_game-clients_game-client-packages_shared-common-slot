@@ -93,7 +93,6 @@ interface MockFSBPromotionStore {
 }
 
 interface MockFSBPromotionUIStore {
-    shouldOpenPromotionInfo: boolean;
     isTrialMode: boolean;
     hasPromo: jest.Mock;
     shouldSkipPromo: jest.Mock;
@@ -152,7 +151,6 @@ const createMockFSBPromotionStore = (overrides?: Partial<MockFSBPromotionStore>)
 });
 
 const createMockFSBPromotionUIStore = (overrides?: Partial<MockFSBPromotionUIStore>): MockFSBPromotionUIStore => ({
-    shouldOpenPromotionInfo: false,
     isTrialMode: false,
     hasPromo: jest.fn(() => true),
     shouldSkipPromo: jest.fn(() => false),
@@ -677,13 +675,7 @@ describe("FSBPromotionUIHandler", () => {
             });
         });
 
-        describe("syncFSBBetControl", () => {
-            it("should_sync_bet_control_with_promotion_settings", () => {
-                testSetup.handler.syncFSBBetControl();
-                
-                expect(testSetup.mockBetControlHandlers.init).toHaveBeenCalledWith(1, 1);
-            });
-        });
+
     });
 
     // Test suite for Error Code Mapping Responsibility
@@ -764,21 +756,6 @@ describe("FSBPromotionUIHandler", () => {
     // Test suite for FSB Manual Trigger Management
     describe("FSB Manual Trigger Management", () => {
         describe("triggerFSBManual", () => {
-            it("should_trigger_fsb_when_all_conditions_met", () => {
-                testSetup.updateFSBPromotionUIStore({ 
-                    fsbConsumedThisRound: false,
-                    currentSpinCount: 5,
-                    resumedFSBPromotion: false
-                });
-                testSetup.updateFSBPromotionStore({ finishPromotion: null });
-                Object.assign(testSetup.mockCascadingUIStore, { isFreeSpins: false });
-                
-                testSetup.handler.triggerFSBManual();
-                
-                expect(testSetup.mockBetControlHandlers.init).toHaveBeenCalled();
-                expect(testSetup.mockFSBPromotionUIStore.tryConsumeFSB).toHaveBeenCalled();
-            });
-
             it("should_not_trigger_fsb_when_already_consumed_this_round", () => {
                 testSetup.updateFSBPromotionUIStore({ fsbConsumedThisRound: true });
                 

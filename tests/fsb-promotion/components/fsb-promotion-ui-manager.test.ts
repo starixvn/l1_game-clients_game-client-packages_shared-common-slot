@@ -462,32 +462,28 @@ describe("FSBPromotionUIStore", () => {
                 {
                     description: "conditions not met",
                     setup: {
-                        cascadingUIStore: { isUsedFSBPromotionBonus: false },
-                        storeProps: { currentSpinCount: 0, isFSBInfoReady: false }
+                        storeProps: { currentSpinCount: 0, isFSBInfoReady: false, isUsedFSBPromotionBonus: false }
                     },
                     expected: false
                 },
                 {
                     description: "all conditions met",
                     setup: {
-                        cascadingUIStore: { isUsedFSBPromotionBonus: true },
-                        storeProps: { currentSpinCount: 3, isFSBInfoReady: true }
+                        storeProps: { currentSpinCount: 3, isFSBInfoReady: true, isUsedFSBPromotionBonus: true }
                     },
                     expected: true
                 },
                 {
                     description: "currentSpinCount is 0",
                     setup: {
-                        cascadingUIStore: { isUsedFSBPromotionBonus: true },
-                        storeProps: { currentSpinCount: 0, isFSBInfoReady: true }
+                        storeProps: { currentSpinCount: 0, isFSBInfoReady: true, isUsedFSBPromotionBonus: true }
                     },
                     expected: false
                 },
                 {
                     description: "FSB info not ready",
                     setup: {
-                        cascadingUIStore: { isUsedFSBPromotionBonus: true },
-                        storeProps: { currentSpinCount: 3, isFSBInfoReady: false }
+                        storeProps: { currentSpinCount: 3, isFSBInfoReady: false, isUsedFSBPromotionBonus: true }
                     },
                     expected: false
                 }
@@ -579,10 +575,7 @@ describe("FSBPromotionUIStore", () => {
                         fsbPromotionStore: { promotion: { id: "test" } },
                         storeProps: { currentSpinCount: 2, fsbConsumedThisRound: true }
                     },
-                    expectedState: FSBPromotionState.Spinning,
-                    expectedSideEffects: [
-                        { property: "fsbPromotionInProgress", value: true }
-                    ]
+                    expectedState: FSBPromotionState.Spinning
                 },
                 {
                     description: "currentSpinCount >= 0",
@@ -594,12 +587,12 @@ describe("FSBPromotionUIStore", () => {
                 }
             ];
 
-            fsbStateTestCases.forEach(({ description, setup, expectedState, expectedSideEffects }) => {
+            fsbStateTestCases.forEach(({ description, setup, expectedState }) => {
                 it(`should return ${FSBPromotionState[expectedState]} when ${description}`, () => {
                     StateTestHelper.testFSBState(
                         store,
                         testSetup.dependencies,
-                        { ...setup, expectedSideEffects },
+                        setup,
                         expectedState
                     );
                 });

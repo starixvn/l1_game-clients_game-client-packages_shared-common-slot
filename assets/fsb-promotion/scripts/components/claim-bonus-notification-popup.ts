@@ -22,7 +22,6 @@ export default class ClaimBonusNotificationPopup extends ObserverComponent {
  
         this.labelTotalWin.string = gc.FormatUtils.numberWithCommas(claimedAmount, 2, false);
         this.node.active = true;
-        this.handleChangeUserBalance(true);
     }
 
     @handle(FSBPromotionUIHandler, (handler) => handler.handleChangeUserBalance(true))
@@ -33,6 +32,7 @@ export default class ClaimBonusNotificationPopup extends ObserverComponent {
     private onCloseClicked() {
         this.node.getComponent(Dialog)?.hide();
         this.updateClaimedAmount();
+        this.handleChangeUserBalance(true);
     }
 
     @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.UPDATE_BALANCE_BONUS))

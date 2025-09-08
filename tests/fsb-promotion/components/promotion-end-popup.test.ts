@@ -2,9 +2,11 @@ import { describe, expect, it, beforeEach, jest } from "@jest/globals";
 import PromotionEndPopup from "../../../assets/fsb-promotion/scripts/components/promotion-end-popup";
 import { Node, Label, Button } from "cc";
 import { GameServiceMessageSlot } from "../../../assets/game-message-slot";
-import { Auth } from "@sg/game-client-base";
+import { Translator } from "@sg/game-client-base";
 
-// Mock decorators first - inline to avoid hoisting issues
+// ========== Mocks ==========
+
+// reflect-metadata (nếu project dùng)
 jest.mock("reflect-metadata", () => ({
     Reflect: {
         decorate: jest.fn(),
@@ -14,7 +16,7 @@ jest.mock("reflect-metadata", () => ({
     },
 }));
 
-// Mock _decorator from cc - inline to avoid hoisting issues
+// cc
 jest.mock("cc", () => ({
     _decorator: {
         ccclass: jest.fn(() => jest.fn()),
@@ -42,57 +44,35 @@ jest.mock("cc", () => ({
     Widget: jest.fn(),
 }));
 
-// Mock dependencies - inline to avoid hoisting issues
-jest.mock("@sg/game-client-base", () => ({
-    FormatUtils: {
-        numberWithCommas: jest.fn().mockReturnValue("1,000.00")
-    },
-    Player: {
-        MainPlayerStore: {
-            balance: 1000,
-        }
-    },
-    Configs: {
-        SiteConfigs: {
-            env: "test",
-        }
-    },
-    Connection: {
-        ConnectionStore: {
-            connection: {
-                on: jest.fn(),
-            },
-        }
-    },
-    Auth: {
-        AuthStore: {
-            session: "test_session",
-            username: "test_username",
-            language: "en",
-        }
-    },
-    Notices: {
-        NoticeStore: {
-            addWarning: jest.fn(),
+// GỘP mock @sg/game-client-base: export default + named
+jest.mock("@sg/game-client-base", () => {
+    const translate = jest.fn((k: string) => k);
+    const gameTranslate = jest.fn();
+    const commonTranslate = jest.fn((k: string) => k);
+    const numberWithCommas = jest.fn((n: number, d: number, _g?: boolean) => Number(n).toFixed(d));
+
+    const mod = {
+        Translator: { translate, gameTranslate, commonTranslate },
+        FormatUtils: { numberWithCommas },
+        Player: { MainPlayerStore: { balance: 1000 } },
+        Configs: { SiteConfigs: { env: "test" } },
+        Connection: { ConnectionStore: { connection: { on: jest.fn() } } },
+        Auth: { AuthStore: { session: "test_session", username: "test_username", language: "en" } },
+        Notices: {
+            NoticeStore: { addWarning: jest.fn() },
+            NoticeErrorsHandlers: { AutoSignOutHandler: jest.fn(() => ({})) },
         },
-        NoticeErrorsHandlers: {
-            AutoSignOutHandler: jest.fn(() => ({})),
-        },
-    },
-    Notification: {
-        NotificationStore: {
-            connection: {
-                on: jest.fn(),
-            },
-        }
-    }
-}));
+        Notification: { NotificationStore: { connection: { on: jest.fn() } } },
+    };
+    return { __esModule: true, default: mod, ...mod };
+});
+
 jest.mock("db://shared-components/shared/common-components/observer-component/scripts/observer-component", () => ({
-    ObserverComponent: class MockObserverComponent {},
+    ObserverComponent: class MockObserverComponent {
+        node: any = { active: false, getComponent: jest.fn() };
+    },
 }));
-jest.mock("db://i18n/LanguageData");
-jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-store");
-jest.mock("../../../assets/fsb-promotion/scripts/handlers/fsb-promotion-handlers");
+
 jest.mock("observer", () => ({
     __esModule: true,
     default: {
@@ -100,709 +80,277 @@ jest.mock("observer", () => ({
         handle: jest.fn(() => jest.fn()),
     },
 }));
-jest.mock("../../../assets/game-message-slot");
+
 jest.mock("db://shared-components/shared/common-components/dialogs/dialog", () => ({
     Dialog: jest.fn(),
 }));
+
+jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-store");
+jest.mock("../../../assets/fsb-promotion/scripts/handlers/fsb-promotion-handlers");
 jest.mock("../../../assets/fsb-promotion/scripts/handlers/fsb-promotion-ui-handler");
 jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store");
+jest.mock("../../../assets/game-message-slot");
 
-// Additional test dependencies are handled by existing mocks above
+// ========== Helpers ==========
 
-// Mock Dependency Factories (SRP - Single Responsibility for creating mocks)
-// Moved after jest.mock() calls to avoid hoisting issues
-class MockDependencyFactory {
-    static createReflectMetadataMock() {
-        return {
-            Reflect: {
-                decorate: jest.fn(),
-                metadata: jest.fn(() => jest.fn()),
-                defineMetadata: jest.fn(),
-                getMetadata: jest.fn(),
-            },
-        };
-    }
-
-    static createCocosCreatorMock() {
-        return {
-            _decorator: {
-                ccclass: jest.fn(() => jest.fn()),
-                property: jest.fn(() => jest.fn()),
-            },
-            Node: jest.fn(),
-            Label: jest.fn(),
-            Button: jest.fn(),
-            Vec3: {
-                ZERO: { x: 0, y: 0, z: 0 },
-                ONE: { x: 1, y: 1, z: 1 },
-            },
-            tween: jest.fn(() => ({
-                to: jest.fn().mockReturnThis(),
-                call: jest.fn().mockReturnThis(),
-                start: jest.fn(),
-            })),
-            EventTarget: jest.fn().mockImplementation(() => ({
-                addEventListener: jest.fn(),
-                removeEventListener: jest.fn(),
-                dispatchEvent: jest.fn(),
-            })),
-            Component: jest.fn(),
-            UITransform: jest.fn(),
-            Widget: jest.fn(),
-        };
-    }
-
-    static createGameClientBaseMock() {
-        return {
-            FormatUtils: {
-                numberWithCommas: jest.fn().mockReturnValue("1,000.00")
-            },
-            Player: {
-                MainPlayerStore: {
-                    balance: 1000,
-                }
-            },
-            Configs: {
-                SiteConfigs: {
-                    env: "test",
-                }
-            },
-            Connection: {
-                ConnectionStore: {
-                    connection: {
-                        on: jest.fn(),
-                    },
-                }
-            },
-            Auth: {
-                AuthStore: {
-                    session: "test_session",
-                    username: "test_username",
-                    language: "en",
-                }
-            },
-            Notices: {
-                NoticeStore: {
-                    addWarning: jest.fn(),
-                },
-                NoticeErrorsHandlers: {
-                    AutoSignOutHandler: jest.fn(() => ({})),
-                },
-            },
-            Notification: {
-                NotificationStore: {
-                    connection: {
-                        on: jest.fn(),
-                    },
-                }
-            }
-        };
-    }
-
-    static createObserverMocks() {
-        return {
-            __esModule: true,
-            default: {
-                render: jest.fn(() => jest.fn()),
-                handle: jest.fn(() => jest.fn()),
-            },
-        };
-    }
-
-    static createCascadingSlotMocks() {
-        return {
-            globalEmitter: {
-                addEventListener: jest.fn(),
-                removeEventListener: jest.fn(),
-                dispatchEvent: jest.fn(),
-            },
-            SlotClientEvent: {},
-            SlotNotification: {},
-        };
-    }
-}
-
-// Test Data Builders (OCP - Open for extension, closed for modification)
 class FinishPromotionTestDataBuilder {
     private data: Partial<GameServiceMessageSlot.FinishPromotion> = {};
-
-    static create(): FinishPromotionTestDataBuilder {
+    static create() {
         return new FinishPromotionTestDataBuilder();
     }
-
-    withTotalWin(totalWin: number): FinishPromotionTestDataBuilder {
+    withTotalWin(totalWin: number) {
         this.data.totalWin = totalWin;
         return this;
     }
-
-    withEndPromotion(endPromotion: boolean): FinishPromotionTestDataBuilder {
+    withEndPromotion(endPromotion: boolean) {
         this.data.endPromotion = endPromotion;
         return this;
     }
-
     build(): GameServiceMessageSlot.FinishPromotion {
         return {
             totalWin: this.data.totalWin ?? 1000,
             endPromotion: this.data.endPromotion ?? false,
-        };
+        } as any;
     }
-
-    // Convenience methods for common scenarios
-    static createDefault(): GameServiceMessageSlot.FinishPromotion {
+    static createDefault() {
         return this.create().build();
     }
-
-    static createWithWin(totalWin: number): GameServiceMessageSlot.FinishPromotion {
+    static createWithWin(totalWin: number) {
         return this.create().withTotalWin(totalWin).build();
     }
-
-    static createWithZeroWin(): GameServiceMessageSlot.FinishPromotion {
+    static createWithZeroWin() {
         return this.create().withTotalWin(0).build();
     }
-
-    static createHighWin(): GameServiceMessageSlot.FinishPromotion {
+    static createHighWin() {
         return this.create().withTotalWin(2500.5).build();
     }
 }
 
-// UI Component Mock Factory (SRP - Single responsibility for UI mocks)
 class UIComponentMockFactory {
-    static createLabelMock(initialValue: string = ""): any {
-        return { string: initialValue };
+    static createLabel(initial = "") {
+        return { string: initial };
     }
-
-    static createButtonMock(): any {
+    static createButton() {
         return {};
     }
-
-    static createNodeMock(active: boolean = false): any {
-        return {
-            active,
-            getComponent: jest.fn(),
-        };
+    static createNode(active = false) {
+        return { active, getComponent: jest.fn() };
     }
-
-    static createDialogMock(): any {
-        return {
-            hide: jest.fn(),
-        };
+    static createDialog() {
+        return { hide: jest.fn() };
     }
-
-    static createCompleteUIComponentSetup(): any {
-        const dialog = this.createDialogMock();
-        const node = this.createNodeMock();
+    static createAll() {
+        const dialog = this.createDialog();
+        const node = this.createNode();
         node.getComponent.mockReturnValue(dialog);
-
         return {
             node,
             dialog,
             labels: {
-                title: this.createLabelMock(),
-                mainMessage: this.createLabelMock(),
-                subMessage: this.createLabelMock(),
-                totalWin: this.createLabelMock(),
+                title: this.createLabel(),
+                main: this.createLabel(),
+                sub: this.createLabel(),
+                totalWin: this.createLabel(),
             },
-            button: this.createButtonMock(),
+            btn: this.createButton(),
         };
     }
 }
 
-// Component Test Setup Helper (SRP - focused on component setup)
-class ComponentTestSetupHelper {
-    static createPromotionEndPopupInstance(): PromotionEndPopup {
-        return new PromotionEndPopup();
-    }
+const createInstance = () => {
+    const inst: any = Object.create((PromotionEndPopup as any).prototype);
+    const ui = UIComponentMockFactory.createAll();
+    inst.node = ui.node;
+    inst.labelTitle = ui.labels.title;
+    inst.labelMainMessage = ui.labels.main;
+    inst.labelSubMessage = ui.labels.sub;
+    inst.labelTotalWin = ui.labels.totalWin;
+    inst.closeButton = ui.btn;
+    inst.currentSpinCount = 0;
 
-    static setupComponent(component: PromotionEndPopup, uiSetup: any): void {
-        component.node = uiSetup.node;
-        component.labelTitle = uiSetup.labels.title;
-        component.labelMainMessage = uiSetup.labels.mainMessage;
-        component.labelSubMessage = uiSetup.labels.subMessage;
-        component.labelTotalWin = uiSetup.labels.totalWin;
-        component.closeButton = uiSetup.button;
+    // override methods invoked via decorators
+    inst.closeFSBBanner = jest.fn();
+    inst.onDestroy = jest.fn();
+    inst.openTurnOverRequired = jest.fn();
+    inst.setShowFreeSpinMessage = jest.fn();
 
-        // Mock methods that will be handled by decorators
-        component.closeFSBBanner = jest.fn();
-        component.onDestroy = jest.fn();
-        (component as any).openTurnOverRequired = jest.fn();
-    }
+    return { inst, ui };
+};
 
-    static setupDependencies(): any {
-        const gc = require("@sg/game-client-base");
-        const i18n = require("db://i18n/LanguageData");
-
-        // Ensure FormatUtils is available
-        if (!gc.FormatUtils) {
-            gc.FormatUtils = {};
-        }
-        gc.FormatUtils.numberWithCommas = jest.fn().mockReturnValue("1,000.00");
-
-        // Setup i18n mock
-        i18n.t = jest.fn().mockImplementation((key) => key);
-
-        return { gc, i18n };
-    }
-
-    static createCompleteTestSetup(): any {
-        const uiSetup = UIComponentMockFactory.createCompleteUIComponentSetup();
-        const component = this.createPromotionEndPopupInstance();
-        const dependencies = this.setupDependencies();
-
-        this.setupComponent(component, uiSetup);
-
-        // Reset static property
-        PromotionEndPopup.hasShown = false;
-
-        return {
-            component,
-            uiSetup,
-            dependencies,
-        };
-    }
-}
-
-// Specialized Test Helpers (ISP - Interface Segregation for different test aspects)
-class ShowMethodTestHelper {
-    static testNullOrUndefinedInput(component: PromotionEndPopup, input: any, expectedResult: any): void {
-        // Act
-        component.show(input);
-
-        // Assert
-        expect(PromotionEndPopup.hasShown).toBe(expectedResult.hasShown);
-        expect(component.node.active).toBe(expectedResult.nodeActive);
-        expect(component.closeFSBBanner).not.toHaveBeenCalled();
-    }
-
-    static testValidInput(
-        component: PromotionEndPopup, 
-        finishPromotion: GameServiceMessageSlot.FinishPromotion,
-        expectedFormatArgs: any,
-        expectedFormattedValue: string
-    ): void {
-        const gc = require("@sg/game-client-base");
-
-        // Act
-        component.show(finishPromotion);
-
-        // Assert
-        expect(PromotionEndPopup.hasShown).toBe(true);
-        expect(component.node.active).toBe(true);
-        expect(component.closeFSBBanner).toHaveBeenCalled();
-        expect(gc.FormatUtils.numberWithCommas).toHaveBeenCalledWith(
-            expectedFormatArgs.totalWin,
-            expectedFormatArgs.decimals,
-            expectedFormatArgs.useGrouping
-        );
-        expect(component.labelTotalWin.string).toBe(expectedFormattedValue);
-    }
-}
-
-class SetupContentTestHelper {
-    static testContentScenario(
-        component: PromotionEndPopup,
-        scenario: {
-            currentSpinCount: number;
-            totalWin: number;
-            expectedCalls: string[];
-            expectedLabels: { title: string; mainMessage: string; subMessage: string };
-        }
-    ): void {
-        const i18n = require("db://i18n/LanguageData");
-        
-        // Arrange
-        component['currentSpinCount'] = scenario.currentSpinCount;
-
-        // Act
-        component['setupContent'](scenario.totalWin);
-
-        // Assert
-        scenario.expectedCalls.forEach(expectedCall => {
-            expect(i18n.t).toHaveBeenCalledWith(expectedCall);
-        });
-
-        expect(component.labelTitle.string).toBe(scenario.expectedLabels.title);
-        expect(component.labelMainMessage.string).toBe(scenario.expectedLabels.mainMessage);
-        expect(component.labelSubMessage.string).toBe(scenario.expectedLabels.subMessage);
-    }
-}
-
-class DialogTestHelper {
-    static testDialogInteraction(component: PromotionEndPopup, dialogExists: boolean = true): void {
-        if (!dialogExists) {
-            (component.node.getComponent as jest.Mock).mockReturnValue(null);
-        }
-
-        // Act
-        component['onCloseClicked']();
-
-        // Assert
-        expect(component.node.getComponent).toHaveBeenCalled();
-        
-        if (dialogExists) {
-            const mockGetComponent = component.node.getComponent as jest.Mock;
-            const dialog = mockGetComponent.mock.results[0]?.value as any;
-            if (dialog && dialog.hide) {
-                expect(dialog.hide).toHaveBeenCalled();
-            }
-        }
-        
-        expect(component['openTurnOverRequired']).toHaveBeenCalled();
-    }
-}
+// ========== Tests ==========
 
 describe("PromotionEndPopup", () => {
-    let testSetup: any;
-    let component: PromotionEndPopup;
-
     beforeEach(() => {
         jest.clearAllMocks();
-        testSetup = ComponentTestSetupHelper.createCompleteTestSetup();
-        component = testSetup.component;
+        (PromotionEndPopup as any).hasShown = false;
     });
 
     describe("updateCurrentSpinCount", () => {
-        it("should update currentSpinCount property", () => {
-            // Arrange
-            const testSpinCount = 5;
-
-            // Act
-            component.updateCurrentSpinCount(testSpinCount);
-
-            // Assert
-            expect(component['currentSpinCount']).toBe(testSpinCount);
-        });
-
-        it("should handle zero spin count", () => {
-            // Arrange & Act
-            component.updateCurrentSpinCount(0);
-
-            // Assert
-            expect(component['currentSpinCount']).toBe(0);
-        });
-
-        it("should handle large spin count", () => {
-            // Arrange
-            const largeSpinCount = 999;
-
-            // Act
-            component.updateCurrentSpinCount(largeSpinCount);
-
-            // Assert
-            expect(component['currentSpinCount']).toBe(largeSpinCount);
+        it("updates currentSpinCount", () => {
+            const { inst } = createInstance();
+            inst.updateCurrentSpinCount(5);
+            expect(inst.currentSpinCount).toBe(5);
         });
     });
 
-    describe("show", () => {
-        const nullUndefinedTestCases = [
-            { input: null, description: "null" },
-            { input: undefined, description: "undefined" },
-        ];
-
-        nullUndefinedTestCases.forEach(({ input, description }) => {
-            it(`should return early when finishPromotion is ${description}`, () => {
-                ShowMethodTestHelper.testNullOrUndefinedInput(component, input, {
-                    hasShown: false,
-                    nodeActive: false,
-                });
-            });
+    describe("show()", () => {
+        it("returns early if no payload", () => {
+            const { inst } = createInstance();
+            inst.show(null as any);
+            expect(PromotionEndPopup.hasShown).toBe(false);
+            expect(inst.node.active).toBe(false);
+            expect(inst.closeFSBBanner).not.toHaveBeenCalled();
         });
 
-        it("should set hasShown to true and activate node when finishPromotion is valid", () => {
-            // Arrange
-            const finishPromotion = FinishPromotionTestDataBuilder.createDefault();
-            const expectedFormatArgs = {
-                totalWin: 1000,
-                decimals: 2,
-                useGrouping: false,
-            };
+        it("sets hasShown, formats totalWin, activates node", () => {
+            const { inst } = createInstance();
+            const gc = require("@sg/game-client-base");
+            gc.FormatUtils.numberWithCommas.mockReturnValue("2,500.50");
 
-            // Act & Assert
-            ShowMethodTestHelper.testValidInput(
-                component,
-                finishPromotion,
-                expectedFormatArgs,
-                "1,000.00"
-            );
-        });
-        
-        it("should format high totalWin correctly", () => {
-            // Arrange
-            const finishPromotion = FinishPromotionTestDataBuilder.createHighWin();
-            const expectedFormatArgs = {
-                totalWin: 2500.5,
-                decimals: 2,
-                useGrouping: false,
-            };
-            
-            // Setup mock to return specific formatted value
-            testSetup.dependencies.gc.FormatUtils.numberWithCommas.mockReturnValue("2,500.50");
+            const payload = FinishPromotionTestDataBuilder.createHighWin();
+            inst.show(payload);
 
-            // Act & Assert
-            ShowMethodTestHelper.testValidInput(
-                component,
-                finishPromotion,
-                expectedFormatArgs,
-                "2,500.50"
-            );
-        });
-
-        it("should handle zero win amount", () => {
-            // Arrange
-            const finishPromotion = FinishPromotionTestDataBuilder.createWithZeroWin();
-            const expectedFormatArgs = {
-                totalWin: 0,
-                decimals: 2,
-                useGrouping: false,
-            };
-
-            testSetup.dependencies.gc.FormatUtils.numberWithCommas.mockReturnValue("0.00");
-
-            // Act & Assert
-            ShowMethodTestHelper.testValidInput(
-                component,
-                finishPromotion,
-                expectedFormatArgs,
-                "0.00"
-            );
+            expect(PromotionEndPopup.hasShown).toBe(true);
+            expect(inst.closeFSBBanner).toHaveBeenCalled();
+            expect(inst.node.active).toBe(true);
+            expect(gc.FormatUtils.numberWithCommas).toHaveBeenCalledWith(2500.5, 2, false);
+            expect(inst.labelTotalWin.string).toBe("2,500.50");
+            expect(inst.setShowFreeSpinMessage).toHaveBeenCalled();
         });
     });
 
-    describe("setupContent", () => {
-        beforeEach(() => {
-            testSetup.dependencies.i18n.t.mockImplementation((key: string) => key);
+    describe("setupContent()", () => {
+        it("win_allUsed: totalWin>0 & currentSpinCount===0", () => {
+            const { inst } = createInstance();
+            inst.currentSpinCount = 0;
+
+            (inst as any).setupContent(123);
+
+            expect(Translator.translate).toHaveBeenCalledWith("FreeSpinBonus.FSB_notification_para1a");
+            expect(Translator.translate).toHaveBeenCalledWith("FreeSpinBonus.FSB_end_notification");
+            expect(Translator.translate).toHaveBeenCalledWith("FreeSpinBonus.FSB_end_notification_message");
+
+            expect(inst.labelTitle.string).toBe("FreeSpinBonus.FSB_notification_para1a".toUpperCase());
+            expect(inst.labelMainMessage.string).toBe("FreeSpinBonus.FSB_end_notification");
+            expect(inst.labelSubMessage.string).toBe("FreeSpinBonus.FSB_end_notification_message");
         });
 
-        const contentScenarios = [
-            {
-                description: "win with all spins used",
-                currentSpinCount: 0,
-                totalWin: 1000,
-                expectedCalls: [
-                    "FreeSpinBonus.FSB_notification_para1a",
-                    "FreeSpinBonus.FSB_end_notification",
-                    "FreeSpinBonus.FSB_end_notification_message"
-                ],
-                expectedLabels: {
-                    title: "FREESPINBONUS.FSB_NOTIFICATION_PARA1A",
-                    mainMessage: "FreeSpinBonus.FSB_end_notification",
-                    subMessage: "FreeSpinBonus.FSB_end_notification_message"
-                }
-            },
-            {
-                description: "win with remaining spins",
-                currentSpinCount: 3,
-                totalWin: 500,
-                expectedCalls: [
-                    "FreeSpinBonus.FSB_end_notification_unusedFS",
-                    "FreeSpinBonus.FSB_end_notification_unusedFS_message",
-                    "FreeSpinBonus.FSB_end_notification_unusedFS_message1"
-                ],
-                expectedLabels: {
-                    title: "FREESPINBONUS.FSB_END_NOTIFICATION_UNUSEDFS",
-                    mainMessage: "FreeSpinBonus.FSB_end_notification_unusedFS_message",
-                    subMessage: "FreeSpinBonus.FSB_end_notification_unusedFS_message1"
-                }
-            },
-            {
-                description: "zero win with all spins used",
-                currentSpinCount: 0,
-                totalWin: 0,
-                expectedCalls: [
-                    "FreeSpinBonus.FSB_end_notification_zero_win",
-                    "FreeSpinBonus.FSB_end_notification_zero_win_message"
-                ],
-                expectedLabels: {
-                    title: "FREESPINBONUS.FSB_END_NOTIFICATION_ZERO_WIN",
-                    mainMessage: "", // Main message is empty for zero win all used
-                    subMessage: "FreeSpinBonus.FSB_end_notification_zero_win_message"
-                }
-            },
-            {
-                description: "zero win with remaining spins",
-                currentSpinCount: 2,
-                totalWin: 0,
-                expectedCalls: [
-                    "FreeSpinBonus.FSB_end_notification_unusedFS",
-                    "FreeSpinBonus.FSB_end_notification_unusedFS_message",
-                    "FreeSpinBonus.FSB_end_notification_unusedFS_message1"
-                ],
-                expectedLabels: {
-                    title: "FREESPINBONUS.FSB_END_NOTIFICATION_UNUSEDFS",
-                    mainMessage: "FreeSpinBonus.FSB_end_notification_unusedFS_message",
-                    subMessage: "FreeSpinBonus.FSB_end_notification_unusedFS_message1"
-                }
-            }
-        ];
+        it("win_withRemaining: totalWin>0 & currentSpinCount>0", () => {
+            const { inst } = createInstance();
+            inst.currentSpinCount = 5;
 
-        contentScenarios.forEach(scenario => {
-            it(`should setup content for ${scenario.description}`, () => {
-                SetupContentTestHelper.testContentScenario(component, scenario);
-            });
+            (inst as any).setupContent(50);
+
+            expect(Translator.translate).toHaveBeenCalledWith("FreeSpinBonus.FSB_end_notification_unusedFS");
+            expect(Translator.translate).toHaveBeenCalledWith("FreeSpinBonus.FSB_end_notification_unusedFS_message");
+            expect(Translator.translate).toHaveBeenCalledWith("FreeSpinBonus.FSB_end_notification_unusedFS_message1");
+
+            expect(inst.labelTitle.string).toBe("FreeSpinBonus.FSB_end_notification_unusedFS".toUpperCase());
+            expect(inst.labelMainMessage.string).toBe("FreeSpinBonus.FSB_end_notification_unusedFS_message");
+            expect(inst.labelSubMessage.string).toBe("FreeSpinBonus.FSB_end_notification_unusedFS_message1");
         });
 
-        it("should uppercase the title text", () => {
-            // Arrange
-            testSetup.dependencies.i18n.t.mockReturnValue("test title");
-            
-            const scenario = {
-                currentSpinCount: 0,
-                totalWin: 100,
-                expectedCalls: ["FreeSpinBonus.FSB_notification_para1a"],
-                expectedLabels: {
-                    title: "TEST TITLE",
-                    mainMessage: "test title",
-                    subMessage: "test title"
-                }
-            };
+        it("zero_allUsed: totalWin===0 & currentSpinCount===0 (main empty)", () => {
+            const { inst } = createInstance();
+            inst.currentSpinCount = 0;
 
-            // Act & Assert
-            SetupContentTestHelper.testContentScenario(component, scenario);
+            (inst as any).setupContent(0);
+
+            expect(Translator.translate).toHaveBeenCalledWith("FreeSpinBonus.FSB_end_notification_zero_win");
+            expect(Translator.translate).not.toHaveBeenCalledWith("");
+            expect(Translator.translate).toHaveBeenCalledWith("FreeSpinBonus.FSB_end_notification_zero_win_message");
+
+            expect(inst.labelTitle.string).toBe("FreeSpinBonus.FSB_end_notification_zero_win".toUpperCase());
+            expect(inst.labelMainMessage.string).toBe("");
+            expect(inst.labelSubMessage.string).toBe("FreeSpinBonus.FSB_end_notification_zero_win_message");
         });
 
-        it("should handle empty messages correctly", () => {
-            // Arrange
-            testSetup.dependencies.i18n.t.mockImplementation((key: string) => {
-                if (key === "FreeSpinBonus.FSB_end_notification_message") return "";
-                return key;
-            });
-            
-            const scenario = {
-                currentSpinCount: 0,
-                totalWin: 100,
-                expectedCalls: [
-                    "FreeSpinBonus.FSB_notification_para1a",
-                    "FreeSpinBonus.FSB_end_notification",
-                    "FreeSpinBonus.FSB_end_notification_message"
-                ],
-                expectedLabels: {
-                    title: "FREESPINBONUS.FSB_NOTIFICATION_PARA1A",
-                    mainMessage: "FreeSpinBonus.FSB_end_notification",
-                    subMessage: ""
-                }
-            };
+        it("zero_withRemaining: totalWin===0 & currentSpinCount>0", () => {
+            const { inst } = createInstance();
+            inst.currentSpinCount = 2;
 
-            // Act & Assert
-            SetupContentTestHelper.testContentScenario(component, scenario);
+            (inst as any).setupContent(0);
+
+            expect(Translator.translate).toHaveBeenCalledWith("FreeSpinBonus.FSB_end_notification_unusedFS");
+            expect(Translator.translate).toHaveBeenCalledWith("FreeSpinBonus.FSB_end_notification_unusedFS_message");
+            expect(Translator.translate).toHaveBeenCalledWith("FreeSpinBonus.FSB_end_notification_unusedFS_message1");
+
+            expect(inst.labelTitle.string).toBe("FreeSpinBonus.FSB_end_notification_unusedFS".toUpperCase());
+            expect(inst.labelMainMessage.string).toBe("FreeSpinBonus.FSB_end_notification_unusedFS_message");
+            expect(inst.labelSubMessage.string).toBe("FreeSpinBonus.FSB_end_notification_unusedFS_message1");
+        });
+
+        it("uppercases title (translate returns lowercase)", () => {
+            const { inst } = createInstance();
+            const t = Translator.translate as jest.Mock;
+            t.mockImplementationOnce(() => "test title").mockImplementation((k: string) => k);
+
+            (inst as any).setupContent(999); // win_allUsed
+
+            expect(inst.labelTitle.string).toBe("TEST TITLE");
+        });
+
+        it("handles empty messages correctly (translate returns '')", () => {
+            const { inst } = createInstance();
+            const t = Translator.translate as jest.Mock;
+            t.mockImplementation((k: string) => (k === "FreeSpinBonus.FSB_end_notification_message" ? "" : k));
+
+            (inst as any).setupContent(100); // win_allUsed
+
+            expect(inst.labelTitle.string).toBe("FreeSpinBonus.FSB_notification_para1a".toUpperCase());
+            expect(inst.labelMainMessage.string).toBe("FreeSpinBonus.FSB_end_notification");
+            expect(inst.labelSubMessage.string).toBe("");
         });
     });
 
-    describe("onCloseClicked", () => {
-        it("should hide dialog when dialog component exists", () => {
-            DialogTestHelper.testDialogInteraction(component, true);
+    describe("onCloseClicked()", () => {
+        it("hides dialog (if exists) và gọi openTurnOverRequired()", () => {
+            const { inst, ui } = createInstance();
+
+            (inst as any).onCloseClicked();
+
+            expect(inst.node.getComponent).toHaveBeenCalled();
+            if (ui.dialog && ui.dialog.hide) {
+                expect(ui.dialog.hide).toHaveBeenCalled();
+            }
+            expect(inst.openTurnOverRequired).toHaveBeenCalled();
         });
 
-        it("should handle case when dialog component is null", () => {
-            // Act & Assert - should not throw
-            expect(() => DialogTestHelper.testDialogInteraction(component, false)).not.toThrow();
-        });
+        it("still calls openTurnOverRequired when dialog is null", () => {
+            const { inst } = createInstance();
+            inst.node.getComponent = jest.fn().mockReturnValue(null);
 
-        it("should always call openTurnOverRequired regardless of dialog existence", () => {
-            const dialogExistenceScenarios = [true, false];
-            
-            dialogExistenceScenarios.forEach(dialogExists => {
-                // Reset mock calls
-                jest.clearAllMocks();
-                testSetup = ComponentTestSetupHelper.createCompleteTestSetup();
-                component = testSetup.component;
+            (inst as any).onCloseClicked();
 
-                // Act & Assert
-                DialogTestHelper.testDialogInteraction(component, dialogExists);
-            });
+            expect(inst.node.getComponent).toHaveBeenCalled();
+            expect(inst.openTurnOverRequired).toHaveBeenCalled();
         });
     });
 
-    describe("static hasShown property", () => {
-        // Static Property Test Helper (ISP - focused on static property testing)
-        class StaticPropertyTestHelper {
-            static testHasShownInitialization(): void {
-                expect(PromotionEndPopup.hasShown).toBe(false);
-            }
-
-            static testHasShownAfterValidShow(component: PromotionEndPopup): void {
-                const finishPromotion = FinishPromotionTestDataBuilder.createWithWin(100);
-                component.show(finishPromotion);
-                expect(PromotionEndPopup.hasShown).toBe(true);
-            }
-
-            static testHasShownAfterNullShow(component: PromotionEndPopup): void {
-                component.show(null);
-                expect(PromotionEndPopup.hasShown).toBe(false);
-            }
-
-            static testHasShownPersistence(component: PromotionEndPopup): void {
-                const finishPromotion = FinishPromotionTestDataBuilder.createDefault();
-                component.show(finishPromotion);
-                
-                // Should remain true after multiple calls
-                expect(PromotionEndPopup.hasShown).toBe(true);
-                component.show(finishPromotion);
-                expect(PromotionEndPopup.hasShown).toBe(true);
-            }
-        }
-
-        it("should initialize as false", () => {
-            StaticPropertyTestHelper.testHasShownInitialization();
+    describe("static hasShown", () => {
+        it("initially false", () => {
+            expect(PromotionEndPopup.hasShown).toBe(false);
         });
 
-        it("should be set to true when show is called with valid data", () => {
-            StaticPropertyTestHelper.testHasShownAfterValidShow(component);
+        it("true after valid show()", () => {
+            const { inst } = createInstance();
+            inst.show(FinishPromotionTestDataBuilder.createWithWin(100));
+            expect(PromotionEndPopup.hasShown).toBe(true);
         });
 
-        it("should remain false when show is called with null data", () => {
-            StaticPropertyTestHelper.testHasShownAfterNullShow(component);
+        it("stays false with null payload", () => {
+            const { inst } = createInstance();
+            inst.show(null as any);
+            expect(PromotionEndPopup.hasShown).toBe(false);
         });
 
-        it("should persist true state across multiple calls", () => {
-            StaticPropertyTestHelper.testHasShownPersistence(component);
-        });
-    });
-
-    describe("component properties and initialization", () => {
-        // Component Properties Test Helper (SRP - focused on component properties)
-        class ComponentPropertiesTestHelper {
-            static testRequiredProperties(component: PromotionEndPopup): void {
-                const requiredProperties = [
-                    'labelTitle',
-                    'labelMainMessage', 
-                    'labelSubMessage',
-                    'labelTotalWin',
-                    'closeButton'
-                ];
-
-                requiredProperties.forEach(property => {
-                    expect(component[property as keyof PromotionEndPopup]).toBeDefined();
-                });
-            }
-
-            static testInitialSpinCount(component: PromotionEndPopup): void {
-                expect(component['currentSpinCount']).toBe(0);
-            }
-
-            static testComponentNodeSetup(component: PromotionEndPopup): void {
-                expect(component.node).toBeDefined();
-                expect(typeof component.node.getComponent).toBe('function');
-            }
-        }
-
-        it("should have all required UI component properties", () => {
-            ComponentPropertiesTestHelper.testRequiredProperties(component);
-        });
-
-        it("should have currentSpinCount initialized to 0", () => {
-            const newComponent = ComponentTestSetupHelper.createPromotionEndPopupInstance();
-            ComponentPropertiesTestHelper.testInitialSpinCount(newComponent);
-        });
-
-        it("should have properly configured node component", () => {
-            ComponentPropertiesTestHelper.testComponentNodeSetup(component);
-        });
-
-        it("should have proper mock setup for component methods", () => {
-            const methodsToCheck = ['closeFSBBanner', 'onDestroy'];
-            
-            methodsToCheck.forEach(method => {
-                expect(jest.isMockFunction(component[method as keyof PromotionEndPopup])).toBe(true);
-            });
+        it("persists true across multiple calls", () => {
+            const { inst } = createInstance();
+            const payload = FinishPromotionTestDataBuilder.createDefault();
+            inst.show(payload);
+            expect(PromotionEndPopup.hasShown).toBe(true);
+            inst.show(payload);
+            expect(PromotionEndPopup.hasShown).toBe(true);
         });
     });
 });

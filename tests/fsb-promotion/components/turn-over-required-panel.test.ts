@@ -4,9 +4,14 @@ import { GameServiceMessageSlot } from "../../../assets/game-message-slot";
 // Mock Factory for consistent mock creation (SRP)
 class MockDependencyFactory {
     static createGameClientBaseMock() {
-        return {
+        const mod = {
+            Translator: {
+                translate: jest.fn((key: string) => key),
+                gameTranslate: jest.fn(),
+                commonTranslate: jest.fn((key: string) => key),
+            },
             FormatUtils: {
-                numberWithCommas: jest.fn((value: number, decimals: number, useGrouping: boolean) => {
+                numberWithCommas: jest.fn((value: number, decimals: number, _useGrouping: boolean) => {
                     if (decimals === 2) {
                         return value.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
                     }
@@ -14,13 +19,15 @@ class MockDependencyFactory {
                 }),
             },
         };
+        // Trả về cả default lẫn named export để import kiểu nào cũng chạy
+        return { __esModule: true, default: mod, ...mod };
     }
 
     static createCCMock() {
         return {
             _decorator: {
                 ccclass: jest.fn(() => (target: any) => target),
-                property: jest.fn(() => (target: any, propertyKey: string) => {}),
+                property: jest.fn(() => (target: any, _propertyKey: string) => {}),
             },
             Label: jest.fn(),
             Node: jest.fn(),
@@ -30,21 +37,14 @@ class MockDependencyFactory {
 
     static createObserverMocks() {
         return {
-            handle: jest.fn(() => (target: any, propertyKey: string) => {}),
-            render: jest.fn(() => (target: any, propertyKey: string) => {}),
-        };
-    }
-
-    static createI18nMock() {
-        return {
-            t: jest.fn((key) => key),
+            handle: jest.fn(() => (target: any, _propertyKey: string) => {}),
+            render: jest.fn(() => (target: any, _propertyKey: string) => {}),
         };
     }
 }
 
 // Mock dependencies
 jest.mock("@sg/game-client-base", () => MockDependencyFactory.createGameClientBaseMock());
-
 jest.mock("cc", () => MockDependencyFactory.createCCMock());
 
 jest.mock("db://shared-components/shared/common-components/draggable/draggable-item", () => ({
@@ -56,8 +56,6 @@ jest.mock("db://shared-components/shared/common-components/observer-component/sc
 }));
 
 jest.mock("observer", () => MockDependencyFactory.createObserverMocks());
-
-jest.mock("db://i18n/LanguageData", () => MockDependencyFactory.createI18nMock());
 
 jest.mock("../../../assets/fsb-promotion/scripts/components/simple-claim-button", () => ({
     default: jest.fn(),
@@ -194,7 +192,7 @@ class PromotionTOProgressTestDataBuilder {
             remainTO: this.data.remainTO || 5000,
             canClaim: this.data.canClaim || false,
             expire: this.data.expire || "2024-12-31T23:59:59Z",
-        };
+        } as any;
     }
 }
 
@@ -217,7 +215,6 @@ class UITestSetupHelper {
             draggableItem: UIComponentMockFactory.createDraggableItemMock(),
             dependencies: {
                 gc: require("@sg/game-client-base"),
-                i18n: require("db://i18n/LanguageData"),
             },
         };
 
@@ -252,21 +249,21 @@ describe("TurnOverRequiredPanel", () => {
             });
         }
 
-        static testI18nTranslations(i18n: any, keys: string[]): void {
-            keys.forEach(key => {
-                expect(i18n.t(key)).toBe(key);
+        static testTranslations(gc: any, keys: string[]): void {
+            keys.forEach((key) => {
+                expect(gc.Translator.translate(key)).toBe(key);
             });
         }
 
         static testLabelUpdates(label: any, testValues: string[]): void {
-            testValues.forEach(value => {
+            testValues.forEach((value) => {
                 label.string = value;
                 expect(label.string).toBe(value);
             });
         }
 
         static testProgressBarUpdates(progressBar: any, testValues: number[]): void {
-            testValues.forEach(value => {
+            testValues.forEach((value) => {
                 progressBar.progress = value;
                 expect(progressBar.progress).toBe(value);
             });
@@ -278,12 +275,9 @@ describe("TurnOverRequiredPanel", () => {
             UITestHelper.testNumberFormatting(uiSetup.dependencies.gc.FormatUtils);
         });
 
-        it("should handle i18n translations", () => {
-            const i18nKeys = [
-                "FreeSpinBonus.FSB_days",
-                "FreeSpinBonus.TO_requirement_state1_message"
-            ];
-            UITestHelper.testI18nTranslations(uiSetup.dependencies.i18n, i18nKeys);
+        it("should handle translations via gc.Translator", () => {
+            const translatorKeys = ["FreeSpinBonus.FSB_days", "FreeSpinBonus.TO_requirement_state1_message"];
+            UITestHelper.testTranslations(uiSetup.dependencies.gc, translatorKeys);
         });
     });
 
@@ -300,10 +294,10 @@ describe("TurnOverRequiredPanel", () => {
 
         it("should handle claim button actions", () => {
             const claimButtonActions = [
-                { method: 'setClaimable', args: [true] },
-                { method: 'setClaimable', args: [false] },
-                { method: 'startClaimButtonPulse', args: [] },
-                { method: 'stopClaimButtonPulse', args: [] },
+                { method: "setClaimable", args: [true] },
+                { method: "setClaimable", args: [false] },
+                { method: "startClaimButtonPulse", args: [] },
+                { method: "stopClaimButtonPulse", args: [] },
             ];
 
             claimButtonActions.forEach(({ method, args }) => {
@@ -314,7 +308,7 @@ describe("TurnOverRequiredPanel", () => {
 
         it("should handle node visibility states", () => {
             const visibilityStates = [false, true];
-            visibilityStates.forEach(state => {
+            visibilityStates.forEach((state) => {
                 uiSetup.node.active = state;
                 expect(uiSetup.node.active).toBe(state);
             });
@@ -347,7 +341,7 @@ describe("TurnOverRequiredPanel", () => {
     describe("Event Constants Tests", () => {
         it("should have correct event constants", () => {
             const { FreeSpinsPromotionEvents } = require("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store");
-            
+
             const expectedEventValues = {
                 SHOW_NOTICE_ERROR: "SHOW_NOTICE_ERROR",
                 EXPIRE_CLAIM_BONUS: "EXPIRE_CLAIM_BONUS",
@@ -387,7 +381,7 @@ describe("TurnOverRequiredPanel", () => {
                 progress: 50,
                 remainTO: 5000,
                 canClaim: false,
-                expire: "2024-12-31T23:59:59Z"
+                expire: "2024-12-31T23:59:59Z",
             };
 
             Object.entries(expectedProperties).forEach(([property, expectedValue]) => {
@@ -410,14 +404,11 @@ describe("TurnOverRequiredPanel", () => {
             const hours = Math.floor(seconds / 3600);
             const minutes = Math.floor((seconds % 3600) / 60);
             const secs = seconds % 60;
-            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
         }
 
-        static testUtilityFunction<T, U>(
-            fn: (input: T) => U,
-            testCases: Array<{ input: T; expected: U; description?: string }>
-        ): void {
-            testCases.forEach(({ input, expected, description }) => {
+        static testUtilityFunction<T, U>(fn: (input: T) => U, testCases: Array<{ input: T; expected: U }>): void {
+            testCases.forEach(({ input, expected }) => {
                 const result = fn(input);
                 expect(result).toBe(expected);
             });
@@ -433,10 +424,7 @@ describe("TurnOverRequiredPanel", () => {
                 { input: 59, expected: "59" },
             ];
 
-            UtilityFunctionHelper.testUtilityFunction(
-                UtilityFunctionHelper.padNumber,
-                paddingTestCases
-            );
+            UtilityFunctionHelper.testUtilityFunction<number, string>(UtilityFunctionHelper.padNumber, paddingTestCases as any);
         });
 
         it("should calculate progress percentage correctly", () => {
@@ -461,10 +449,7 @@ describe("TurnOverRequiredPanel", () => {
                 { input: 60, expected: "00:01:00" },
             ];
 
-            UtilityFunctionHelper.testUtilityFunction(
-                UtilityFunctionHelper.formatTime,
-                timeFormattingTestCases
-            );
+            UtilityFunctionHelper.testUtilityFunction<number, string>(UtilityFunctionHelper.formatTime, timeFormattingTestCases as any);
         });
     });
 
@@ -472,12 +457,16 @@ describe("TurnOverRequiredPanel", () => {
     class IntegrationTestScenarioHelper {
         static setupTOProgressFlow(uiSetup: any, progressData: any): any {
             const formatUtils = uiSetup.dependencies.gc.FormatUtils;
-            
+
             return {
                 formattedWin: formatUtils.numberWithCommas(progressData.win, 2, true),
-                formattedTurnover: `${formatUtils.numberWithCommas(progressData.totalTO, 0, true)} / ${formatUtils.numberWithCommas(progressData.minTO, 0, true)}`,
+                formattedTurnover: `${formatUtils.numberWithCommas(progressData.totalTO, 0, true)} / ${formatUtils.numberWithCommas(
+                    progressData.minTO,
+                    0,
+                    true
+                )}`,
                 formattedPercentage: `${progressData.progress}%`,
-                shouldEnableClaim: progressData.progress === 100
+                shouldEnableClaim: progressData.progress === 100,
             };
         }
 
@@ -500,13 +489,15 @@ describe("TurnOverRequiredPanel", () => {
                 days: Math.floor(remainingTime / (1000 * 60 * 60 * 24)),
                 hours: Math.floor((remainingTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
                 minutes: Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60)),
-                seconds: Math.floor((remainingTime % (1000 * 60)) / 1000)
+                seconds: Math.floor((remainingTime % (1000 * 60)) / 1000),
             };
         }
 
         static formatTimerString(timeComponents: any): string {
             const { days, hours, minutes, seconds } = timeComponents;
-            return `${days} FreeSpinBonus.FSB_days ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            return `${days} FreeSpinBonus.FSB_days ${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds
+                .toString()
+                .padStart(2, "0")}`;
         }
     }
 
@@ -528,30 +519,21 @@ describe("TurnOverRequiredPanel", () => {
             expect(flowResult.formattedTurnover).toBe("8,000 / 10,000");
             expect(flowResult.formattedPercentage).toBe("80%");
 
-            // Act - Handle claim button state
-            IntegrationTestScenarioHelper.handleClaimButtonState(
-                uiSetup.simpleClaimButton,
-                flowResult.shouldEnableClaim
-            );
+            // Handle claim button state
+            IntegrationTestScenarioHelper.handleClaimButtonState(uiSetup.simpleClaimButton, flowResult.shouldEnableClaim);
 
-            // Assert - Verify claim button behavior
+            // Verify claim button behavior (80% => chưa claimable)
             expect(uiSetup.simpleClaimButton.setClaimable).toHaveBeenCalledWith(false);
             expect(uiSetup.simpleClaimButton.stopClaimButtonPulse).toHaveBeenCalled();
         });
 
         it("should handle claimable progress scenario", () => {
             // Arrange
-            const claimableProgressData = PromotionTOProgressTestDataBuilder.create()
-                .withProgress(100)
-                .withClaimable(true)
-                .build();
+            const claimableProgressData = PromotionTOProgressTestDataBuilder.create().withProgress(100).withClaimable(true).build();
 
             // Act
             const flowResult = IntegrationTestScenarioHelper.setupTOProgressFlow(uiSetup, claimableProgressData);
-            IntegrationTestScenarioHelper.handleClaimButtonState(
-                uiSetup.simpleClaimButton,
-                flowResult.shouldEnableClaim
-            );
+            IntegrationTestScenarioHelper.handleClaimButtonState(uiSetup.simpleClaimButton, flowResult.shouldEnableClaim);
 
             // Assert
             expect(flowResult.shouldEnableClaim).toBe(true);
@@ -567,8 +549,8 @@ describe("TurnOverRequiredPanel", () => {
                 { event: FreeSpinsPromotionEvents.EXPIRE_CLAIM_BONUS, data: "ERROR_CODE" },
             ];
 
-            errorScenarios.forEach(scenario => {
-                const eventData = EventTestHelper.createEventTestData(scenario.event, scenario.data);
+            errorScenarios.forEach((scenario) => {
+                const eventData = { event: scenario.event, data: scenario.data };
                 expect(eventData.event).toBe(scenario.event);
                 expect(eventData.data).toBe(scenario.data);
             });

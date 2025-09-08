@@ -227,13 +227,6 @@ export class FSBPromotionUIHandler {
         this.fsbPromotionStore.redeemResult = RedeemStatus.Idle;
     }
 
-    getDataBetControl() {
-        return {
-            coinValue: this.fsbPromotionStore.promotion?.coinValue,
-            betLevel: this.fsbPromotionStore.promotion?.betLevel,
-        };
-    }
-
     updateTotalWin({ win, totalFreeSpins }: { win: number; totalFreeSpins: number }) {
         if (!this.fsbPromotionUIStore.isUpdateTotalWin) {
             return;

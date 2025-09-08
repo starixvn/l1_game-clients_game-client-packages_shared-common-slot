@@ -43,7 +43,7 @@ export default class PromotionEndPopup extends ObserverComponent {
         this.setShowFreeSpinMessage();
     }
 
-    @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.CLOSE_FSB_END_BANNER))
+    @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.CLOSE_FSB_BANNER))
     closeFSBBanner() {}
 
     private setupContent(totalWin: number) {

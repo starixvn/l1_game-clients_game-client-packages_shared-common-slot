@@ -151,7 +151,13 @@ export default class TurnOverRequiredPanel extends ObserverComponent {
         const T = (s: string) => gc.Translator.translate(`FreeSpinBonus.${s}`);
         const value = this.progressPercentage;
 
-        const state = PROGRESS_MAP.find((s) => value >= s.min)!;
+        const state = PROGRESS_MAP.find((s) => value >= s.min);
+
+        if (!state) {
+            this.labelMainMessage.string = "";
+            this.labelSubMessage.string = "";
+            return;
+        }
 
         this.labelMainMessage.string = T(state.main).toUpperCase();
         this.labelSubMessage.string = T(state.sub);

@@ -1,110 +1,7 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { RedeemGiftCodePopup } from "../../../assets/fsb-promotion/scripts/components/redeem-gift-code-popup";
 
-// SOLID: Interface Segregation Principle - Define focused interfaces
-interface IGiftCodeInput {
-    string: string;
-}
-
-interface IErrorLabel {
-    string: string;
-}
-
-interface IContentNode {
-    position: { y: number };
-    y: number;
-}
-
-interface IDialog {
-    hide: jest.Mock;
-}
-
-interface ISystemInfo {
-    isMobile: boolean;
-}
-
-interface IClipboardAPI {
-    clipboard: {
-        readText: jest.Mock;
-    };
-}
-
-interface ITranslator {
-    translate: jest.Mock;
-}
-
-interface IPendingUIEvent {
-    event: string;
-    data: string;
-}
-
-// SOLID: Dependency Inversion - Test data factory
-class GiftCodeTestDataFactory {
-    static createGiftCodeInput(initialValue = ""): IGiftCodeInput {
-        return {
-            string: initialValue,
-        };
-    }
-
-    static createErrorLabel(initialValue = ""): IErrorLabel {
-        return {
-            string: initialValue,
-        };
-    }
-
-    static createContentNode(initialY = 0): IContentNode {
-        return {
-            position: { y: initialY },
-            y: initialY,
-        };
-    }
-
-    static createUIEvent(event: string, data: string): IPendingUIEvent {
-        return { event, data };
-    }
-
-    static createClipboardData(text: string): string {
-        return text;
-    }
-}
-
-// SOLID: Dependency Inversion - Mock factory
-class GiftCodeMockFactory {
-    static createDialog(): IDialog {
-        return {
-            hide: jest.fn(),
-        };
-    }
-
-    static createSystemInfo(isMobile = false): ISystemInfo {
-        return {
-            isMobile,
-        };
-    }
-
-    static createClipboardAPI(text?: string, shouldFail = false): IClipboardAPI {
-        let readTextMock: jest.Mock;
-        
-        if (shouldFail) {
-            readTextMock = jest.fn(() => Promise.reject(new Error("Clipboard access denied")));
-        } else {
-            readTextMock = jest.fn(() => Promise.resolve(text || ""));
-        }
-
-        return {
-            clipboard: {
-                readText: readTextMock,
-            },
-        };
-    }
-
-    static createTranslator(): ITranslator {
-        return {
-            translate: jest.fn((key) => `translated_${key}`),
-        };
-    }
-}
-
-// Mock dependencies
+// Mock external dependencies
 jest.mock("cc", () => ({
     _decorator: {
         ccclass: jest.fn(() => (target: any) => target),
@@ -118,6 +15,24 @@ jest.mock("cc", () => ({
     Node: jest.fn(),
 }));
 
+// Mock navigator.clipboard
+Object.defineProperty(global, 'navigator', {
+    value: {
+        clipboard: {
+            readText: jest.fn(),
+        },
+    },
+    writable: true,
+});
+
+// Mock window.dispatchEvent
+Object.defineProperty(global, 'window', {
+    value: {
+        dispatchEvent: jest.fn(),
+    },
+    writable: true,
+});
+
 jest.mock("db://shared-components/shared/common-components/observer-component/scripts/observer-component", () => ({
     ObserverComponent: jest.fn(),
 }));
@@ -128,15 +43,37 @@ jest.mock("observer", () => ({
 }));
 
 jest.mock("@sg/game-client-base", () => ({
-    default: {
-        Audios: {
-            AudioHandler: jest.fn(),
-            AudioIds: {
-                CLICK: "CLICK",
-            },
+    Translator: {
+        translate: jest.fn((key: string) => key),
+    },
+    FormatUtils: {
+        numberWithCommas: jest.fn((num: number, decimals: number) => num.toFixed(decimals)),
+    },
+    Audios: {
+        AudioHandler: jest.fn(),
+        AudioIds: {
+            CLICK: "click",
         },
-        Translator: {
-            translate: jest.fn((key) => `translated_${key}`),
+    },
+    Configs: {
+        SiteConfigs: jest.fn(),
+    },
+    Connection: {
+        ConnectionStore: jest.fn(),
+    },
+    Notices: {
+        NoticeErrorsHandlers: {
+            AutoSignOutHandler: jest.fn(),
+        },
+    },
+    Notification: {
+        NotificationStore: jest.fn(),
+    },
+    Shared: {
+        utils: {
+            StorageManager: {
+                setPrefixKey: jest.fn(),
+            },
         },
     },
 }));
@@ -160,581 +97,410 @@ jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store",
     FSBPromotionUIStore: jest.fn(),
 }));
 
-// SOLID: Dependency Inversion - Test context setup
-class GiftCodeTestContext {
-    public giftCodeInput: IGiftCodeInput;
-    public errorLabel: IErrorLabel;
-    public contentNode: IContentNode;
-    public dialog: IDialog;
-    public systemInfo: ISystemInfo;
-    public translator: ITranslator;
 
-    constructor() {
-        this.setupComponents();
-    }
-
-    private setupComponents(): void {
-        this.giftCodeInput = GiftCodeTestDataFactory.createGiftCodeInput();
-        this.errorLabel = GiftCodeTestDataFactory.createErrorLabel();
-        this.contentNode = GiftCodeTestDataFactory.createContentNode();
-        this.dialog = GiftCodeMockFactory.createDialog();
-        this.systemInfo = GiftCodeMockFactory.createSystemInfo();
-        this.translator = GiftCodeMockFactory.createTranslator();
-    }
-
-    public reset(): void {
-        jest.clearAllMocks();
-        this.setupComponents();
-    }
-
-    public setupMobileEnvironment(): void {
-        this.systemInfo.isMobile = true;
-    }
-
-    public setupDesktopEnvironment(): void {
-        this.systemInfo.isMobile = false;
-    }
-}
-
-// SOLID: Single Responsibility Principle - Gift Code Input Handling Tests
-describe("RedeemGiftCodePopup - Gift Code Input Handling", () => {
-    let testContext: GiftCodeTestContext;
+describe("RedeemGiftCodePopup", () => {
+    let redeemGiftCodePopup: RedeemGiftCodePopup;
+    let mockGiftCodeInput: any;
+    let mockErrorLabel: any;
+    let mockContentNode: any;
+    let mockDialog: any;
 
     beforeEach(() => {
-        testContext = new GiftCodeTestContext();
+        // Reset all mocks
+        jest.clearAllMocks();
+
+        // Create mock instances
+        mockGiftCodeInput = {
+            string: "",
+        };
+
+        mockErrorLabel = {
+            string: "",
+        };
+
+        mockContentNode = {
+            position: { y: 100 },
+            y: 100,
+        };
+
+        mockDialog = {
+            hide: jest.fn(),
+        };
+
+        // Create mock node
+        const mockNode = {
+            getComponent: jest.fn().mockReturnValue(mockDialog),
+        };
+
+        // Create component instance
+        redeemGiftCodePopup = new RedeemGiftCodePopup();
+        
+        // Manually inject the mocked dependencies
+        (redeemGiftCodePopup as any).giftCodeInput = mockGiftCodeInput;
+        (redeemGiftCodePopup as any).errorLabel = mockErrorLabel;
+        (redeemGiftCodePopup as any).contentNode = mockContentNode;
+        (redeemGiftCodePopup as any).node = mockNode;
+        (redeemGiftCodePopup as any).scheduleOnce = jest.fn();
     });
 
-    describe("gift code input management", () => {
-        it("should update gift code input value", () => {
-            testContext.giftCodeInput.string = "TEST123";
-            
-            expect(testContext.giftCodeInput.string).toBe("TEST123");
+    describe("constructor and initialization", () => {
+        it("should initialize properly", () => {
+            expect(redeemGiftCodePopup).toBeInstanceOf(RedeemGiftCodePopup);
         });
 
-        it("should handle lowercase input", () => {
-            testContext.giftCodeInput.string = "test456";
-            
-            expect(testContext.giftCodeInput.string).toBe("test456");
-        });
-
-        it("should handle empty input", () => {
-            testContext.giftCodeInput.string = "";
-            
-            expect(testContext.giftCodeInput.string).toBe("");
+        it("should have required properties", () => {
+            expect(redeemGiftCodePopup).toHaveProperty("giftCodeInput");
+            expect(redeemGiftCodePopup).toHaveProperty("errorLabel");
+            expect(redeemGiftCodePopup).toHaveProperty("contentNode");
         });
     });
 
-    describe("gift code transformation logic", () => {
-        class GiftCodeTransformer {
-            static trimAndUppercase(input: IGiftCodeInput): string {
-                return input.string.trim().toUpperCase();
-            }
-
-            static finalizeInput(input: IGiftCodeInput): string {
-                const upper = input.string.toUpperCase();
-                if (input.string !== upper) {
-                    input.string = upper;
-                }
-                return input.string;
-            }
-        }
-
-        it("should trim and convert to uppercase", () => {
-            testContext.giftCodeInput.string = "  test123  ";
+    describe("redeemGifCode method", () => {
+        it("should return trimmed and uppercased gift code", () => {
+            mockGiftCodeInput.string = "  test123  ";
             
-            const result = GiftCodeTransformer.trimAndUppercase(testContext.giftCodeInput);
+            const result = redeemGiftCodePopup.redeemGifCode();
             
             expect(result).toBe("TEST123");
         });
 
-        it("should handle empty trimmed input", () => {
-            testContext.giftCodeInput.string = "   ";
+        it("should handle empty input", () => {
+            mockGiftCodeInput.string = "";
             
-            const result = GiftCodeTransformer.trimAndUppercase(testContext.giftCodeInput);
+            const result = redeemGiftCodePopup.redeemGifCode();
             
             expect(result).toBe("");
         });
 
-        it("should preserve already uppercase input", () => {
-            testContext.giftCodeInput.string = "ABC123";
+        it("should handle mixed case input", () => {
+            mockGiftCodeInput.string = "aBc123DeF";
             
-            const result = GiftCodeTransformer.trimAndUppercase(testContext.giftCodeInput);
-            
-            expect(result).toBe("ABC123");
-        });
-
-        it("should convert mixed case input to uppercase", () => {
-            testContext.giftCodeInput.string = "aBc123DeF";
-            
-            const result = GiftCodeTransformer.finalizeInput(testContext.giftCodeInput);
+            const result = redeemGiftCodePopup.redeemGifCode();
             
             expect(result).toBe("ABC123DEF");
-            expect(testContext.giftCodeInput.string).toBe("ABC123DEF");
         });
     });
 
-});
-
-// SOLID: Single Responsibility Principle - Error Handling Tests
-describe("RedeemGiftCodePopup - Error Handling", () => {
-    let testContext: GiftCodeTestContext;
-
-    beforeEach(() => {
-        testContext = new GiftCodeTestContext();
-    });
-
-    describe("error label management", () => {
-        it("should update error label content", () => {
-            testContext.errorLabel.string = "Error message";
+    describe("onClickRedeemGifCode method", () => {
+        it("should call both redeem and reset functions", () => {
+            const mockRedeemGifCode = jest.spyOn(redeemGiftCodePopup, 'redeemGifCode');
+            const mockResetFSBRedemptionState = jest.fn();
+            (redeemGiftCodePopup as any).resetFSBRedemptionState = mockResetFSBRedemptionState;
             
-            expect(testContext.errorLabel.string).toBe("Error message");
-        });
-
-        it("should clear error label content", () => {
-            testContext.errorLabel.string = "Previous error";
-            testContext.errorLabel.string = "";
+            redeemGiftCodePopup.onClickRedeemGifCode();
             
-            expect(testContext.errorLabel.string).toBe("");
+            expect(mockRedeemGifCode).toHaveBeenCalledTimes(1);
+            expect(mockResetFSBRedemptionState).toHaveBeenCalledTimes(1);
         });
     });
 
-    describe("component initialization logic", () => {
-        class ComponentInitializer {
-            static initializeComponent(errorLabel: IErrorLabel, contentNode: IContentNode): { errorLabelString: string; originalY: number } {
-                errorLabel.string = "";
-                const originalY = contentNode.position.y;
-                return { errorLabelString: errorLabel.string, originalY };
-            }
-        }
-
-        it("should clear error label and store original Y position", () => {
-            const result = ComponentInitializer.initializeComponent(testContext.errorLabel, testContext.contentNode);
-            
-            expect(result.errorLabelString).toBe("");
-            expect(result.originalY).toBe(0);
-        });
-
-        it("should handle different original Y positions", () => {
-            testContext.contentNode.position.y = 150;
-            
-            const result = ComponentInitializer.initializeComponent(testContext.errorLabel, testContext.contentNode);
-            
-            expect(result.originalY).toBe(150);
-        });
-    });
-
-    describe("redemption notice handling", () => {
-        class RedemptionNoticeHandler {
-            static handleNotice(pendingUIEvent: IPendingUIEvent | null, errorLabel: IErrorLabel, translator: ITranslator): void {
-                if (pendingUIEvent?.event === "REDEMPTION_NOTICE") {
-                    errorLabel.string = translator.translate(pendingUIEvent.data) as string;
-                }
-            }
-        }
-
-        it("should update error label for redemption notice events", () => {
-            const noticeEvent = GiftCodeTestDataFactory.createUIEvent("REDEMPTION_NOTICE", "ERROR_CODE");
-            
-            RedemptionNoticeHandler.handleNotice(noticeEvent, testContext.errorLabel, testContext.translator);
-            
-            expect(testContext.translator.translate).toHaveBeenCalledWith("ERROR_CODE");
-            expect(testContext.errorLabel.string).toBe("translated_ERROR_CODE");
-        });
-
-        it("should not update error label for other events", () => {
-            const otherEvent = GiftCodeTestDataFactory.createUIEvent("OTHER_EVENT", "ERROR_CODE");
-            
-            RedemptionNoticeHandler.handleNotice(otherEvent, testContext.errorLabel, testContext.translator);
-            
-            expect(testContext.errorLabel.string).toBe("");
-        });
-
-        it("should handle null pending UI event", () => {
-            expect(() => {
-                RedemptionNoticeHandler.handleNotice(null, testContext.errorLabel, testContext.translator);
-            }).not.toThrow();
-        });
-    });
-
-});
-
-// SOLID: Single Responsibility Principle - UI Interaction Tests
-describe("RedeemGiftCodePopup - UI Interaction", () => {
-    let testContext: GiftCodeTestContext;
-
-    beforeEach(() => {
-        testContext = new GiftCodeTestContext();
-    });
-
-    describe("popup close behavior", () => {
-        class PopupController {
-            static closePopup(isKeyboardOpen: boolean, dialog: IDialog): "keyboard_open" | "popup_closed" {
-                if (isKeyboardOpen) {
-                    return "keyboard_open";
-                }
-                dialog?.hide();
-                return "popup_closed";
-            }
-        }
-
+    describe("onClosePopup method", () => {
         it("should not close popup when keyboard is open", () => {
-            const result = PopupController.closePopup(true, testContext.dialog);
+            (redeemGiftCodePopup as any)._isKeyboardOpen = true;
             
-            expect(result).toBe("keyboard_open");
-            expect(testContext.dialog.hide).not.toHaveBeenCalled();
+            redeemGiftCodePopup.onClosePopup();
+            
+            expect(mockDialog.hide).not.toHaveBeenCalled();
         });
 
         it("should close popup when keyboard is closed", () => {
-            const result = PopupController.closePopup(false, testContext.dialog);
+            (redeemGiftCodePopup as any)._isKeyboardOpen = false;
             
-            expect(result).toBe("popup_closed");
-            expect(testContext.dialog.hide).toHaveBeenCalledTimes(1);
+            redeemGiftCodePopup.onClosePopup();
+            
+            expect((redeemGiftCodePopup as any).node.getComponent).toHaveBeenCalledWith(expect.any(Function));
+            expect(mockDialog.hide).toHaveBeenCalledTimes(1);
         });
 
         it("should handle null dialog component safely", () => {
-            const nullDialog = null as any;
+            (redeemGiftCodePopup as any).node.getComponent = jest.fn().mockReturnValue(null);
+            (redeemGiftCodePopup as any)._isKeyboardOpen = false;
             
-            expect(() => PopupController.closePopup(false, nullDialog)).not.toThrow();
+            expect(() => redeemGiftCodePopup.onClosePopup()).not.toThrow();
         });
     });
 
-    describe("redemption success handling", () => {
-        class RedemptionSuccessHandler {
-            static handleSuccess(isRedeemSuccess: boolean, onClosePopup: jest.Mock): void {
-                if (isRedeemSuccess) {
-                    onClosePopup();
-                }
-            }
-        }
-
+    describe("renderRedeemSuccess method", () => {
         it("should close popup when redemption is successful", () => {
-            const onClosePopup = jest.fn();
+            const mockOnClosePopup = jest.spyOn(redeemGiftCodePopup, 'onClosePopup');
+            (redeemGiftCodePopup as any).isRedeemSuccess = true;
             
-            RedemptionSuccessHandler.handleSuccess(true, onClosePopup);
+            redeemGiftCodePopup.renderRedeemSuccess(true);
             
-            expect(onClosePopup).toHaveBeenCalledTimes(1);
+            expect(mockOnClosePopup).toHaveBeenCalledTimes(1);
         });
 
         it("should not close popup when redemption fails", () => {
-            const onClosePopup = jest.fn();
+            const mockOnClosePopup = jest.spyOn(redeemGiftCodePopup, 'onClosePopup');
+            (redeemGiftCodePopup as any).isRedeemSuccess = false;
             
-            RedemptionSuccessHandler.handleSuccess(false, onClosePopup);
+            redeemGiftCodePopup.renderRedeemSuccess(false);
             
-            expect(onClosePopup).not.toHaveBeenCalled();
+            expect(mockOnClosePopup).not.toHaveBeenCalled();
         });
     });
 
-    describe("redemption action handling", () => {
-        class RedemptionActionHandler {
-            static executeRedemption(redeemGifCode: jest.Mock, resetFSBRedemptionState: jest.Mock): void {
-                redeemGifCode();
-                resetFSBRedemptionState();
-            }
-        }
-
-        it("should call both redeem and reset functions", () => {
-            const redeemGifCode = jest.fn(() => "TEST123");
-            const resetFSBRedemptionState = jest.fn();
-            
-            RedemptionActionHandler.executeRedemption(redeemGifCode, resetFSBRedemptionState);
-            
-            expect(redeemGifCode).toHaveBeenCalledTimes(1);
-            expect(resetFSBRedemptionState).toHaveBeenCalledTimes(1);
+    describe("onPasteClicked method", () => {
+        beforeEach(() => {
+            // Mock navigator.clipboard for each test
+            Object.defineProperty(global, 'navigator', {
+                value: {
+                    clipboard: {
+                        readText: jest.fn(),
+                    },
+                },
+                writable: true,
+            });
         });
-    });
-
-});
-
-// SOLID: Single Responsibility Principle - Clipboard Integration Tests
-describe("RedeemGiftCodePopup - Clipboard Integration", () => {
-    let testContext: GiftCodeTestContext;
-
-    beforeEach(() => {
-        testContext = new GiftCodeTestContext();
-    });
-
-    describe("clipboard paste functionality", () => {
-        class ClipboardHandler {
-            static async pasteFromClipboard(clipboardAPI: IClipboardAPI, giftCodeInput: IGiftCodeInput): Promise<string> {
-                try {
-                    const text = await clipboardAPI.clipboard.readText() as string;
-                    giftCodeInput.string = text.trim().toUpperCase();
-                } catch (e) {
-                    console.warn("Clipboard read failed", e);
-                }
-                return giftCodeInput.string;
-            }
-        }
 
         it("should handle successful clipboard read", async () => {
-            const clipboardAPI = GiftCodeMockFactory.createClipboardAPI("PASTE123");
+            const mockReadText = jest.fn() as jest.MockedFunction<() => Promise<string>>;
+            mockReadText.mockResolvedValue("PASTE123");
+            (global.navigator.clipboard as any).readText = mockReadText;
             
-            const result = await ClipboardHandler.pasteFromClipboard(clipboardAPI, testContext.giftCodeInput);
+            await redeemGiftCodePopup.onPasteClicked();
             
-            expect(result).toBe("PASTE123");
-            expect(testContext.giftCodeInput.string).toBe("PASTE123");
+            expect(mockGiftCodeInput.string).toBe("PASTE123");
         });
 
         it("should handle clipboard read failure gracefully", async () => {
-            const clipboardAPI = GiftCodeMockFactory.createClipboardAPI("", true);
+            const mockReadText = jest.fn() as jest.MockedFunction<() => Promise<string>>;
+            mockReadText.mockRejectedValue(new Error("Clipboard access denied"));
+            (global.navigator.clipboard as any).readText = mockReadText;
+            const consoleSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
             
-            const result = await ClipboardHandler.pasteFromClipboard(clipboardAPI, testContext.giftCodeInput);
+            await redeemGiftCodePopup.onPasteClicked();
             
-            expect(result).toBe("");
-            expect(testContext.giftCodeInput.string).toBe("");
+            expect(mockGiftCodeInput.string).toBe("");
+            expect(consoleSpy).toHaveBeenCalledWith("Clipboard read failed", expect.any(Error));
+            
+            consoleSpy.mockRestore();
         });
 
         it("should trim and convert clipboard text to uppercase", async () => {
-            const clipboardAPI = GiftCodeMockFactory.createClipboardAPI("  paste456  ");
+            const mockReadText = jest.fn() as jest.MockedFunction<() => Promise<string>>;
+            mockReadText.mockResolvedValue("  paste456  ");
+            (global.navigator.clipboard as any).readText = mockReadText;
             
-            const result = await ClipboardHandler.pasteFromClipboard(clipboardAPI, testContext.giftCodeInput);
+            await redeemGiftCodePopup.onPasteClicked();
             
-            expect(result).toBe("PASTE456");
-            expect(testContext.giftCodeInput.string).toBe("PASTE456");
+            expect(mockGiftCodeInput.string).toBe("PASTE456");
         });
 
         it("should handle empty clipboard text", async () => {
-            const clipboardAPI = GiftCodeMockFactory.createClipboardAPI("");
+            const mockReadText = jest.fn() as jest.MockedFunction<() => Promise<string>>;
+            mockReadText.mockResolvedValue("");
+            (global.navigator.clipboard as any).readText = mockReadText;
             
-            const result = await ClipboardHandler.pasteFromClipboard(clipboardAPI, testContext.giftCodeInput);
+            await redeemGiftCodePopup.onPasteClicked();
             
-            expect(result).toBe("");
-            expect(testContext.giftCodeInput.string).toBe("");
+            expect(mockGiftCodeInput.string).toBe("");
         });
     });
 
-});
+    describe("onEditBoxFocus method", () => {
+        beforeEach(() => {
+            jest.useFakeTimers();
+        });
 
-// SOLID: Single Responsibility Principle - Mobile Keyboard Handling Tests
-describe("RedeemGiftCodePopup - Mobile Keyboard Handling", () => {
-    let testContext: GiftCodeTestContext;
-
-    beforeEach(() => {
-        testContext = new GiftCodeTestContext();
-    });
-
-    describe("keyboard focus behavior", () => {
-        class KeyboardFocusHandler {
-            static handleFocus(
-                systemInfo: ISystemInfo,
-                contentNode: IContentNode,
-                dispatchEvent: jest.Mock,
-                debounceDelay = 200
-            ): { scheduled: boolean; initialY: number } {
-                const initialY = contentNode.y;
-                
-                if (systemInfo.isMobile) {
-                    setTimeout(() => {
-                        contentNode.y += 200;
-                        dispatchEvent(new Event("resize"));
-                    }, debounceDelay);
-                    return { scheduled: true, initialY };
-                }
-                
-                return { scheduled: false, initialY };
-            }
-        }
+        afterEach(() => {
+            jest.useRealTimers();
+        });
 
         it("should schedule mobile keyboard adjustment", () => {
-            testContext.setupMobileEnvironment();
+            const mockSetTimeout = jest.spyOn(global, 'setTimeout');
             const mockDispatchEvent = jest.fn();
+            (global as any).window = { dispatchEvent: mockDispatchEvent };
             
-            const result = KeyboardFocusHandler.handleFocus(testContext.systemInfo, testContext.contentNode, mockDispatchEvent);
+            // Mock cc.sys.isMobile
+            const cc = require("cc");
+            cc.sys.isMobile = true;
             
-            expect(result.scheduled).toBe(true);
-            expect(result.initialY).toBe(0);
+            redeemGiftCodePopup.onEditBoxFocus();
+            
+            expect(mockSetTimeout).toHaveBeenCalled();
+            
+            // Advance timer to trigger the callback
+            jest.advanceTimersByTime(200);
+            expect(mockContentNode.y).toBe(300); // 100 + 200
+            expect(mockDispatchEvent).toHaveBeenCalledWith(expect.any(Event));
         });
 
         it("should not schedule adjustment on desktop", () => {
-            testContext.setupDesktopEnvironment();
+            const mockSetTimeout = jest.spyOn(global, 'setTimeout');
             const mockDispatchEvent = jest.fn();
+            (global as any).window = { dispatchEvent: mockDispatchEvent };
             
-            const result = KeyboardFocusHandler.handleFocus(testContext.systemInfo, testContext.contentNode, mockDispatchEvent);
+            // Mock cc.sys.isMobile
+            const cc = require("cc");
+            cc.sys.isMobile = false;
             
-            expect(result.scheduled).toBe(false);
-            expect(result.initialY).toBe(0);
+            redeemGiftCodePopup.onEditBoxFocus();
+            
+            expect(mockSetTimeout).toHaveBeenCalled();
+            
+            // Advance timer to trigger the callback
+            jest.advanceTimersByTime(200);
+            expect(mockContentNode.y).toBe(100); // Should remain unchanged
+            expect(mockDispatchEvent).toHaveBeenCalledWith(expect.any(Event));
         });
     });
 
-    describe("keyboard blur behavior", () => {
-        class KeyboardBlurHandler {
-            static handleBlur(
-                systemInfo: ISystemInfo,
-                contentNode: IContentNode,
-                originalY: number,
-                scheduleOnce: jest.Mock
-            ): { scheduled: boolean } {
-                if (systemInfo.isMobile) {
-                    scheduleOnce(() => {
-                        contentNode.y = originalY;
-                    }, 0.2);
-                    return { scheduled: true };
-                }
-                return { scheduled: false };
-            }
-        }
-
+    describe("onEditBoxBlur method", () => {
         it("should schedule position restore on mobile", () => {
-            testContext.setupMobileEnvironment();
-            const mockScheduleOnce = jest.fn();
+            (redeemGiftCodePopup as any)._originalY = 100;
             
-            const result = KeyboardBlurHandler.handleBlur(testContext.systemInfo, testContext.contentNode, 100, mockScheduleOnce);
+            // Mock cc.sys.isMobile
+            const cc = require("cc");
+            cc.sys.isMobile = true;
             
-            expect(result.scheduled).toBe(true);
-            expect(mockScheduleOnce).toHaveBeenCalledTimes(1);
+            redeemGiftCodePopup.onEditBoxBlur();
+            
+            expect((redeemGiftCodePopup as any).scheduleOnce).toHaveBeenCalledTimes(1);
+            expect((redeemGiftCodePopup as any).scheduleOnce).toHaveBeenCalledWith(expect.any(Function), 0.2);
         });
 
         it("should not schedule position restore on desktop", () => {
-            testContext.setupDesktopEnvironment();
-            const mockScheduleOnce = jest.fn();
+            (redeemGiftCodePopup as any)._originalY = 100;
             
-            const result = KeyboardBlurHandler.handleBlur(testContext.systemInfo, testContext.contentNode, 100, mockScheduleOnce);
+            // Mock cc.sys.isMobile
+            const cc = require("cc");
+            cc.sys.isMobile = false;
             
-            expect(result.scheduled).toBe(false);
-            expect(mockScheduleOnce).not.toHaveBeenCalled();
+            redeemGiftCodePopup.onEditBoxBlur();
+            
+            expect((redeemGiftCodePopup as any).scheduleOnce).not.toHaveBeenCalled();
         });
     });
 
-});
+    describe("onInputFinalized method", () => {
+        it("should convert input to uppercase and call blur", () => {
+            mockGiftCodeInput.string = "test123";
+            const mockOnEditBoxBlur = jest.spyOn(redeemGiftCodePopup, 'onEditBoxBlur');
+            
+            redeemGiftCodePopup.onInputFinalized(mockGiftCodeInput);
+            
+            expect(mockGiftCodeInput.string).toBe("TEST123");
+            expect(mockOnEditBoxBlur).toHaveBeenCalledTimes(1);
+        });
 
-// SOLID: Single Responsibility Principle - Integration Scenarios
-describe("RedeemGiftCodePopup - Integration Scenarios", () => {
-    let testContext: GiftCodeTestContext;
-
-    beforeEach(() => {
-        testContext = new GiftCodeTestContext();
+        it("should not change already uppercase input", () => {
+            mockGiftCodeInput.string = "TEST123";
+            const mockOnEditBoxBlur = jest.spyOn(redeemGiftCodePopup, 'onEditBoxBlur');
+            
+            redeemGiftCodePopup.onInputFinalized(mockGiftCodeInput);
+            
+            expect(mockGiftCodeInput.string).toBe("TEST123");
+            expect(mockOnEditBoxBlur).toHaveBeenCalledTimes(1);
+        });
     });
 
-    describe("mobile keyboard interaction flow", () => {
-        it("should handle complete mobile keyboard lifecycle", () => {
+    describe("renderRedemptionNotice method", () => {
+        it("should update error label for redemption notice events", () => {
+            const noticeEvent = { event: "REDEMPTION_NOTICE", data: "ERROR_CODE" };
+            const mockTranslate = jest.fn((key: string) => key);
+            const gc = require("@sg/game-client-base");
+            gc.Translator.translate = mockTranslate;
+            
+            redeemGiftCodePopup.renderRedemptionNotice(noticeEvent);
+            
+            expect(mockTranslate).toHaveBeenCalledWith("ERROR_CODE");
+            expect(mockErrorLabel.string).toBe("ERROR_CODE");
+        });
+
+        it("should not update error label for other events", () => {
+            const otherEvent = { event: "OTHER_EVENT", data: "ERROR_CODE" };
+            const mockTranslate = jest.fn((key: string) => key);
+            const gc = require("@sg/game-client-base");
+            gc.Translator.translate = mockTranslate;
+            
+            redeemGiftCodePopup.renderRedemptionNotice(otherEvent);
+            
+            expect(mockErrorLabel.string).toBe("");
+        });
+
+        it("should handle null pending UI event", () => {
+            const mockTranslate = jest.fn((key: string) => key);
+            const gc = require("@sg/game-client-base");
+            gc.Translator.translate = mockTranslate;
+            
+            expect(() => redeemGiftCodePopup.renderRedemptionNotice(null)).not.toThrow();
+            expect(mockErrorLabel.string).toBe("");
+        });
+    });
+
+    describe("integration scenarios", () => {
+        it("should handle complete gift code redemption flow", async () => {
+            // Setup initial state
+            mockGiftCodeInput.string = "TEST123";
+            const mockRedeemGifCode = jest.spyOn(redeemGiftCodePopup, 'redeemGifCode');
+            const mockResetFSBRedemptionState = jest.fn();
+            const mockOnClosePopup = jest.spyOn(redeemGiftCodePopup, 'onClosePopup');
+            (redeemGiftCodePopup as any).resetFSBRedemptionState = mockResetFSBRedemptionState;
+            (redeemGiftCodePopup as any).isRedeemSuccess = true;
+
+            // User clicks redeem
+            redeemGiftCodePopup.onClickRedeemGifCode();
+
+            // Handle success
+            redeemGiftCodePopup.renderRedeemSuccess(true);
+
+            expect(mockRedeemGifCode).toHaveBeenCalledTimes(1);
+            expect(mockResetFSBRedemptionState).toHaveBeenCalledTimes(1);
+            expect(mockOnClosePopup).toHaveBeenCalledTimes(1);
+        });
+
+        it("should handle redemption failure flow", () => {
+            // Setup initial state
+            mockGiftCodeInput.string = "INVALID";
+            const mockRedeemGifCode = jest.spyOn(redeemGiftCodePopup, 'redeemGifCode');
+            const mockResetFSBRedemptionState = jest.fn();
+            const mockTranslate = jest.fn((key: string) => key);
+            const gc = require("@sg/game-client-base");
+            gc.Translator.translate = mockTranslate;
+            (redeemGiftCodePopup as any).resetFSBRedemptionState = mockResetFSBRedemptionState;
+            (redeemGiftCodePopup as any).isRedeemSuccess = false;
+
+            // User clicks redeem
+            redeemGiftCodePopup.onClickRedeemGifCode();
+
+            // Handle error
+            const errorEvent = { event: "REDEMPTION_NOTICE", data: "INVALID_CODE" };
+            redeemGiftCodePopup.renderRedemptionNotice(errorEvent);
+
+            expect(mockRedeemGifCode).toHaveBeenCalledTimes(1);
+            expect(mockResetFSBRedemptionState).toHaveBeenCalledTimes(1);
+            expect(mockErrorLabel.string).toBe("INVALID_CODE");
+        });
+
+        it("should handle complete mobile keyboard interaction", () => {
             // Setup mobile environment
-            testContext.setupMobileEnvironment();
-            testContext.contentNode.position.y = 100;
+            const cc = require("cc");
+            cc.sys.isMobile = true;
+            (redeemGiftCodePopup as any)._originalY = 100;
 
-            // Focus handling
-            const handleFocus = (systemInfo: ISystemInfo, contentNode: IContentNode) => {
-                if (systemInfo.isMobile) {
-                    contentNode.y += 200;
-                    return { adjusted: true, finalY: contentNode.y };
-                }
-                return { adjusted: false, finalY: contentNode.y };
-            };
+            // Focus - should adjust position
+            jest.useFakeTimers();
+            const mockSetTimeout = jest.spyOn(global, 'setTimeout');
+            const mockDispatchEvent = jest.fn();
+            (global as any).window = { dispatchEvent: mockDispatchEvent };
 
-            const focusResult = handleFocus(testContext.systemInfo, testContext.contentNode);
-            expect(focusResult.adjusted).toBe(true);
-            expect(focusResult.finalY).toBe(200);
+            redeemGiftCodePopup.onEditBoxFocus();
+            jest.advanceTimersByTime(200);
 
-            // Blur handling
-            const handleBlur = (systemInfo: ISystemInfo, contentNode: IContentNode, originalY: number) => {
-                if (systemInfo.isMobile) {
-                    contentNode.y = originalY;
-                    return { restored: true, finalY: contentNode.y };
-                }
-                return { restored: false, finalY: contentNode.y };
-            };
+            expect(mockSetTimeout).toHaveBeenCalled();
+            expect(mockContentNode.y).toBe(300); // 100 + 200
+            expect(mockDispatchEvent).toHaveBeenCalledWith(expect.any(Event));
 
-            const blurResult = handleBlur(testContext.systemInfo, testContext.contentNode, 100);
-            expect(blurResult.restored).toBe(true);
-            expect(blurResult.finalY).toBe(100);
-        });
-    });
+            // Blur - should restore position
+            redeemGiftCodePopup.onEditBoxBlur();
+            expect((redeemGiftCodePopup as any).scheduleOnce).toHaveBeenCalledTimes(1);
 
-    describe("clipboard integration flow", () => {
-        it("should handle complete clipboard paste workflow", async () => {
-            const clipboardAPI = GiftCodeMockFactory.createClipboardAPI("PASTE123");
-
-            // Paste operation
-            const handlePaste = async (api: IClipboardAPI, input: IGiftCodeInput) => {
-                try {
-                    const text = await api.clipboard.readText() as string;
-                    input.string = text.trim().toUpperCase();
-                    return { success: true, value: input.string };
-                } catch {
-                    return { success: false, value: "" };
-                }
-            };
-
-            const result = await handlePaste(clipboardAPI, testContext.giftCodeInput);
-            
-            expect(result.success).toBe(true);
-            expect(result.value).toBe("PASTE123");
-            expect(testContext.giftCodeInput.string).toBe("PASTE123");
-        });
-    });
-
-    describe("error handling integration", () => {
-        it("should handle complete error flow", () => {
-            // Error occurs
-            const errorEvent = GiftCodeTestDataFactory.createUIEvent("REDEMPTION_NOTICE", "INVALID_CODE");
-            
-            // Error handling
-            const handleError = (event: IPendingUIEvent, errorLabel: IErrorLabel, translator: ITranslator) => {
-                if (event.event === "REDEMPTION_NOTICE") {
-                    errorLabel.string = translator.translate(event.data) as string;
-                    return { handled: true, errorMessage: errorLabel.string };
-                }
-                return { handled: false, errorMessage: "" };
-            };
-
-            const result = handleError(errorEvent, testContext.errorLabel, testContext.translator);
-            
-            expect(result.handled).toBe(true);
-            expect(result.errorMessage).toBe("translated_INVALID_CODE");
-            expect(testContext.errorLabel.string).toBe("translated_INVALID_CODE");
+            jest.useRealTimers();
         });
     });
 });
 
-// SOLID: Single Responsibility Principle - Component Structure Validation
-describe("RedeemGiftCodePopup - Component Structure", () => {
-    describe("interface compliance", () => {
-        it("should validate IGiftCodeInput interface", () => {
-            const input = GiftCodeTestDataFactory.createGiftCodeInput("test");
-            
-            expect(input).toHaveProperty("string");
-            expect(typeof input.string).toBe("string");
-            expect(input.string).toBe("test");
-        });
 
-        it("should validate IErrorLabel interface", () => {
-            const label = GiftCodeTestDataFactory.createErrorLabel("error");
-            
-            expect(label).toHaveProperty("string");
-            expect(typeof label.string).toBe("string");
-            expect(label.string).toBe("error");
-        });
 
-        it("should validate IContentNode interface", () => {
-            const node = GiftCodeTestDataFactory.createContentNode(50);
-            
-            expect(node).toHaveProperty("position");
-            expect(node).toHaveProperty("y");
-            expect(node.position).toHaveProperty("y");
-            expect(typeof node.position.y).toBe("number");
-            expect(typeof node.y).toBe("number");
-        });
 
-        it("should validate IDialog interface", () => {
-            const dialog = GiftCodeMockFactory.createDialog();
-            
-            expect(dialog).toHaveProperty("hide");
-            expect(typeof dialog.hide).toBe("function");
-        });
-    });
-
-    describe("factory methods validation", () => {
-        it("should validate test data factory methods", () => {
-            expect(typeof GiftCodeTestDataFactory.createGiftCodeInput).toBe("function");
-            expect(typeof GiftCodeTestDataFactory.createErrorLabel).toBe("function");
-            expect(typeof GiftCodeTestDataFactory.createContentNode).toBe("function");
-            expect(typeof GiftCodeTestDataFactory.createUIEvent).toBe("function");
-        });
-
-        it("should validate mock factory methods", () => {
-            expect(typeof GiftCodeMockFactory.createDialog).toBe("function");
-            expect(typeof GiftCodeMockFactory.createSystemInfo).toBe("function");
-            expect(typeof GiftCodeMockFactory.createClipboardAPI).toBe("function");
-            expect(typeof GiftCodeMockFactory.createTranslator).toBe("function");
-        });
-    });
-});

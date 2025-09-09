@@ -4,144 +4,11 @@ import { RedeemStatus } from "../../../assets/fsb-promotion/scripts/stores/fsb-p
 import { FreeSpinsPromotionEvents } from "../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store";
 import { GameServiceMessageSlot } from "../../../assets/game-message-slot";
 
-// SOLID: Interface Segregation Principle - Define focused interfaces
-interface IPromotionStore {
-    promotion: GameServiceMessageSlot.Promotion | null;
-    promotionTOProgress: GameServiceMessageSlot.PromotionTOProgress | null;
-    claimedAmount: number;
-    redeemResult: RedeemStatus;
-    finishPromotion: GameServiceMessageSlot.FinishPromotion | null;
-    redemptionNotice: GameServiceMessageSlot.RedemptionNotice | null;
-    claimedBonusFailed: string | null;
-}
-
-interface IConnectionStore {
-    send: jest.Mock;
-}
-
-interface IPromotionUIHandler {
-    handlePromotionDisplay: jest.Mock;
-    openTurnOverRequired: jest.Mock;
-    onReceivedTOProgressData: jest.Mock;
-    claimedBonusSuccess: jest.Mock;
-    markFSBEndFromServer: jest.Mock;
-    handleRedemptionNotice: jest.Mock;
-}
-
-interface IPromotionUIStore {
-    toProgress: GameServiceMessageSlot.PromotionTOProgress | null;
-    addPendingUIEvent: jest.Mock;
-}
-
-interface INotificationStore {
-    connection: {
-        on: jest.Mock;
-    };
-}
-
-// SOLID: Dependency Inversion - Abstract test data factory
-class TestDataFactory {
-    static createPromotionData(overrides?: Partial<GameServiceMessageSlot.Promotion>): GameServiceMessageSlot.Promotion {
-        return {
-            promotionId: "test-123",
-            initialBonusItem: 10,
-            remainingBonusItems: 10,
-            isClaimed: false,
-            isGiftCode: false,
-            coinValue: 1,
-            betLevel: 1,
-            ...overrides,
-        };
-    }
-
-    static createTOProgressData(overrides?: Partial<GameServiceMessageSlot.PromotionTOProgress>): GameServiceMessageSlot.PromotionTOProgress {
-        return {
-            promotionId: "test-123",
-            win: 100,
-            totalTO: 1000,
-            minTO: 100,
-            progress: 0.1,
-            remainTO: 900,
-            canClaim: false,
-            expire: "2024-12-31",
-            ...overrides,
-        };
-    }
-
-    static createFinishPromotionData(overrides?: Partial<GameServiceMessageSlot.FinishPromotion>): GameServiceMessageSlot.FinishPromotion {
-        return {
-            totalWin: 1000,
-            endPromotion: true,
-            ...overrides,
-        };
-    }
-
-    static createRedemptionNoticeData(overrides?: Partial<GameServiceMessageSlot.RedemptionNotice>): GameServiceMessageSlot.RedemptionNotice {
-        return {
-            errorCode: "SUCCESS",
-            ...overrides,
-        };
-    }
-}
-
-// SOLID: Dependency Inversion - Abstract mock factory
-class MockFactory {
-    static createPromotionStore(): IPromotionStore {
-        return {
-            promotion: null,
-            promotionTOProgress: null,
-            claimedAmount: 0,
-            redeemResult: RedeemStatus.Idle,
-            finishPromotion: null,
-            redemptionNotice: null,
-            claimedBonusFailed: null,
-        };
-    }
-
-    static createConnectionStore(): IConnectionStore {
-        return {
-            send: jest.fn(),
-        };
-    }
-
-    static createPromotionUIHandler(): IPromotionUIHandler {
-        return {
-            handlePromotionDisplay: jest.fn(),
-            openTurnOverRequired: jest.fn(),
-            onReceivedTOProgressData: jest.fn(),
-            claimedBonusSuccess: jest.fn(),
-            markFSBEndFromServer: jest.fn(),
-            handleRedemptionNotice: jest.fn(),
-        };
-    }
-
-    static createPromotionUIStore(): IPromotionUIStore {
-        return {
-            toProgress: null,
-            addPendingUIEvent: jest.fn(),
-        };
-    }
-
-    static createNotificationStore(): INotificationStore {
-        return {
-            connection: {
-                on: jest.fn(),
-            },
-        };
-    }
-}
-
 // Mock dependencies
 jest.mock("@sg/game-client-base", () => ({
-    Connection: {
-        ConnectionStore: jest.fn(),
-    },
-    Notification: {
-        NotificationStore: jest.fn(),
-    },
-    Shared: {
-        IMultipleHandlers: jest.fn(),
-    },
+    Connection: { ConnectionStore: jest.fn() },
+    Notification: { NotificationStore: jest.fn() },
+    Shared: { IMultipleHandlers: jest.fn() },
 }));
 
 jest.mock("inversify", () => ({
@@ -184,291 +51,332 @@ jest.mock("../../../assets/fsb-promotion/scripts/handlers/fsb-promotion-ui-handl
 
 jest.mock("../../../assets/game-message-slot", () => ({
     GameServiceMessageSlot: {
-        Promotion: {
-            eventName: "Promotion",
-        },
-        PromotionTOProgress: {
-            eventName: "PromotionTOProgress",
-        },
-        ClaimedAmount: {
-            eventName: "ClaimedAmount",
-        },
-        RedeemResult: {
-            eventName: "RedeemResult",
-        },
-        FinishPromotion: {
-            eventName: "FinishPromotion",
-        },
-        RedemptionNotice: {
-            eventName: "RedemptionNotice",
-        },
-        ClaimedBonusFailed: {
-            eventName: "ClaimedBonusFailed",
-        },
+        Promotion: { eventName: "Promotion" },
+        PromotionTOProgress: { eventName: "PromotionTOProgress" },
+        ClaimedAmount: { eventName: "ClaimedAmount" },
+        RedeemResult: { eventName: "RedeemResult" },
+        FinishPromotion: { eventName: "FinishPromotion" },
+        RedemptionNotice: { eventName: "RedemptionNotice" },
+        ClaimedBonusFailed: { eventName: "ClaimedBonusFailed" },
     },
 }));
 
-// SOLID: Dependency Inversion - Test context setup
-class TestContext {
-    public handlers: FSBPromotionHandlers;
-    public mockPromotionStore: IPromotionStore;
-    public mockConnectionStore: IConnectionStore;
-    public mockFSBPromotionUIHandler: IPromotionUIHandler;
-    public mockFSBPromotionUIStore: IPromotionUIStore;
-    public mockNotificationStore: INotificationStore;
-
-    constructor() {
-        this.setupMocks();
-        this.setupHandlers();
-    }
-
-    private setupMocks(): void {
-        this.mockPromotionStore = MockFactory.createPromotionStore();
-        this.mockConnectionStore = MockFactory.createConnectionStore();
-        this.mockFSBPromotionUIHandler = MockFactory.createPromotionUIHandler();
-        this.mockFSBPromotionUIStore = MockFactory.createPromotionUIStore();
-        this.mockNotificationStore = MockFactory.createNotificationStore();
-    }
-
-    private setupHandlers(): void {
-        this.handlers = new FSBPromotionHandlers();
-        
-        // Inject dependencies
-        (this.handlers as any).promotionStore = this.mockPromotionStore;
-        (this.handlers as any).connectionStore = this.mockConnectionStore;
-        (this.handlers as any).fsbPromotionUIHandler = this.mockFSBPromotionUIHandler;
-        (this.handlers as any).fsbPromotionUIStore = this.mockFSBPromotionUIStore;
-        (this.handlers as any).notificationStore = this.mockNotificationStore;
-    }
-
-    public reset(): void {
-        jest.clearAllMocks();
-        this.setupMocks();
-        this.setupHandlers();
-    }
-}
-
-// SOLID: Single Responsibility Principle - Promotion Data Handler Tests
-describe("FSBPromotionHandlers - Promotion Data Handling", () => {
-    let testContext: TestContext;
+describe("FSBPromotionHandlers", () => {
+    let handlers: FSBPromotionHandlers;
+    let mockPromotionStore: any;
+    let mockConnectionStore: any;
+    let mockFSBPromotionUIHandler: any;
+    let mockFSBPromotionUIStore: any;
+    let mockNotificationStore: any;
 
     beforeEach(() => {
-        testContext = new TestContext();
+        jest.clearAllMocks();
+
+        // Create simple mocks
+        mockPromotionStore = {
+            promotion: null,
+            promotionTOProgress: null,
+            claimedAmount: 0,
+            redeemResult: RedeemStatus.Idle,
+            finishPromotion: null,
+            redemptionNotice: null,
+            claimedBonusFailed: null,
+        };
+
+        mockConnectionStore = {
+            send: jest.fn(),
+        };
+
+        mockFSBPromotionUIHandler = {
+            handlePromotionDisplay: jest.fn(),
+            openTurnOverRequired: jest.fn(),
+            onReceivedTOProgressData: jest.fn(),
+            claimedBonusSuccess: jest.fn(),
+            markFSBEndFromServer: jest.fn(),
+            handleRedemptionNotice: jest.fn(),
+        };
+
+        mockFSBPromotionUIStore = {
+            toProgress: null,
+            addPendingUIEvent: jest.fn(),
+        };
+
+        mockNotificationStore = {
+            connection: {
+                on: jest.fn(),
+            },
+        };
+
+        // Create handlers and inject dependencies
+        handlers = new FSBPromotionHandlers();
+        (handlers as any).promotionStore = mockPromotionStore;
+        (handlers as any).connectionStore = mockConnectionStore;
+        (handlers as any).fsbPromotionUIHandler = mockFSBPromotionUIHandler;
+        (handlers as any).fsbPromotionUIStore = mockFSBPromotionUIStore;
+        (handlers as any).notificationStore = mockNotificationStore;
     });
 
     describe("initialization", () => {
         it("should initialize with proper dependencies", () => {
-            expect(testContext.handlers).toBeInstanceOf(FSBPromotionHandlers);
+            expect(handlers).toBeInstanceOf(FSBPromotionHandlers);
         });
     });
 
     describe("handlePromotion", () => {
         it("should set promotion data in store", () => {
-            const promotionData = TestDataFactory.createPromotionData();
+            const promotionData = {
+                promotionId: "test-123",
+                initialBonusItem: 10,
+                remainingBonusItems: 10,
+                isClaimed: false,
+                isGiftCode: false,
+                coinValue: 1,
+                betLevel: 1,
+            };
 
-            testContext.handlers.handlePromotion(promotionData);
+            handlers.handlePromotion(promotionData);
 
-            expect(testContext.mockPromotionStore.promotion).toBe(promotionData);
+            expect(mockPromotionStore.promotion).toBe(promotionData);
         });
 
         it("should trigger promotion display handling", () => {
-            const promotionData = TestDataFactory.createPromotionData();
+            const promotionData = {
+                promotionId: "test-123",
+                initialBonusItem: 10,
+                remainingBonusItems: 10,
+                isClaimed: false,
+                isGiftCode: false,
+                coinValue: 1,
+                betLevel: 1,
+            };
 
-            testContext.handlers.handlePromotion(promotionData);
+            handlers.handlePromotion(promotionData);
 
-            expect(testContext.mockFSBPromotionUIHandler.handlePromotionDisplay).toHaveBeenCalledTimes(1);
+            expect(mockFSBPromotionUIHandler.handlePromotionDisplay).toHaveBeenCalledTimes(1);
         });
 
         it("should handle gift code promotion correctly", () => {
-            const giftCodePromotion = TestDataFactory.createPromotionData({ isGiftCode: true });
+            const giftCodePromotion = {
+                promotionId: "test-123",
+                initialBonusItem: 10,
+                remainingBonusItems: 10,
+                isClaimed: false,
+                isGiftCode: true,
+                coinValue: 1,
+                betLevel: 1,
+            };
 
-            testContext.handlers.handlePromotion(giftCodePromotion);
+            handlers.handlePromotion(giftCodePromotion);
 
-            expect(testContext.mockPromotionStore.promotion?.isGiftCode).toBe(true);
+            expect(mockPromotionStore.promotion?.isGiftCode).toBe(true);
         });
-    });
-});
-
-// SOLID: Single Responsibility Principle - Turn Over Progress Handler Tests
-describe("FSBPromotionHandlers - Turn Over Progress Handling", () => {
-    let testContext: TestContext;
-
-    beforeEach(() => {
-        testContext = new TestContext();
     });
 
     describe("handlePromotionTOProgress", () => {
         it("should set TO progress data in both stores", () => {
-            const toProgressData = TestDataFactory.createTOProgressData();
+            const toProgressData = {
+                promotionId: "test-123",
+                win: 100,
+                totalTO: 1000,
+                minTO: 100,
+                progress: 0.1,
+                remainTO: 900,
+                canClaim: false,
+                expire: "2024-12-31",
+            };
 
-            testContext.handlers.handlePromotionTOProgress(toProgressData);
+            handlers.handlePromotionTOProgress(toProgressData);
 
-            expect(testContext.mockPromotionStore.promotionTOProgress).toBe(toProgressData);
-            expect(testContext.mockFSBPromotionUIStore.toProgress).toBe(toProgressData);
+            expect(mockPromotionStore.promotionTOProgress).toBe(toProgressData);
+            expect(mockFSBPromotionUIStore.toProgress).toBe(toProgressData);
         });
 
         it("should open turn over required UI", () => {
-            const toProgressData = TestDataFactory.createTOProgressData();
+            const toProgressData = {
+                promotionId: "test-123",
+                win: 100,
+                totalTO: 1000,
+                minTO: 100,
+                progress: 0.1,
+                remainTO: 900,
+                canClaim: false,
+                expire: "2024-12-31",
+            };
 
-            testContext.handlers.handlePromotionTOProgress(toProgressData);
+            handlers.handlePromotionTOProgress(toProgressData);
 
-            expect(testContext.mockFSBPromotionUIHandler.openTurnOverRequired).toHaveBeenCalledWith("in-game");
+            expect(mockFSBPromotionUIHandler.openTurnOverRequired).toHaveBeenCalledWith("in-game");
         });
 
         it("should register notification listener", () => {
-            const toProgressData = TestDataFactory.createTOProgressData();
+            const toProgressData = {
+                promotionId: "test-123",
+                win: 100,
+                totalTO: 1000,
+                minTO: 100,
+                progress: 0.1,
+                remainTO: 900,
+                canClaim: false,
+                expire: "2024-12-31",
+            };
 
-            testContext.handlers.handlePromotionTOProgress(toProgressData);
+            handlers.handlePromotionTOProgress(toProgressData);
 
-            expect(testContext.mockNotificationStore.connection.on).toHaveBeenCalledWith(
+            expect(mockNotificationStore.connection.on).toHaveBeenCalledWith(
                 "promotionProgress",
                 expect.any(Function)
             );
         });
 
         it("should handle claimable progress correctly", () => {
-            const claimableProgress = TestDataFactory.createTOProgressData({ canClaim: true, remainTO: 0 });
+            const claimableProgress = {
+                promotionId: "test-123",
+                win: 100,
+                totalTO: 1000,
+                minTO: 100,
+                progress: 0.1,
+                remainTO: 0,
+                canClaim: true,
+                expire: "2024-12-31",
+            };
 
-            testContext.handlers.handlePromotionTOProgress(claimableProgress);
+            handlers.handlePromotionTOProgress(claimableProgress);
 
-            expect(testContext.mockPromotionStore.promotionTOProgress?.canClaim).toBe(true);
+            expect(mockPromotionStore.promotionTOProgress?.canClaim).toBe(true);
         });
     });
 
     describe("handleNotificationReceived", () => {
         it("should delegate to UI handler", () => {
-            const progressData = TestDataFactory.createTOProgressData();
+            const progressData = {
+                promotionId: "test-123",
+                win: 100,
+                totalTO: 1000,
+                minTO: 100,
+                progress: 0.1,
+                remainTO: 900,
+                canClaim: false,
+                expire: "2024-12-31",
+            };
 
-            testContext.handlers.handleNotificationReceived(progressData);
+            handlers.handleNotificationReceived(progressData);
 
-            expect(testContext.mockFSBPromotionUIHandler.onReceivedTOProgressData).toHaveBeenCalledWith(progressData);
+            expect(mockFSBPromotionUIHandler.onReceivedTOProgressData).toHaveBeenCalledWith(progressData);
         });
-    });
-});
-
-// SOLID: Single Responsibility Principle - Claims and Redemption Handler Tests
-describe("FSBPromotionHandlers - Claims and Redemption Handling", () => {
-    let testContext: TestContext;
-
-    beforeEach(() => {
-        testContext = new TestContext();
     });
 
     describe("handleClaimedAmount", () => {
         it("should set claimed amount in store", () => {
             const claimedAmount = 500;
 
-            testContext.handlers.handleClaimedAmount(claimedAmount);
+            handlers.handleClaimedAmount(claimedAmount);
 
-            expect(testContext.mockPromotionStore.claimedAmount).toBe(claimedAmount);
+            expect(mockPromotionStore.claimedAmount).toBe(claimedAmount);
         });
 
         it("should trigger claimed bonus success UI", () => {
             const claimedAmount = 500;
 
-            testContext.handlers.handleClaimedAmount(claimedAmount);
+            handlers.handleClaimedAmount(claimedAmount);
 
-            expect(testContext.mockFSBPromotionUIHandler.claimedBonusSuccess).toHaveBeenCalledTimes(1);
+            expect(mockFSBPromotionUIHandler.claimedBonusSuccess).toHaveBeenCalledTimes(1);
         });
 
         it("should handle zero claimed amount", () => {
-            testContext.handlers.handleClaimedAmount(0);
+            handlers.handleClaimedAmount(0);
 
-            expect(testContext.mockPromotionStore.claimedAmount).toBe(0);
+            expect(mockPromotionStore.claimedAmount).toBe(0);
         });
     });
 
     describe("handleRedeemResult", () => {
         it("should set successful redeem result", () => {
-            testContext.handlers.handleRedeemResult(RedeemStatus.Success);
+            handlers.handleRedeemResult(RedeemStatus.Success);
 
-            expect(testContext.mockPromotionStore.redeemResult).toBe(RedeemStatus.Success);
+            expect(mockPromotionStore.redeemResult).toBe(RedeemStatus.Success);
         });
 
         it("should set failed redeem result", () => {
-            testContext.handlers.handleRedeemResult(RedeemStatus.Failed);
+            handlers.handleRedeemResult(RedeemStatus.Failed);
 
-            expect(testContext.mockPromotionStore.redeemResult).toBe(RedeemStatus.Failed);
+            expect(mockPromotionStore.redeemResult).toBe(RedeemStatus.Failed);
         });
     });
 
     describe("resetRedeemSuccess", () => {
         it("should reset redeem result to idle", () => {
-            testContext.mockPromotionStore.redeemResult = RedeemStatus.Success;
+            mockPromotionStore.redeemResult = RedeemStatus.Success;
 
-            testContext.handlers.resetRedeemSuccess();
+            handlers.resetRedeemSuccess();
 
-            expect(testContext.mockPromotionStore.redeemResult).toBe(RedeemStatus.Idle);
+            expect(mockPromotionStore.redeemResult).toBe(RedeemStatus.Idle);
         });
-    });
-});
-
-// SOLID: Single Responsibility Principle - Promotion Lifecycle Handler Tests
-describe("FSBPromotionHandlers - Promotion Lifecycle Handling", () => {
-    let testContext: TestContext;
-
-    beforeEach(() => {
-        testContext = new TestContext();
     });
 
     describe("handleFinishPromotion", () => {
         it("should set finish promotion data in store", () => {
-            const finishPromotionData = TestDataFactory.createFinishPromotionData();
+            const finishPromotionData = {
+                totalWin: 1000,
+                endPromotion: true,
+            };
 
-            testContext.handlers.handleFinishPromotion(finishPromotionData);
+            handlers.handleFinishPromotion(finishPromotionData);
 
-            expect(testContext.mockPromotionStore.finishPromotion).toBe(finishPromotionData);
+            expect(mockPromotionStore.finishPromotion).toBe(finishPromotionData);
         });
 
         it("should mark FSB end from server", () => {
-            const finishPromotionData = TestDataFactory.createFinishPromotionData();
+            const finishPromotionData = {
+                totalWin: 1000,
+                endPromotion: true,
+            };
 
-            testContext.handlers.handleFinishPromotion(finishPromotionData);
+            handlers.handleFinishPromotion(finishPromotionData);
 
-            expect(testContext.mockFSBPromotionUIHandler.markFSBEndFromServer).toHaveBeenCalledTimes(1);
+            expect(mockFSBPromotionUIHandler.markFSBEndFromServer).toHaveBeenCalledTimes(1);
         });
 
         it("should handle promotion end with zero total win", () => {
-            const finishPromotionData = TestDataFactory.createFinishPromotionData({ totalWin: 0 });
+            const finishPromotionData = {
+                totalWin: 0,
+                endPromotion: true,
+            };
 
-            testContext.handlers.handleFinishPromotion(finishPromotionData);
+            handlers.handleFinishPromotion(finishPromotionData);
 
-            expect(testContext.mockPromotionStore.finishPromotion?.totalWin).toBe(0);
+            expect(mockPromotionStore.finishPromotion?.totalWin).toBe(0);
         });
-    });
-});
-
-// SOLID: Single Responsibility Principle - Error Handling Tests
-describe("FSBPromotionHandlers - Error Handling", () => {
-    let testContext: TestContext;
-
-    beforeEach(() => {
-        testContext = new TestContext();
     });
 
     describe("handleRedemptionNotice", () => {
         it("should set redemption notice data in store", () => {
-            const redemptionNoticeData = TestDataFactory.createRedemptionNoticeData();
+            const redemptionNoticeData = {
+                errorCode: "SUCCESS",
+            };
 
-            testContext.handlers.handleRedemptionNotice(redemptionNoticeData);
+            handlers.handleRedemptionNotice(redemptionNoticeData);
 
-            expect(testContext.mockPromotionStore.redemptionNotice).toBe(redemptionNoticeData);
+            expect(mockPromotionStore.redemptionNotice).toBe(redemptionNoticeData);
         });
 
         it("should delegate to UI handler", () => {
-            const redemptionNoticeData = TestDataFactory.createRedemptionNoticeData();
+            const redemptionNoticeData = {
+                errorCode: "SUCCESS",
+            };
 
-            testContext.handlers.handleRedemptionNotice(redemptionNoticeData);
+            handlers.handleRedemptionNotice(redemptionNoticeData);
 
-            expect(testContext.mockFSBPromotionUIHandler.handleRedemptionNotice).toHaveBeenCalledTimes(1);
+            expect(mockFSBPromotionUIHandler.handleRedemptionNotice).toHaveBeenCalledTimes(1);
         });
 
         it("should handle error redemption notice", () => {
-            const errorNotice = TestDataFactory.createRedemptionNoticeData({ errorCode: "ERROR" });
+            const errorNotice = {
+                errorCode: "ERROR",
+            };
 
-            testContext.handlers.handleRedemptionNotice(errorNotice);
+            handlers.handleRedemptionNotice(errorNotice);
 
-            expect(testContext.mockPromotionStore.redemptionNotice?.errorCode).toBe("ERROR");
+            expect(mockPromotionStore.redemptionNotice?.errorCode).toBe("ERROR");
         });
     });
 
@@ -476,17 +384,17 @@ describe("FSBPromotionHandlers - Error Handling", () => {
         it("should set claimed bonus failed in store", () => {
             const errorCode = "SB3023";
 
-            testContext.handlers.handleClaimedBonusFailed(errorCode);
+            handlers.handleClaimedBonusFailed(errorCode);
 
-            expect(testContext.mockPromotionStore.claimedBonusFailed).toBe(errorCode);
+            expect(mockPromotionStore.claimedBonusFailed).toBe(errorCode);
         });
 
         it("should add EXPIRE_CLAIM_BONUS event for SB3023 error", () => {
             const errorCode = "SB3023";
 
-            testContext.handlers.handleClaimedBonusFailed(errorCode);
+            handlers.handleClaimedBonusFailed(errorCode);
 
-            expect(testContext.mockFSBPromotionUIStore.addPendingUIEvent).toHaveBeenCalledWith(
+            expect(mockFSBPromotionUIStore.addPendingUIEvent).toHaveBeenCalledWith(
                 FreeSpinsPromotionEvents.EXPIRE_CLAIM_BONUS,
                 errorCode
             );
@@ -495,9 +403,9 @@ describe("FSBPromotionHandlers - Error Handling", () => {
         it("should add SHOW_NOTICE_ERROR event for other errors", () => {
             const errorCode = "OTHER_ERROR";
 
-            testContext.handlers.handleClaimedBonusFailed(errorCode);
+            handlers.handleClaimedBonusFailed(errorCode);
 
-            expect(testContext.mockFSBPromotionUIStore.addPendingUIEvent).toHaveBeenCalledWith(
+            expect(mockFSBPromotionUIStore.addPendingUIEvent).toHaveBeenCalledWith(
                 FreeSpinsPromotionEvents.SHOW_NOTICE_ERROR,
                 errorCode
             );
@@ -511,31 +419,21 @@ describe("FSBPromotionHandlers - Error Handling", () => {
             ];
 
             testCases.forEach(({ code, expectedEvent }) => {
-                testContext.reset();
-                testContext.handlers.handleClaimedBonusFailed(code);
-                expect(testContext.mockFSBPromotionUIStore.addPendingUIEvent).toHaveBeenCalledWith(expectedEvent, code);
+                jest.clearAllMocks();
+                handlers.handleClaimedBonusFailed(code);
+                expect(mockFSBPromotionUIStore.addPendingUIEvent).toHaveBeenCalledWith(expectedEvent, code);
             });
         });
     });
 
-});
-
-// SOLID: Single Responsibility Principle - Event Configuration Tests
-describe("FSBPromotionHandlers - Event Configuration", () => {
-    let testContext: TestContext;
-
-    beforeEach(() => {
-        testContext = new TestContext();
-    });
-
     describe("eventHandleList", () => {
         it("should be defined as an array", () => {
-            expect(testContext.handlers.eventHandleList).toBeDefined();
-            expect(Array.isArray(testContext.handlers.eventHandleList)).toBe(true);
+            expect(handlers.eventHandleList).toBeDefined();
+            expect(Array.isArray(handlers.eventHandleList)).toBe(true);
         });
 
         it("should contain all required event names", () => {
-            const eventNames = testContext.handlers.eventHandleList.map(event => event.name);
+            const eventNames = handlers.eventHandleList.map(event => event.name);
             
             const requiredEvents = [
                 GameServiceMessageSlot.Promotion.eventName,
@@ -553,82 +451,93 @@ describe("FSBPromotionHandlers - Event Configuration", () => {
         });
 
         it("should map events to correct handler functions", () => {
-            const eventMap = testContext.handlers.eventHandleList.reduce((acc, event) => {
+            const eventMap = handlers.eventHandleList.reduce((acc, event) => {
                 acc[event.name] = event.handle;
                 return acc;
             }, {} as Record<string, Function>);
             
-            expect(eventMap[GameServiceMessageSlot.Promotion.eventName]).toBe(testContext.handlers.handlePromotion);
-            expect(eventMap[GameServiceMessageSlot.PromotionTOProgress.eventName]).toBe(testContext.handlers.handlePromotionTOProgress);
-            expect(eventMap[GameServiceMessageSlot.ClaimedAmount.eventName]).toBe(testContext.handlers.handleClaimedAmount);
-            expect(eventMap[GameServiceMessageSlot.RedeemResult.eventName]).toBe(testContext.handlers.handleRedeemResult);
-            expect(eventMap[GameServiceMessageSlot.FinishPromotion.eventName]).toBe(testContext.handlers.handleFinishPromotion);
-            expect(eventMap[GameServiceMessageSlot.RedemptionNotice.eventName]).toBe(testContext.handlers.handleRedemptionNotice);
-            expect(eventMap[GameServiceMessageSlot.ClaimedBonusFailed.eventName]).toBe(testContext.handlers.handleClaimedBonusFailed);
+            expect(eventMap[GameServiceMessageSlot.Promotion.eventName]).toBe(handlers.handlePromotion);
+            expect(eventMap[GameServiceMessageSlot.PromotionTOProgress.eventName]).toBe(handlers.handlePromotionTOProgress);
+            expect(eventMap[GameServiceMessageSlot.ClaimedAmount.eventName]).toBe(handlers.handleClaimedAmount);
+            expect(eventMap[GameServiceMessageSlot.RedeemResult.eventName]).toBe(handlers.handleRedeemResult);
+            expect(eventMap[GameServiceMessageSlot.FinishPromotion.eventName]).toBe(handlers.handleFinishPromotion);
+            expect(eventMap[GameServiceMessageSlot.RedemptionNotice.eventName]).toBe(handlers.handleRedemptionNotice);
+            expect(eventMap[GameServiceMessageSlot.ClaimedBonusFailed.eventName]).toBe(handlers.handleClaimedBonusFailed);
         });
     });
-});
 
-// SOLID: Single Responsibility Principle - Integration Scenarios
-describe("FSBPromotionHandlers - Integration Scenarios", () => {
-    let testContext: TestContext;
-
-    beforeEach(() => {
-        testContext = new TestContext();
-    });
-
-    describe("complete promotion flow", () => {
+    describe("integration scenarios", () => {
         it("should handle successful promotion lifecycle", () => {
             // Step 1: Handle promotion initialization
-            const promotionData = TestDataFactory.createPromotionData();
-            testContext.handlers.handlePromotion(promotionData);
+            const promotionData = {
+                promotionId: "test-123",
+                initialBonusItem: 10,
+                remainingBonusItems: 10,
+                isClaimed: false,
+                isGiftCode: false,
+                coinValue: 1,
+                betLevel: 1,
+            };
+            handlers.handlePromotion(promotionData);
             
-            expect(testContext.mockPromotionStore.promotion).toBe(promotionData);
-            expect(testContext.mockFSBPromotionUIHandler.handlePromotionDisplay).toHaveBeenCalledTimes(1);
+            expect(mockPromotionStore.promotion).toBe(promotionData);
+            expect(mockFSBPromotionUIHandler.handlePromotionDisplay).toHaveBeenCalledTimes(1);
 
             // Step 2: Handle turnover progress
-            const toProgressData = TestDataFactory.createTOProgressData({ promotionId: promotionData.promotionId });
-            testContext.handlers.handlePromotionTOProgress(toProgressData);
+            const toProgressData = {
+                promotionId: "test-123",
+                win: 100,
+                totalTO: 1000,
+                minTO: 100,
+                progress: 0.1,
+                remainTO: 900,
+                canClaim: false,
+                expire: "2024-12-31",
+            };
+            handlers.handlePromotionTOProgress(toProgressData);
             
-            expect(testContext.mockPromotionStore.promotionTOProgress).toBe(toProgressData);
-            expect(testContext.mockFSBPromotionUIHandler.openTurnOverRequired).toHaveBeenCalledWith("in-game");
+            expect(mockPromotionStore.promotionTOProgress).toBe(toProgressData);
+            expect(mockFSBPromotionUIHandler.openTurnOverRequired).toHaveBeenCalledWith("in-game");
 
             // Step 3: Handle successful claim
-            testContext.handlers.handleClaimedAmount(500);
+            handlers.handleClaimedAmount(500);
             
-            expect(testContext.mockPromotionStore.claimedAmount).toBe(500);
-            expect(testContext.mockFSBPromotionUIHandler.claimedBonusSuccess).toHaveBeenCalledTimes(1);
+            expect(mockPromotionStore.claimedAmount).toBe(500);
+            expect(mockFSBPromotionUIHandler.claimedBonusSuccess).toHaveBeenCalledTimes(1);
 
             // Step 4: Handle promotion completion
-            const finishPromotionData = TestDataFactory.createFinishPromotionData();
-            testContext.handlers.handleFinishPromotion(finishPromotionData);
+            const finishPromotionData = {
+                totalWin: 1000,
+                endPromotion: true,
+            };
+            handlers.handleFinishPromotion(finishPromotionData);
             
-            expect(testContext.mockPromotionStore.finishPromotion).toBe(finishPromotionData);
-            expect(testContext.mockFSBPromotionUIHandler.markFSBEndFromServer).toHaveBeenCalledTimes(1);
+            expect(mockPromotionStore.finishPromotion).toBe(finishPromotionData);
+            expect(mockFSBPromotionUIHandler.markFSBEndFromServer).toHaveBeenCalledTimes(1);
         });
-    });
 
-    describe("error scenarios", () => {
         it("should handle promotion with errors and recovery", () => {
             // Handle redemption notice with error
-            const errorNotice = TestDataFactory.createRedemptionNoticeData({ errorCode: "ERROR" });
-            testContext.handlers.handleRedemptionNotice(errorNotice);
+            const errorNotice = {
+                errorCode: "ERROR",
+            };
+            handlers.handleRedemptionNotice(errorNotice);
             
-            expect(testContext.mockPromotionStore.redemptionNotice).toBe(errorNotice);
-            expect(testContext.mockFSBPromotionUIHandler.handleRedemptionNotice).toHaveBeenCalledTimes(1);
+            expect(mockPromotionStore.redemptionNotice).toBe(errorNotice);
+            expect(mockFSBPromotionUIHandler.handleRedemptionNotice).toHaveBeenCalledTimes(1);
 
             // Handle claimed bonus failure
-            testContext.handlers.handleClaimedBonusFailed("SB3023");
+            handlers.handleClaimedBonusFailed("SB3023");
             
-            expect(testContext.mockPromotionStore.claimedBonusFailed).toBe("SB3023");
-            expect(testContext.mockFSBPromotionUIStore.addPendingUIEvent).toHaveBeenCalledWith(
+            expect(mockPromotionStore.claimedBonusFailed).toBe("SB3023");
+            expect(mockFSBPromotionUIStore.addPendingUIEvent).toHaveBeenCalledWith(
                 FreeSpinsPromotionEvents.EXPIRE_CLAIM_BONUS,
                 "SB3023"
             );
 
             // Reset and recover
-            testContext.handlers.resetRedeemSuccess();
-            expect(testContext.mockPromotionStore.redeemResult).toBe(RedeemStatus.Idle);
+            handlers.resetRedeemSuccess();
+            expect(mockPromotionStore.redeemResult).toBe(RedeemStatus.Idle);
         });
     });
 });

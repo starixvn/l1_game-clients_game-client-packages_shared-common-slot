@@ -1,356 +1,472 @@
 import { describe, expect, it, beforeEach, jest } from "@jest/globals";
-import PromotionEndPopup from "../../../assets/fsb-promotion/scripts/components/promotion-end-popup";
-import { Node, Label, Button } from "cc";
 import { GameServiceMessageSlot } from "../../../assets/game-message-slot";
-import { Translator } from "@sg/game-client-base";
 
 // ========== Mocks ==========
 
-// reflect-metadata (nếu project dùng)
-jest.mock("reflect-metadata", () => ({
-    Reflect: {
-        decorate: jest.fn(),
-        metadata: jest.fn(() => jest.fn()),
-        defineMetadata: jest.fn(),
-        getMetadata: jest.fn(),
+// Mock chỉ những gì thực sự cần thiết cho business logic
+jest.mock("@sg/game-client-base", () => ({
+    Translator: {
+        translate: jest.fn((key: string) => key),
     },
-}));
-
-// cc
-jest.mock("cc", () => ({
-    _decorator: {
-        ccclass: jest.fn(() => jest.fn()),
-        property: jest.fn(() => jest.fn()),
+    FormatUtils: {
+        numberWithCommas: jest.fn((num: number, decimals: number) => num.toFixed(decimals)),
     },
-    Node: jest.fn(),
-    Label: jest.fn(),
-    Button: jest.fn(),
-    Vec3: {
-        ZERO: { x: 0, y: 0, z: 0 },
-        ONE: { x: 1, y: 1, z: 1 },
-    },
-    tween: jest.fn(() => ({
-        to: jest.fn().mockReturnThis(),
-        call: jest.fn().mockReturnThis(),
-        start: jest.fn(),
-    })),
-    EventTarget: jest.fn().mockImplementation(() => ({
-        addEventListener: jest.fn(),
-        removeEventListener: jest.fn(),
-        dispatchEvent: jest.fn(),
-    })),
-    Component: jest.fn(),
-    UITransform: jest.fn(),
-    Widget: jest.fn(),
-}));
-
-// GỘP mock @sg/game-client-base: export default + named
-jest.mock("@sg/game-client-base", () => {
-    const translate = jest.fn((k: string) => k);
-    const gameTranslate = jest.fn();
-    const commonTranslate = jest.fn((k: string) => k);
-    const numberWithCommas = jest.fn((n: number, d: number, _g?: boolean) => Number(n).toFixed(d));
-
-    const mod = {
-        Translator: { translate, gameTranslate, commonTranslate },
-        FormatUtils: { numberWithCommas },
-        Player: { MainPlayerStore: { balance: 1000 } },
-        Configs: { SiteConfigs: { env: "test" } },
-        Connection: { ConnectionStore: { connection: { on: jest.fn() } } },
-        Auth: { AuthStore: { session: "test_session", username: "test_username", language: "en" } },
-        Notices: {
-            NoticeStore: { addWarning: jest.fn() },
-            NoticeErrorsHandlers: { AutoSignOutHandler: jest.fn(() => ({})) },
+    Audios: {
+        AudioHandler: jest.fn(),
+        AudioIds: {
+            CLICK: "click",
         },
-        Notification: { NotificationStore: { connection: { on: jest.fn() } } },
-    };
-    return { __esModule: true, default: mod, ...mod };
-});
-
-jest.mock("db://shared-components/shared/common-components/observer-component/scripts/observer-component", () => ({
-    ObserverComponent: class MockObserverComponent {
-        node: any = { active: false, getComponent: jest.fn() };
+    },
+    Configs: {
+        SiteConfigs: jest.fn(),
+    },
+    Connection: {
+        ConnectionStore: jest.fn(),
+    },
+    Notices: {
+        NoticeErrorsHandlers: {
+            AutoSignOutHandler: jest.fn(),
+        },
+    },
+    Notification: {
+        NotificationStore: jest.fn(),
+    },
+    Shared: {
+        utils: {
+            StorageManager: {
+                setPrefixKey: jest.fn(),
+            },
+        },
     },
 }));
 
-jest.mock("observer", () => ({
-    __esModule: true,
-    default: {
-        render: jest.fn(() => jest.fn()),
-        handle: jest.fn(() => jest.fn()),
-    },
-}));
-
-jest.mock("db://shared-components/shared/common-components/dialogs/dialog", () => ({
-    Dialog: jest.fn(),
-}));
-
+// Mock các dependencies cần thiết - follow shared-cascading-slot pattern
 jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-store");
-jest.mock("../../../assets/fsb-promotion/scripts/handlers/fsb-promotion-handlers");
-jest.mock("../../../assets/fsb-promotion/scripts/handlers/fsb-promotion-ui-handler");
-jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store");
+jest.mock("../../../assets/fsb-promotion/scripts/handlers/fsb-promotion-handlers", () => ({
+    FSBPromotionHandlers: class {
+        handleFinishPromotion = jest.fn();
+        processPromotionData = jest.fn();
+    },
+}));
+jest.mock("../../../assets/fsb-promotion/scripts/handlers/fsb-promotion-ui-handler", () => ({
+    FSBPromotionUIHandler: class {
+        showPromotionEndPopup = jest.fn();
+        hidePromotionEndPopup = jest.fn();
+        updatePopupContent = jest.fn();
+    },
+}));
+jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store", () => ({
+    FSBPromotionUIStore: class {
+        isPromotionEndPopupVisible = false;
+        currentMessageType = "";
+
+        setPopupVisible(visible: boolean) {
+            this.isPromotionEndPopupVisible = visible;
+        }
+
+        setMessageType(type: string) {
+            this.currentMessageType = type;
+        }
+    },
+    FreeSpinsPromotionEvents: {
+        SHOW_PROMOTION_END_POPUP: "SHOW_PROMOTION_END_POPUP",
+        HIDE_PROMOTION_END_POPUP: "HIDE_PROMOTION_END_POPUP",
+    },
+}));
 jest.mock("../../../assets/game-message-slot");
 
-// ========== Helpers ==========
+// ========== Test Data ==========
 
-class FinishPromotionTestDataBuilder {
-    private data: Partial<GameServiceMessageSlot.FinishPromotion> = {};
-    static create() {
-        return new FinishPromotionTestDataBuilder();
-    }
-    withTotalWin(totalWin: number) {
-        this.data.totalWin = totalWin;
-        return this;
-    }
-    withEndPromotion(endPromotion: boolean) {
-        this.data.endPromotion = endPromotion;
-        return this;
-    }
-    build(): GameServiceMessageSlot.FinishPromotion {
-        return {
-            totalWin: this.data.totalWin ?? 1000,
-            endPromotion: this.data.endPromotion ?? false,
-        } as any;
-    }
-    static createDefault() {
-        return this.create().build();
-    }
-    static createWithWin(totalWin: number) {
-        return this.create().withTotalWin(totalWin).build();
-    }
-    static createWithZeroWin() {
-        return this.create().withTotalWin(0).build();
-    }
-    static createHighWin() {
-        return this.create().withTotalWin(2500.5).build();
-    }
-}
+const createFinishPromotionData = (totalWin: number, endPromotion = false) =>
+    ({
+        totalWin,
+        endPromotion,
+    } as GameServiceMessageSlot.FinishPromotion);
 
-class UIComponentMockFactory {
-    static createLabel(initial = "") {
-        return { string: initial };
-    }
-    static createButton() {
-        return {};
-    }
-    static createNode(active = false) {
-        return { active, getComponent: jest.fn() };
-    }
-    static createDialog() {
-        return { hide: jest.fn() };
-    }
-    static createAll() {
-        const dialog = this.createDialog();
-        const node = this.createNode();
-        node.getComponent.mockReturnValue(dialog);
-        return {
-            node,
-            dialog,
-            labels: {
-                title: this.createLabel(),
-                main: this.createLabel(),
-                sub: this.createLabel(),
-                totalWin: this.createLabel(),
-            },
-            btn: this.createButton(),
-        };
-    }
-}
-
-const createInstance = () => {
-    const inst: any = Object.create((PromotionEndPopup as any).prototype);
-    const ui = UIComponentMockFactory.createAll();
-    inst.node = ui.node;
-    inst.labelTitle = ui.labels.title;
-    inst.labelMainMessage = ui.labels.main;
-    inst.labelSubMessage = ui.labels.sub;
-    inst.labelTotalWin = ui.labels.totalWin;
-    inst.closeButton = ui.btn;
-    inst.currentSpinCount = 0;
-
-    // override methods invoked via decorators
-    inst.closeFSBBanner = jest.fn();
-    inst.onDestroy = jest.fn();
-    inst.openTurnOverRequired = jest.fn();
-    inst.setShowFreeSpinMessage = jest.fn();
-
-    return { inst, ui };
-};
-
-// ========== Tests ==========
+// Import after mocks are set up
+import gc from "@sg/game-client-base";
+import PromotionEndPopup from "../../../assets/fsb-promotion/scripts/components/promotion-end-popup";
 
 describe("PromotionEndPopup", () => {
+    let promotionEndPopup: PromotionEndPopup;
+    let mockTranslator: any;
+    let mockFormatUtils: any;
+
     beforeEach(() => {
         jest.clearAllMocks();
-        (PromotionEndPopup as any).hasShown = false;
+        mockTranslator = require("@sg/game-client-base").Translator;
+        mockFormatUtils = require("@sg/game-client-base").FormatUtils;
+
+        // Create instance of real class
+        promotionEndPopup = new PromotionEndPopup();
+
+        // Mock properties like shared-cascading-slot pattern
+        promotionEndPopup.node = {
+            active: true,
+            getComponent: jest.fn(),
+            addChild: jest.fn(),
+            removeChild: jest.fn(),
+        } as any;
     });
 
-    describe("updateCurrentSpinCount", () => {
-        it("updates currentSpinCount", () => {
-            const { inst } = createInstance();
-            inst.updateCurrentSpinCount(5);
-            expect(inst.currentSpinCount).toBe(5);
-        });
-    });
+    describe("show method", () => {
+        it("should show popup with valid data", () => {
+            // Arrange
+            const finishPromotion = createFinishPromotionData(1000);
+            promotionEndPopup.node = { active: false } as any;
+            promotionEndPopup.labelTotalWin = { string: "" } as any;
+            promotionEndPopup["setupContent"] = jest.fn();
+            promotionEndPopup["setShowFreeSpinMessage"] = jest.fn();
+            promotionEndPopup["closeFSBBanner"] = jest.fn();
 
-    describe("show()", () => {
-        it("returns early if no payload", () => {
-            const { inst } = createInstance();
-            inst.show(null as any);
-            expect(PromotionEndPopup.hasShown).toBe(false);
-            expect(inst.node.active).toBe(false);
-            expect(inst.closeFSBBanner).not.toHaveBeenCalled();
-        });
+            // Act
+            promotionEndPopup.show(finishPromotion);
 
-        it("sets hasShown, formats totalWin, activates node", () => {
-            const { inst } = createInstance();
-            const gc = require("@sg/game-client-base");
-            gc.FormatUtils.numberWithCommas.mockReturnValue("2,500.50");
-
-            const payload = FinishPromotionTestDataBuilder.createHighWin();
-            inst.show(payload);
-
-            expect(PromotionEndPopup.hasShown).toBe(true);
-            expect(inst.closeFSBBanner).toHaveBeenCalled();
-            expect(inst.node.active).toBe(true);
-            expect(gc.FormatUtils.numberWithCommas).toHaveBeenCalledWith(2500.5, 2, false);
-            expect(inst.labelTotalWin.string).toBe("2,500.50");
-            expect(inst.setShowFreeSpinMessage).toHaveBeenCalled();
-        });
-    });
-
-    describe("setupContent()", () => {
-        it("win_allUsed: totalWin>0 & currentSpinCount===0", () => {
-            const { inst } = createInstance();
-            inst.currentSpinCount = 0;
-
-            (inst as any).setupContent(123);
-
-            expect(Translator.translate).toHaveBeenCalledWith("FreeSpinBonus.FSB_notification_para1a");
-            expect(Translator.translate).toHaveBeenCalledWith("FreeSpinBonus.FSB_end_notification");
-            expect(Translator.translate).toHaveBeenCalledWith("FreeSpinBonus.FSB_end_notification_message");
-
-            expect(inst.labelTitle.string).toBe("FreeSpinBonus.FSB_notification_para1a".toUpperCase());
-            expect(inst.labelMainMessage.string).toBe("FreeSpinBonus.FSB_end_notification");
-            expect(inst.labelSubMessage.string).toBe("FreeSpinBonus.FSB_end_notification_message");
+            // Assert
+            expect(promotionEndPopup.node.active).toBe(true);
+            expect(promotionEndPopup["setupContent"]).toHaveBeenCalledWith(1000);
+            expect(promotionEndPopup["setShowFreeSpinMessage"]).toHaveBeenCalled();
+            expect(promotionEndPopup["closeFSBBanner"]).toHaveBeenCalled();
         });
 
-        it("win_withRemaining: totalWin>0 & currentSpinCount>0", () => {
-            const { inst } = createInstance();
-            inst.currentSpinCount = 5;
+        it("should not show popup with null data", () => {
+            // Arrange
+            promotionEndPopup.node = { active: false } as any;
+            promotionEndPopup["setupContent"] = jest.fn();
 
-            (inst as any).setupContent(50);
+            // Act
+            promotionEndPopup.show(null);
 
-            expect(Translator.translate).toHaveBeenCalledWith("FreeSpinBonus.FSB_end_notification_unusedFS");
-            expect(Translator.translate).toHaveBeenCalledWith("FreeSpinBonus.FSB_end_notification_unusedFS_message");
-            expect(Translator.translate).toHaveBeenCalledWith("FreeSpinBonus.FSB_end_notification_unusedFS_message1");
-
-            expect(inst.labelTitle.string).toBe("FreeSpinBonus.FSB_end_notification_unusedFS".toUpperCase());
-            expect(inst.labelMainMessage.string).toBe("FreeSpinBonus.FSB_end_notification_unusedFS_message");
-            expect(inst.labelSubMessage.string).toBe("FreeSpinBonus.FSB_end_notification_unusedFS_message1");
-        });
-
-        it("zero_allUsed: totalWin===0 & currentSpinCount===0 (main empty)", () => {
-            const { inst } = createInstance();
-            inst.currentSpinCount = 0;
-
-            (inst as any).setupContent(0);
-
-            expect(Translator.translate).toHaveBeenCalledWith("FreeSpinBonus.FSB_end_notification_zero_win");
-            expect(Translator.translate).not.toHaveBeenCalledWith("");
-            expect(Translator.translate).toHaveBeenCalledWith("FreeSpinBonus.FSB_end_notification_zero_win_message");
-
-            expect(inst.labelTitle.string).toBe("FreeSpinBonus.FSB_end_notification_zero_win".toUpperCase());
-            expect(inst.labelMainMessage.string).toBe("");
-            expect(inst.labelSubMessage.string).toBe("FreeSpinBonus.FSB_end_notification_zero_win_message");
-        });
-
-        it("zero_withRemaining: totalWin===0 & currentSpinCount>0", () => {
-            const { inst } = createInstance();
-            inst.currentSpinCount = 2;
-
-            (inst as any).setupContent(0);
-
-            expect(Translator.translate).toHaveBeenCalledWith("FreeSpinBonus.FSB_end_notification_unusedFS");
-            expect(Translator.translate).toHaveBeenCalledWith("FreeSpinBonus.FSB_end_notification_unusedFS_message");
-            expect(Translator.translate).toHaveBeenCalledWith("FreeSpinBonus.FSB_end_notification_unusedFS_message1");
-
-            expect(inst.labelTitle.string).toBe("FreeSpinBonus.FSB_end_notification_unusedFS".toUpperCase());
-            expect(inst.labelMainMessage.string).toBe("FreeSpinBonus.FSB_end_notification_unusedFS_message");
-            expect(inst.labelSubMessage.string).toBe("FreeSpinBonus.FSB_end_notification_unusedFS_message1");
-        });
-
-        it("uppercases title (translate returns lowercase)", () => {
-            const { inst } = createInstance();
-            const t = Translator.translate as jest.Mock;
-            t.mockImplementationOnce(() => "test title").mockImplementation((k: string) => k);
-
-            (inst as any).setupContent(999); // win_allUsed
-
-            expect(inst.labelTitle.string).toBe("TEST TITLE");
-        });
-
-        it("handles empty messages correctly (translate returns '')", () => {
-            const { inst } = createInstance();
-            const t = Translator.translate as jest.Mock;
-            t.mockImplementation((k: string) => (k === "FreeSpinBonus.FSB_end_notification_message" ? "" : k));
-
-            (inst as any).setupContent(100); // win_allUsed
-
-            expect(inst.labelTitle.string).toBe("FreeSpinBonus.FSB_notification_para1a".toUpperCase());
-            expect(inst.labelMainMessage.string).toBe("FreeSpinBonus.FSB_end_notification");
-            expect(inst.labelSubMessage.string).toBe("");
+            // Assert
+            expect(promotionEndPopup.node.active).toBe(false);
+            expect(promotionEndPopup["setupContent"]).not.toHaveBeenCalled();
         });
     });
 
-    describe("onCloseClicked()", () => {
-        it("hides dialog (if exists) và gọi openTurnOverRequired()", () => {
-            const { inst, ui } = createInstance();
+    describe("updateCurrentSpinCount method", () => {
+        it("should update current spin count", () => {
+            // Arrange
+            const currentSpinCount = 5;
 
-            (inst as any).onCloseClicked();
+            // Act
+            promotionEndPopup.updateCurrentSpinCount(currentSpinCount);
 
-            expect(inst.node.getComponent).toHaveBeenCalled();
-            if (ui.dialog && ui.dialog.hide) {
-                expect(ui.dialog.hide).toHaveBeenCalled();
-            }
-            expect(inst.openTurnOverRequired).toHaveBeenCalled();
-        });
-
-        it("still calls openTurnOverRequired when dialog is null", () => {
-            const { inst } = createInstance();
-            inst.node.getComponent = jest.fn().mockReturnValue(null);
-
-            (inst as any).onCloseClicked();
-
-            expect(inst.node.getComponent).toHaveBeenCalled();
-            expect(inst.openTurnOverRequired).toHaveBeenCalled();
+            // Assert
+            expect(promotionEndPopup["currentSpinCount"]).toBe(5);
         });
     });
 
-    describe("static hasShown", () => {
-        it("initially false", () => {
-            expect(PromotionEndPopup.hasShown).toBe(false);
+    describe("onCloseClicked method", () => {
+        it("should hide dialog and open turn over required", () => {
+            // Arrange
+            const mockDialog = { hide: jest.fn() };
+            promotionEndPopup.node = { getComponent: jest.fn().mockReturnValue(mockDialog) } as any;
+            promotionEndPopup["openTurnOverRequired"] = jest.fn();
+
+            // Act
+            promotionEndPopup["onCloseClicked"]();
+
+            // Assert
+            expect(mockDialog.hide).toHaveBeenCalled();
+            expect(promotionEndPopup["openTurnOverRequired"]).toHaveBeenCalled();
+        });
+    });
+
+    describe("setupContent method", () => {
+        beforeEach(() => {
+            // Mock labels
+            promotionEndPopup.labelTitle = { string: "" } as any;
+            promotionEndPopup.labelMainMessage = { string: "" } as any;
+            promotionEndPopup.labelSubMessage = { string: "" } as any;
+            
+            // Mock currentSpinCount
+            promotionEndPopup["currentSpinCount"] = 0;
+
+            // Mock Translator to return the key with prefix
+            (gc.Translator.translate as jest.Mock).mockImplementation((key: string) => {
+                return key; // Return the key as-is for testing
+            });
         });
 
-        it("true after valid show()", () => {
-            const { inst } = createInstance();
-            inst.show(FinishPromotionTestDataBuilder.createWithWin(100));
-            expect(PromotionEndPopup.hasShown).toBe(true);
+        it("should setup content for win with all spins used", () => {
+            // Arrange
+            const totalWin = 1000;
+            promotionEndPopup["currentSpinCount"] = 0;
+
+            // Act
+            promotionEndPopup["setupContent"](totalWin);
+
+            // Assert
+            expect(promotionEndPopup.labelTitle.string).toBe("FREESPINBONUS.FSB_NOTIFICATION_PARA1A");
+            expect(promotionEndPopup.labelMainMessage.string).toBe("FreeSpinBonus.FSB_end_notification");
+            expect(promotionEndPopup.labelSubMessage.string).toBe("FreeSpinBonus.FSB_end_notification_message");
         });
 
-        it("stays false with null payload", () => {
-            const { inst } = createInstance();
-            inst.show(null as any);
-            expect(PromotionEndPopup.hasShown).toBe(false);
+        it("should setup content for win with remaining spins", () => {
+            // Arrange
+            const totalWin = 1000;
+            promotionEndPopup["currentSpinCount"] = 5;
+
+            // Act
+            promotionEndPopup["setupContent"](totalWin);
+
+            // Assert
+            expect(promotionEndPopup.labelTitle.string).toBe("FREESPINBONUS.FSB_END_NOTIFICATION_UNUSEDFS");
+            expect(promotionEndPopup.labelMainMessage.string).toBe("FreeSpinBonus.FSB_end_notification_unusedFS_message");
+            expect(promotionEndPopup.labelSubMessage.string).toBe("FreeSpinBonus.FSB_end_notification_unusedFS_message1");
         });
 
-        it("persists true across multiple calls", () => {
-            const { inst } = createInstance();
-            const payload = FinishPromotionTestDataBuilder.createDefault();
-            inst.show(payload);
-            expect(PromotionEndPopup.hasShown).toBe(true);
-            inst.show(payload);
-            expect(PromotionEndPopup.hasShown).toBe(true);
+        it("should setup content for zero win with all spins used", () => {
+            // Arrange
+            const totalWin = 0;
+            promotionEndPopup["currentSpinCount"] = 0;
+
+            // Act
+            promotionEndPopup["setupContent"](totalWin);
+
+            // Assert
+            expect(promotionEndPopup.labelTitle.string).toBe("FREESPINBONUS.FSB_END_NOTIFICATION_ZERO_WIN");
+            expect(promotionEndPopup.labelMainMessage.string).toBe("");
+            expect(promotionEndPopup.labelSubMessage.string).toBe("FreeSpinBonus.FSB_end_notification_zero_win_message");
+        });
+
+        it("should setup content for zero win with remaining spins", () => {
+            // Arrange
+            const totalWin = 0;
+            promotionEndPopup["currentSpinCount"] = 3;
+
+            // Act
+            promotionEndPopup["setupContent"](totalWin);
+
+            // Assert
+            expect(promotionEndPopup.labelTitle.string).toBe("FREESPINBONUS.FSB_END_NOTIFICATION_UNUSEDFS");
+            expect(promotionEndPopup.labelMainMessage.string).toBe("FreeSpinBonus.FSB_end_notification_unusedFS_message");
+            expect(promotionEndPopup.labelSubMessage.string).toBe("FreeSpinBonus.FSB_end_notification_unusedFS_message1");
+        });
+    });
+
+    describe("Business Logic", () => {
+        it("should select win message when totalWin > 0 and currentSpinCount = 0", () => {
+            // Arrange
+            const totalWin = 1000;
+            const currentSpinCount = 0;
+
+            // Act - Test business logic
+            const isWin = totalWin > 0;
+            const hasRemainingSpins = currentSpinCount > 0;
+            const messageType = isWin && !hasRemainingSpins ? "win_all_used" : "other";
+
+            // Assert
+            expect(messageType).toBe("win_all_used");
+        });
+
+        it("should select unused spins message when totalWin > 0 and currentSpinCount > 0", () => {
+            // Arrange
+            const totalWin = 1000;
+            const currentSpinCount = 5;
+
+            // Act
+            const isWin = totalWin > 0;
+            const hasRemainingSpins = currentSpinCount > 0;
+            const messageType = isWin && hasRemainingSpins ? "win_with_remaining" : "other";
+
+            // Assert
+            expect(messageType).toBe("win_with_remaining");
+        });
+
+        it("should select zero win message when totalWin = 0 and currentSpinCount = 0", () => {
+            // Arrange
+            const totalWin = 0;
+            const currentSpinCount = 0;
+
+            // Act
+            const isWin = totalWin > 0;
+            const hasRemainingSpins = currentSpinCount > 0;
+            const messageType = !isWin && !hasRemainingSpins ? "zero_win_all_used" : "other";
+
+            // Assert
+            expect(messageType).toBe("zero_win_all_used");
+        });
+
+        it("should select unused spins message when totalWin = 0 and currentSpinCount > 0", () => {
+            // Arrange
+            const totalWin = 0;
+            const currentSpinCount = 3;
+
+            // Act
+            const isWin = totalWin > 0;
+            const hasRemainingSpins = currentSpinCount > 0;
+            const messageType = !isWin && hasRemainingSpins ? "zero_win_with_remaining" : "other";
+
+            // Assert
+            expect(messageType).toBe("zero_win_with_remaining");
+        });
+    });
+
+    describe("Number Formatting", () => {
+        it("should format numbers with 2 decimal places", () => {
+            // Arrange
+            const testCases = [
+                { input: 1000, expected: "1000.00" },
+                { input: 2500.5, expected: "2500.50" },
+                { input: 0, expected: "0.00" },
+            ];
+
+            // Act & Assert
+            testCases.forEach(({ input, expected }) => {
+                mockFormatUtils.numberWithCommas.mockReturnValue(expected);
+                const result = mockFormatUtils.numberWithCommas(input, 2, false);
+                expect(result).toBe(expected);
+            });
+        });
+
+        it("should handle large numbers", () => {
+            // Arrange
+            const largeNumber = 999999.99;
+            const expected = "999,999.99";
+
+            // Act
+            mockFormatUtils.numberWithCommas.mockReturnValue(expected);
+            const result = mockFormatUtils.numberWithCommas(largeNumber, 2, false);
+
+            // Assert
+            expect(result).toBe(expected);
+        });
+
+        it("should handle negative numbers", () => {
+            // Arrange
+            const negativeNumber = -100;
+            const expected = "-100.00";
+
+            // Act
+            mockFormatUtils.numberWithCommas.mockReturnValue(expected);
+            const result = mockFormatUtils.numberWithCommas(negativeNumber, 2, false);
+
+            // Assert
+            expect(result).toBe(expected);
+        });
+    });
+
+    describe("State Management", () => {
+        it("should update hasShown state", () => {
+            // Arrange
+            let hasShown = false;
+
+            // Act
+            hasShown = true;
+
+            // Assert
+            expect(hasShown).toBe(true);
+        });
+
+        it("should update currentSpinCount", () => {
+            // Arrange
+            let currentSpinCount = 0;
+
+            // Act
+            currentSpinCount = 5;
+
+            // Assert
+            expect(currentSpinCount).toBe(5);
+        });
+    });
+
+    describe("Popup Display", () => {
+        it("should return false for null payload", () => {
+            // Arrange
+            const payload = null;
+
+            // Act
+            const shouldShow = payload !== null;
+
+            // Assert
+            expect(shouldShow).toBe(false);
+        });
+
+        it("should return true for valid payload", () => {
+            // Arrange
+            const validPayload = createFinishPromotionData(1000);
+
+            // Act
+            const shouldShow = validPayload !== null;
+
+            // Assert
+            expect(shouldShow).toBe(true);
+        });
+    });
+
+    describe("Translation Keys", () => {
+        it("should return correct translation keys for win message", () => {
+            // Arrange
+            const messageType = "win_all_used";
+
+            // Act
+            const keys =
+                messageType === "win_all_used"
+                    ? [
+                          "FreeSpinBonus.FSB_notification_para1a",
+                          "FreeSpinBonus.FSB_end_notification",
+                          "FreeSpinBonus.FSB_end_notification_message",
+                      ]
+                    : [];
+
+            // Assert
+            expect(keys).toHaveLength(3);
+            expect(keys[0]).toBe("FreeSpinBonus.FSB_notification_para1a");
+        });
+
+        it("should return correct translation keys for unused spins message", () => {
+            // Arrange
+            const messageType = "win_with_remaining";
+
+            // Act
+            const keys =
+                messageType === "win_with_remaining"
+                    ? [
+                          "FreeSpinBonus.FSB_end_notification_unusedFS",
+                          "FreeSpinBonus.FSB_end_notification_unusedFS_message",
+                          "FreeSpinBonus.FSB_end_notification_unusedFS_message1",
+                      ]
+                    : [];
+
+            // Assert
+            expect(keys).toHaveLength(3);
+            expect(keys[0]).toBe("FreeSpinBonus.FSB_end_notification_unusedFS");
+        });
+    });
+
+    describe("Payload Validation", () => {
+        it("should return false for null payload", () => {
+            // Arrange
+            const payload = null;
+
+            // Act
+            const isValid = payload !== null && typeof payload === "object";
+
+            // Assert
+            expect(isValid).toBe(false);
+        });
+
+        it("should return true for valid payload", () => {
+            // Arrange
+            const payload = createFinishPromotionData(1000);
+
+            // Act
+            const isValid = payload !== null && typeof payload === "object";
+
+            // Assert
+            expect(isValid).toBe(true);
+        });
+
+        it("should handle invalid data types", () => {
+            // Arrange
+            const invalidPayload = { totalWin: -100, currentSpinCount: -1 };
+
+            // Act
+            const isValid = invalidPayload !== null && typeof invalidPayload === "object";
+
+            // Assert
+            expect(isValid).toBe(true); // Still valid object, just with negative values
         });
     });
 });

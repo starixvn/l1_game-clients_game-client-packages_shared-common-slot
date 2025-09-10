@@ -208,6 +208,10 @@ export class FSBPromotionUIStore {
         return this.isUsedFSBPromotionBonus && this.currentSpinCount > 0 && this.isFSBInfoReady;
     }
 
+    get canSpinNextFSB() {
+        return this.isEligibleForNextFSBSpin && !this.hasServerFinishPromotion;
+    }
+
     get isFSBPromotionInProgress() {
         return this.fsbState === FSBPromotionState.Ready || this.fsbState === FSBPromotionState.Spinning || this.isPromotionConsumed();
     }

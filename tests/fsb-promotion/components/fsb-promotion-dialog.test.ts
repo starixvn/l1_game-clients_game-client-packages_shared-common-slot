@@ -1,7 +1,7 @@
-import { describe, expect, it, beforeEach, jest } from "@jest/globals";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { FsbPromotionDialog } from "../../../assets/fsb-promotion/scripts/components/fsb-promotion-dialog";
 
-// Mock dependencies following Dependency Inversion Principle
+// Mock dependencies
 jest.mock("reflect-metadata", () => ({
     Reflect: {
         decorate: jest.fn(),
@@ -46,710 +46,468 @@ jest.mock("db://shared-components/shared/common-components/dialogs/transition/di
     DialogTransition: jest.fn(),
 }));
 
-jest.mock("db://shared-cascading-slot/cascading-slot-utils", () => ({
-    globalEmitter: {
-        addEventListener: jest.fn(),
-        removeEventListener: jest.fn(),
-        dispatchEvent: jest.fn(),
-    },
-    SlotClientEvent: {},
-    SlotNotification: {},
-}));
-
 jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store");
 jest.mock("../../../assets/fsb-promotion/scripts/handlers/fsb-promotion-ui-handler");
 jest.mock("../../../assets/fsb-promotion/scripts/handlers/fsb-promotion-handlers");
-jest.mock("db://shared-cascading-slot/stores/cascading-ui-store");
-
-// Mock Interfaces following Interface Segregation Principle
-interface MockDialog {
-    hide: jest.Mock;
-}
-
-interface MockDialogTransition {
-    show: jest.Mock;
-}
-
-interface MockNodeVisibility {
-    active: boolean;
-}
-
-interface MockBackground extends MockNodeVisibility {
-    getComponent: jest.Mock;
-}
-
-interface MockGameOffer {
-    name: string;
-    gameId: number;
-}
-
-interface MockDialogState {
-    isFreeSpins: boolean;
-    activeDetailPromo: boolean;
-    gameOffers: MockGameOffer[];
-}
-
-interface MockDialogComponents {
-    playNow: MockNodeVisibility | null;
-    playLater: MockNodeVisibility | null;
-    closeButton: MockNodeVisibility | null;
-    background: MockBackground;
-    node: { getComponent: jest.Mock };
-}
-
-interface MockDialogActions {
-    closeDialog: () => void;
-    playGameNow: () => void;
-    checkFeeSpinInGame: (isFreeSpins: boolean) => void;
-    setGameOffers: (offers: MockGameOffer[]) => void;
-    controlButtonsVisibility: (isWebViewLoading: boolean) => void;
-    setActiveAnnouncement: (isActive: boolean) => void;
-    closeFSBBanner: (shouldClose: boolean) => void;
-    onPlayGameNow: jest.Mock;
-    openPromotionDetailsPanel: jest.Mock;
-    showFreeSpinMessage: jest.Mock;
-    resetRedeemSuccess: jest.Mock;
-    addPendingUIEvent: jest.Mock;
-}
-
-interface MockFsbPromotionDialog extends MockDialogState, MockDialogComponents, MockDialogActions {}
-
-// Factory functions following Single Responsibility Principle
-const createMockDialog = (): MockDialog => ({
-    hide: jest.fn(),
-});
-
-const createMockDialogTransition = (): MockDialogTransition => ({
-    show: jest.fn(),
-});
-
-const createMockNode = (isActive: boolean = true): MockNodeVisibility => ({
-    active: isActive,
-});
-
-const createMockBackground = (): MockBackground => ({
-    active: true,
-    getComponent: jest.fn().mockReturnValue(createMockDialogTransition()),
-});
-
-const createMockGameOffer = (name: string, gameId: number): MockGameOffer => ({
-    name,
-    gameId,
-});
-
-const createMockFsbPromotionDialog = (overrides?: Partial<MockFsbPromotionDialog>): MockFsbPromotionDialog => {
-    const mockDialog = createMockDialog();
-    const mockBackground = createMockBackground();
-
-    const dialog: MockFsbPromotionDialog = {
-        // State
-        isFreeSpins: false,
-        activeDetailPromo: false,
-        gameOffers: [],
-
-        // Components  
-        playNow: createMockNode(true),
-        playLater: createMockNode(true),
-        closeButton: createMockNode(false),
-        background: mockBackground,
-        node: { getComponent: jest.fn().mockReturnValue(mockDialog) },
-
-        // Actions
-        onPlayGameNow: jest.fn(),
-        openPromotionDetailsPanel: jest.fn(),
-        showFreeSpinMessage: jest.fn(),
-        resetRedeemSuccess: jest.fn(),
-        addPendingUIEvent: jest.fn(),
-
-        // Methods
-        closeDialog() {
-            const dialogComponent = this.node.getComponent() as MockDialog;
-            if (dialogComponent) {
-                dialogComponent.hide();
-            }
-            this.resetRedeemSuccess();
-            this.addPendingUIEvent();
-        },
-
-        playGameNow() {
-            this.closeDialog();
-            this.onPlayGameNow();
-            if (this.isFreeSpins) {
-                this.showFreeSpinMessage();
-            } else {
-                this.openPromotionDetailsPanel();
-            }
-        },
-
-        checkFeeSpinInGame(isFreeSpins: boolean) {
-            if (isFreeSpins) {
-                this.isFreeSpins = true;
-            }
-        },
-
-        setGameOffers(offers: MockGameOffer[]) {
-            this.gameOffers = offers;
-        },
-
-        controlButtonsVisibility(isWebViewLoading: boolean) {
-            if (isWebViewLoading) {
-                if (this.playNow) this.playNow.active = false;
-                if (this.playLater) this.playLater.active = false;
-                if (this.closeButton) this.closeButton.active = false;
-                this.background.active = false;
-                const transition = this.background.getComponent() as MockDialogTransition;
-                transition.show(false);
-            } else {
-                if (this.activeDetailPromo) {
-                    if (this.playNow) this.playNow.active = false;
-                    if (this.playLater) this.playLater.active = false;
-                    if (this.closeButton) this.closeButton.active = true;
-                } else {
-                    if (this.playNow) this.playNow.active = true;
-                    if (this.playLater) this.playLater.active = true;
-                    if (this.closeButton) this.closeButton.active = false;
-                }
-                this.background.active = true;
-                const transition = this.background.getComponent() as MockDialogTransition;
-                transition.show(true);
-            }
-        },
-
-        setActiveAnnouncement(isActive: boolean) {
-            this.activeDetailPromo = isActive;
-        },
-
-        closeFSBBanner(shouldClose: boolean) {
-            if (shouldClose) {
-                this.closeDialog();
-            }
-        },
-
-        ...overrides,
-    };
-
-    return dialog;
-};
-
-// Business Logic Handlers following Single Responsibility Principle
-class DialogStateHandler {
-    static canProcessFreeSpins(dialog: MockDialogState): boolean {
-        return dialog.isFreeSpins;
-    }
-
-    static updateFreeSpinState(dialog: MockDialogState, isFreeSpins: boolean): void {
-        if (isFreeSpins) {
-            dialog.isFreeSpins = true;
-        }
-    }
-
-    static updateAnnouncementState(dialog: MockDialogState, isActive: boolean): void {
-        dialog.activeDetailPromo = isActive;
-    }
-
-    static updateGameOffers(dialog: MockDialogState, offers: MockGameOffer[]): void {
-        dialog.gameOffers = offers;
-    }
-}
-
-class DialogVisibilityHandler {
-    static controlButtonVisibility(
-        dialog: MockFsbPromotionDialog, 
-        isWebViewLoading: boolean
-    ): void {
-        if (isWebViewLoading) {
-            this.hideAllButtons(dialog);
-            this.hideBackground(dialog);
-        } else {
-            this.showButtonsBasedOnState(dialog);
-            this.showBackground(dialog);
-        }
-    }
-
-    private static hideAllButtons(dialog: MockFsbPromotionDialog): void {
-        if (dialog.playNow) dialog.playNow.active = false;
-        if (dialog.playLater) dialog.playLater.active = false;
-        if (dialog.closeButton) dialog.closeButton.active = false;
-    }
-
-    private static hideBackground(dialog: MockFsbPromotionDialog): void {
-        dialog.background.active = false;
-        const transition = dialog.background.getComponent() as MockDialogTransition;
-        transition.show(false);
-    }
-
-    private static showButtonsBasedOnState(dialog: MockFsbPromotionDialog): void {
-        if (dialog.activeDetailPromo) {
-            if (dialog.playNow) dialog.playNow.active = false;
-            if (dialog.playLater) dialog.playLater.active = false;
-            if (dialog.closeButton) dialog.closeButton.active = true;
-        } else {
-            if (dialog.playNow) dialog.playNow.active = true;
-            if (dialog.playLater) dialog.playLater.active = true;
-            if (dialog.closeButton) dialog.closeButton.active = false;
-        }
-    }
-
-    private static showBackground(dialog: MockFsbPromotionDialog): void {
-        dialog.background.active = true;
-        const transition = dialog.background.getComponent() as MockDialogTransition;
-        transition.show(true);
-    }
-}
-
-class DialogInteractionHandler {
-    static handleCloseDialog(dialog: MockFsbPromotionDialog): void {
-        const dialogComponent = dialog.node.getComponent() as MockDialog;
-        if (dialogComponent) {
-            dialogComponent.hide();
-        }
-        dialog.resetRedeemSuccess();
-        dialog.addPendingUIEvent();
-    }
-
-    static handlePlayGameNow(dialog: MockFsbPromotionDialog): void {
-        this.handleCloseDialog(dialog);
-        dialog.onPlayGameNow();
-
-        if (DialogStateHandler.canProcessFreeSpins(dialog)) {
-            dialog.showFreeSpinMessage();
-        } else {
-            dialog.openPromotionDetailsPanel();
-        }
-    }
-
-    static handleBannerClose(dialog: MockFsbPromotionDialog, shouldClose: boolean): void {
-        if (shouldClose) {
-            this.handleCloseDialog(dialog);
-        }
-    }
-}
-
-// Test Setup Class following Single Responsibility Principle
-class FsbPromotionDialogTestSetup {
-    dialog: MockFsbPromotionDialog;
-    mockDialog: MockDialog;
-    mockDialogTransition: MockDialogTransition;
-    mockBackground: MockBackground;
-
-    constructor(dialogOverrides?: Partial<MockFsbPromotionDialog>) {
-        this.setupMocks();
-        this.setupDialog(dialogOverrides);
-    }
-
-    private setupMocks(): void {
-        this.mockDialog = createMockDialog();
-        this.mockDialogTransition = createMockDialogTransition();
-        this.mockBackground = createMockBackground();
-    }
-
-    private setupDialog(overrides?: Partial<MockFsbPromotionDialog>): void {
-        this.dialog = createMockFsbPromotionDialog({
-            background: this.mockBackground,
-            node: { getComponent: jest.fn().mockReturnValue(this.mockDialog) },
-            ...overrides,
-        });
-    }
-
-    updateDialogState(stateOverrides: Partial<MockDialogState>): void {
-        Object.assign(this.dialog, stateOverrides);
-    }
-
-    updateDialogComponents(componentOverrides: Partial<MockDialogComponents>): void {
-        Object.assign(this.dialog, componentOverrides);
-    }
-
-    setGameOffers(offers: MockGameOffer[]): void {
-        this.dialog.setGameOffers(offers);
-    }
-
-    simulatePlayNow(): void {
-        this.dialog.playGameNow();
-    }
-
-    simulateCloseDialog(): void {
-        this.dialog.closeDialog();
-    }
-
-    clearAllMocks(): void {
-        jest.clearAllMocks();
-    }
-}
 
 describe("FsbPromotionDialog", () => {
-    let testSetup: FsbPromotionDialogTestSetup;
+    let component: FsbPromotionDialog;
+    let mockPlayNow: any;
+    let mockPlayLater: any;
+    let mockCloseButton: any;
+    let mockBackground: any;
+    let mockDialogTransition: any;
+    let mockDialog: any;
+    let mockNode: any;
 
     beforeEach(() => {
-        testSetup = new FsbPromotionDialogTestSetup();
+        jest.clearAllMocks();
+
+        // Create simple mocks
+        mockPlayNow = { active: true };
+        mockPlayLater = { active: true };
+        mockCloseButton = { active: false };
+        mockDialogTransition = {
+            show: jest.fn()
+        };
+        mockBackground = {
+            active: true,
+            getComponent: jest.fn().mockReturnValue(mockDialogTransition)
+        };
+        mockDialog = {
+            hide: jest.fn()
+        };
+        mockNode = {
+            getComponent: jest.fn().mockReturnValue(mockDialog)
+        };
+
+        // Create component and inject mocks
+        component = new FsbPromotionDialog();
+        (component as any).playNow = mockPlayNow;
+        (component as any).playLater = mockPlayLater;
+        (component as any).closeButton = mockCloseButton;
+        (component as any).background = mockBackground;
+        (component as any).node = mockNode;
+        (component as any).isFreeSpins = false;
+        (component as any).activeDetailPromo = false;
+        (component as any).gameOffers = [];
+        (component as any).onPlayGameNow = jest.fn();
+        (component as any).openPromotionDetailsPanel = jest.fn();
+        (component as any).showFreeSpinMessage = jest.fn();
+        (component as any).setShowFreeSpinMessage = jest.fn();
+        (component as any).resetRedeemSuccess = jest.fn();
+        (component as any).addPendingUIEvent = jest.fn();
     });
 
-    // Test suite for Dialog Initialization Responsibility
-    describe("Dialog Initialization", () => {
-        it("should_initialize_with_correct_default_state_values", () => {
-            expect(testSetup.dialog.isFreeSpins).toBe(false);
-            expect(testSetup.dialog.activeDetailPromo).toBe(false);
-            expect(testSetup.dialog.gameOffers).toEqual([]);
+    describe("initialization", () => {
+        it("should initialize with default values", () => {
+            expect((component as any).isFreeSpins).toBe(false);
+            expect((component as any).activeDetailPromo).toBe(false);
+            expect((component as any).gameOffers).toEqual([]);
         });
 
-        it("should_initialize_with_correct_component_visibility_states", () => {
-            expect(testSetup.dialog.playNow?.active).toBe(true);
-            expect(testSetup.dialog.playLater?.active).toBe(true);
-            expect(testSetup.dialog.closeButton?.active).toBe(false);
-            expect(testSetup.dialog.background.active).toBe(true);
-        });
-
-        it("should_have_all_required_action_methods_available", () => {
-            expect(typeof testSetup.dialog.onPlayGameNow).toBe('function');
-            expect(typeof testSetup.dialog.openPromotionDetailsPanel).toBe('function');
-            expect(typeof testSetup.dialog.showFreeSpinMessage).toBe('function');
-            expect(typeof testSetup.dialog.resetRedeemSuccess).toBe('function');
-            expect(typeof testSetup.dialog.addPendingUIEvent).toBe('function');
-        });
-    });
-
-    // Test suite for Dialog Close Management Responsibility
-    describe("Dialog Close Management", () => {
-        it("should_hide_dialog_and_execute_cleanup_actions_on_close", () => {
-            testSetup.simulateCloseDialog();
-
-            expect(testSetup.dialog.node.getComponent).toHaveBeenCalled();
-            expect(testSetup.mockDialog.hide).toHaveBeenCalled();
-            expect(testSetup.dialog.resetRedeemSuccess).toHaveBeenCalled();
-            expect(testSetup.dialog.addPendingUIEvent).toHaveBeenCalled();
-        });
-
-        it("should_handle_missing_dialog_component_gracefully", () => {
-            testSetup.updateDialogComponents({ 
-                node: { getComponent: jest.fn().mockReturnValue(null) }
-            });
-
-            expect(() => testSetup.simulateCloseDialog()).not.toThrow();
-            expect(testSetup.dialog.resetRedeemSuccess).toHaveBeenCalled();
-            expect(testSetup.dialog.addPendingUIEvent).toHaveBeenCalled();
-        });
-
-        it("should_execute_close_action_cleanup_sequence_correctly", () => {
-            const resetSpy = jest.spyOn(testSetup.dialog, 'resetRedeemSuccess');
-            const eventSpy = jest.spyOn(testSetup.dialog, 'addPendingUIEvent');
-
-            testSetup.simulateCloseDialog();
-
-            expect(resetSpy).toHaveBeenCalled();
-            expect(eventSpy).toHaveBeenCalled();
-            expect(testSetup.mockDialog.hide).toHaveBeenCalled();
-        });
-    });
-
-    // Test suite for Game Play Actions Responsibility
-    describe("Game Play Actions", () => {
-        it("should_execute_free_spin_flow_when_free_spins_active", () => {
-            testSetup.updateDialogState({ isFreeSpins: true });
-            const closeDialogSpy = jest.spyOn(testSetup.dialog, 'closeDialog');
-
-            testSetup.simulatePlayNow();
-
-            expect(closeDialogSpy).toHaveBeenCalled();
-            expect(testSetup.dialog.onPlayGameNow).toHaveBeenCalled();
-            expect(testSetup.dialog.showFreeSpinMessage).toHaveBeenCalled();
-            expect(testSetup.dialog.openPromotionDetailsPanel).not.toHaveBeenCalled();
-        });
-
-        it("should_execute_promotion_details_flow_when_free_spins_inactive", () => {
-            testSetup.updateDialogState({ isFreeSpins: false });
-            const closeDialogSpy = jest.spyOn(testSetup.dialog, 'closeDialog');
-
-            testSetup.simulatePlayNow();
-
-            expect(closeDialogSpy).toHaveBeenCalled();
-            expect(testSetup.dialog.onPlayGameNow).toHaveBeenCalled();
-            expect(testSetup.dialog.openPromotionDetailsPanel).toHaveBeenCalled();
-            expect(testSetup.dialog.showFreeSpinMessage).not.toHaveBeenCalled();
-        });
-
-        it("should_always_execute_common_play_actions_regardless_of_free_spin_state", () => {
-            const playNowSpy = jest.spyOn(testSetup.dialog, 'onPlayGameNow');
-            const closeDialogSpy = jest.spyOn(testSetup.dialog, 'closeDialog');
-
-            testSetup.simulatePlayNow();
-
-            expect(closeDialogSpy).toHaveBeenCalled();
-            expect(playNowSpy).toHaveBeenCalled();
+        it("should have all required methods", () => {
+            expect(typeof component.closeDialog).toBe('function');
+            expect(typeof component.playGameNow).toBe('function');
+            expect(typeof component.checkFeeSpinInGame).toBe('function');
+            expect(typeof component.setGameOffers).toBe('function');
+            expect(typeof component.controlButtonsVisibility).toBe('function');
+            expect(typeof component.setActiveAnnouncement).toBe('function');
+            expect(typeof component.closeFSBBanner).toBe('function');
+            expect(typeof component.openPromotionDetailsPanel).toBe('function');
+            expect(typeof component.showFreeSpinMessage).toBe('function');
+            expect(typeof component.setShowFreeSpinMessage).toBe('function');
+            expect(typeof component.resetRedeemSuccess).toBe('function');
+            expect(typeof component.addPendingUIEvent).toBe('function');
         });
     });
 
-    // Test suite for Free Spin State Management Responsibility
-    describe("Free Spin State Management", () => {
-        it("should_activate_free_spin_state_when_requested", () => {
-            testSetup.dialog.checkFeeSpinInGame(true);
-            
-            expect(testSetup.dialog.isFreeSpins).toBe(true);
+    describe("dialog visibility management", () => {
+        it("should control button visibility when web view is loading", () => {
+            component.controlButtonsVisibility(true);
+
+            expect(mockPlayNow.active).toBe(false);
+            expect(mockPlayLater.active).toBe(false);
+            expect(mockCloseButton.active).toBe(false);
+            expect(mockBackground.active).toBe(false);
+            expect(mockDialogTransition.show).toHaveBeenCalledWith(false);
         });
 
-        it("should_not_modify_free_spin_state_when_false_provided", () => {
-            testSetup.updateDialogState({ isFreeSpins: false });
-            
-            testSetup.dialog.checkFeeSpinInGame(false);
-            
-            expect(testSetup.dialog.isFreeSpins).toBe(false);
+        it("should control button visibility when web view is not loading", () => {
+            component.controlButtonsVisibility(false);
+
+            expect(mockPlayNow.active).toBe(true);
+            expect(mockPlayLater.active).toBe(true);
+            expect(mockCloseButton.active).toBe(false);
+            expect(mockBackground.active).toBe(true);
+            expect(mockDialogTransition.show).toHaveBeenCalledWith(true);
         });
 
-        it("should_preserve_active_free_spin_state_when_false_provided", () => {
-            testSetup.updateDialogState({ isFreeSpins: true });
-            
-            testSetup.dialog.checkFeeSpinInGame(false);
-            
-            expect(testSetup.dialog.isFreeSpins).toBe(true);
-        });
+        it("should show close button when detail promo is active", () => {
+            // Simulate activeDetailPromo = true by calling setActiveAnnouncement
+            component.setActiveAnnouncement(true);
+            component.controlButtonsVisibility(false);
 
-        it("should_maintain_state_consistency_across_multiple_calls", () => {
-            testSetup.dialog.checkFeeSpinInGame(true);
-            expect(testSetup.dialog.isFreeSpins).toBe(true);
-            
-            testSetup.dialog.checkFeeSpinInGame(false);
-            expect(testSetup.dialog.isFreeSpins).toBe(true);
-            
-            // State should remain true once activated
-            testSetup.dialog.checkFeeSpinInGame(true);
-            expect(testSetup.dialog.isFreeSpins).toBe(true);
+            expect(mockPlayNow.active).toBe(false);
+            expect(mockPlayLater.active).toBe(false);
+            expect(mockCloseButton.active).toBe(true);
         });
     });
 
-    // Test suite for Game Offers Management Responsibility
-    describe("Game Offers Management", () => {
-        it("should_set_and_store_game_offers_correctly", () => {
-            const gameOffers = [
-                createMockGameOffer("Game 1", 1),
-                createMockGameOffer("Game 2", 2)
+    describe("dialog state management", () => {
+        it("should handle free spin state changes", () => {
+            component.checkFeeSpinInGame(true);
+            expect((component as any).isFreeSpins).toBe(true);
+
+            // Note: checkFeeSpinInGame(false) doesn't set isFreeSpins to false in the actual implementation
+            // It only sets to true when the parameter is truthy
+            component.checkFeeSpinInGame(false);
+            expect((component as any).isFreeSpins).toBe(true); // Still true from previous call
+        });
+
+        it("should set game offers correctly", () => {
+            const offers = [
+                { name: "Game1", gameId: 1 },
+                { name: "Game2", gameId: 2 }
             ];
 
-            testSetup.setGameOffers(gameOffers);
-
-            expect(testSetup.dialog.gameOffers).toBe(gameOffers);
-            expect(testSetup.dialog.gameOffers).toHaveLength(2);
-            expect(testSetup.dialog.gameOffers[0]).toEqual({ name: "Game 1", gameId: 1 });
+            component.setGameOffers(offers);
+            expect((component as any).gameOffers).toEqual(offers);
         });
 
-        it("should_handle_empty_game_offers_array", () => {
-            const emptyOffers: MockGameOffer[] = [];
-            
-            testSetup.setGameOffers(emptyOffers);
-            
-            expect(testSetup.dialog.gameOffers).toHaveLength(0);
+        it("should set active announcement state", () => {
+            component.setActiveAnnouncement(true);
+            // Test the effect through controlButtonsVisibility
+            component.controlButtonsVisibility(false);
+            expect(mockCloseButton.active).toBe(true);
+
+            component.setActiveAnnouncement(false);
+            component.controlButtonsVisibility(false);
+            expect(mockCloseButton.active).toBe(false);
+        });
+    });
+
+    describe("dialog interactions", () => {
+        it("should close dialog correctly", () => {
+            component.closeDialog();
+
+            expect(mockDialog.hide).toHaveBeenCalled();
+            expect((component as any).resetRedeemSuccess).toHaveBeenCalled();
+            expect((component as any).addPendingUIEvent).toHaveBeenCalled();
         });
 
-        it("should_handle_multiple_game_offers_with_different_properties", () => {
-            const gameOffers = [
-                createMockGameOffer("Slot Game", 100),
-                createMockGameOffer("Card Game", 200),
-                createMockGameOffer("Roulette", 300)
+        it("should handle play game now action with free spins", () => {
+            (component as any).isFreeSpins = true;
+            component.playGameNow();
+            
+            expect((component as any).onPlayGameNow).toHaveBeenCalled();
+            expect((component as any).setShowFreeSpinMessage).toHaveBeenCalled();
+            expect((component as any).showFreeSpinMessage).toHaveBeenCalled();
+        });
+
+        it("should handle play game now action without free spins", () => {
+            (component as any).isFreeSpins = false;
+            component.playGameNow();
+            
+            expect((component as any).onPlayGameNow).toHaveBeenCalled();
+            expect((component as any).openPromotionDetailsPanel).toHaveBeenCalled();
+            expect((component as any).setShowFreeSpinMessage).not.toHaveBeenCalled();
+            expect((component as any).showFreeSpinMessage).not.toHaveBeenCalled();
+        });
+
+        it("should close FSB banner when should close is true", () => {
+            component.closeFSBBanner(true);
+            expect(mockDialog.hide).toHaveBeenCalled();
+        });
+
+        it("should not close FSB banner when should close is false", () => {
+            component.closeFSBBanner(false);
+            expect(mockDialog.hide).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("button visibility edge cases", () => {
+        it("should handle null buttons gracefully", () => {
+            (component as any).playNow = null;
+            (component as any).playLater = null;
+            (component as any).closeButton = null;
+
+            expect(() => component.controlButtonsVisibility(false)).not.toThrow();
+        });
+
+        it("should handle missing background component", () => {
+            mockBackground.getComponent = jest.fn().mockReturnValue(null);
+
+            expect(() => component.controlButtonsVisibility(false)).not.toThrow();
+        });
+
+        it("should handle undefined buttons gracefully", () => {
+            (component as any).playNow = undefined;
+            (component as any).playLater = undefined;
+            (component as any).closeButton = undefined;
+
+            expect(() => component.controlButtonsVisibility(false)).not.toThrow();
+        });
+
+        it("should handle all null UI elements except background", () => {
+            (component as any).playNow = null;
+            (component as any).playLater = null;
+            (component as any).closeButton = null;
+
+            expect(() => component.controlButtonsVisibility(false)).not.toThrow();
+        });
+    });
+
+    describe("game offers management", () => {
+        it("should handle empty game offers", () => {
+            component.setGameOffers([]);
+            expect((component as any).gameOffers).toEqual([]);
+        });
+
+        it("should handle null game offers", () => {
+            component.setGameOffers(null as any);
+            expect((component as any).gameOffers).toBeNull();
+        });
+
+        it("should handle undefined game offers", () => {
+            component.setGameOffers(undefined as any);
+            expect((component as any).gameOffers).toBeUndefined();
+        });
+    });
+
+    describe("free spins functionality", () => {
+        it("should set free spins state correctly", () => {
+            component.checkFeeSpinInGame(true);
+            expect((component as any).isFreeSpins).toBe(true);
+
+            // Note: checkFeeSpinInGame(false) doesn't set isFreeSpins to false in the actual implementation
+            component.checkFeeSpinInGame(false);
+            expect((component as any).isFreeSpins).toBe(true); // Still true from previous call
+        });
+
+        it("should handle free spins state with different values", () => {
+            // Test with truthy values - should set isFreeSpins to true
+            component.checkFeeSpinInGame(1 as any);
+            expect((component as any).isFreeSpins).toBe(true);
+
+            component.checkFeeSpinInGame("true" as any);
+            expect((component as any).isFreeSpins).toBe(true);
+
+            // Test with falsy values - note: these don't set isFreeSpins to false in actual implementation
+            component.checkFeeSpinInGame(0 as any);
+            expect((component as any).isFreeSpins).toBe(true); // Still true from previous call
+
+            component.checkFeeSpinInGame("" as any);
+            expect((component as any).isFreeSpins).toBe(true); // Still true from previous call
+        });
+
+        it("should handle free spins state with boolean values", () => {
+            // Test with boolean true
+            component.checkFeeSpinInGame(true);
+            expect((component as any).isFreeSpins).toBe(true);
+
+            // Test with boolean false - note: this doesn't set isFreeSpins to false in actual implementation
+            component.checkFeeSpinInGame(false);
+            expect((component as any).isFreeSpins).toBe(true); // Still true from previous call
+        });
+
+        it("should only set isFreeSpins to true when parameter is truthy", () => {
+            // Start with false
+            (component as any).isFreeSpins = false;
+            expect((component as any).isFreeSpins).toBe(false);
+
+            // Only truthy values set it to true
+            component.checkFeeSpinInGame(true);
+            expect((component as any).isFreeSpins).toBe(true);
+
+            // Falsy values don't change it
+            component.checkFeeSpinInGame(false);
+            expect((component as any).isFreeSpins).toBe(true);
+
+            component.checkFeeSpinInGame(0 as any);
+            expect((component as any).isFreeSpins).toBe(true);
+
+            component.checkFeeSpinInGame("" as any);
+            expect((component as any).isFreeSpins).toBe(true);
+        });
+    });
+
+    describe("active detail promo functionality", () => {
+        it("should set active detail promo state correctly", () => {
+            component.setActiveAnnouncement(true);
+            expect((component as any).activeDetailPromo).toBe(true);
+
+            component.setActiveAnnouncement(false);
+            expect((component as any).activeDetailPromo).toBe(false);
+        });
+
+        it("should affect button visibility when detail promo is active", () => {
+            component.setActiveAnnouncement(true);
+            component.controlButtonsVisibility(false);
+
+            expect(mockPlayNow.active).toBe(false);
+            expect(mockPlayLater.active).toBe(false);
+            expect(mockCloseButton.active).toBe(true);
+        });
+    });
+
+    describe("handler method calls", () => {
+        it("should call all handler methods correctly", () => {
+            component.openPromotionDetailsPanel();
+            expect((component as any).openPromotionDetailsPanel).toHaveBeenCalled();
+
+            component.showFreeSpinMessage();
+            expect((component as any).showFreeSpinMessage).toHaveBeenCalled();
+
+            component.setShowFreeSpinMessage();
+            expect((component as any).setShowFreeSpinMessage).toHaveBeenCalled();
+
+            component.resetRedeemSuccess();
+            expect((component as any).resetRedeemSuccess).toHaveBeenCalled();
+
+            component.addPendingUIEvent();
+            expect((component as any).addPendingUIEvent).toHaveBeenCalled();
+        });
+    });
+
+    describe("edge cases and error handling", () => {
+        it("should handle rapid state changes", () => {
+            // Test rapid state changes to ensure component doesn't break
+            for (let i = 0; i < 10; i++) {
+                (component as any).isFreeSpins = i % 2 === 0;
+                component.setActiveAnnouncement(i % 3 === 0);
+                component.controlButtonsVisibility(i % 2 === 0);
+            }
+            // After the loop, the last iteration (i=9) sets isFreeSpins to false (9 % 2 === 0 is false)
+            // This verifies the component can handle rapid state changes without breaking
+            expect((component as any).isFreeSpins).toBe(false);
+        });
+
+        it("should handle multiple dialog close calls", () => {
+            for (let i = 0; i < 5; i++) {
+                component.closeDialog();
+            }
+            expect(mockDialog.hide).toHaveBeenCalledTimes(5);
+            expect((component as any).resetRedeemSuccess).toHaveBeenCalledTimes(5);
+        });
+
+        it("should handle extreme game offer values", () => {
+            const extremeOffers = [
+                { name: "", gameId: 0 },
+                { name: "A".repeat(1000), gameId: Number.MAX_SAFE_INTEGER },
+                { name: "Test", gameId: -1 }
             ];
 
-            testSetup.setGameOffers(gameOffers);
-
-            expect(testSetup.dialog.gameOffers).toHaveLength(3);
-            expect(testSetup.dialog.gameOffers.find(game => game.gameId === 200)?.name).toBe("Card Game");
+            component.setGameOffers(extremeOffers);
+            expect((component as any).gameOffers).toEqual(extremeOffers);
         });
 
-        it("should_replace_existing_game_offers_when_new_ones_set", () => {
-            const initialOffers = [createMockGameOffer("Initial Game", 1)];
-            const newOffers = [createMockGameOffer("New Game", 2)];
-
-            testSetup.setGameOffers(initialOffers);
-            expect(testSetup.dialog.gameOffers).toHaveLength(1);
-
-            testSetup.setGameOffers(newOffers);
-            expect(testSetup.dialog.gameOffers).toHaveLength(1);
-            expect(testSetup.dialog.gameOffers[0].name).toBe("New Game");
-        });
-    });
-
-    // Test suite for Button Visibility Control Responsibility
-    describe("Button Visibility Control", () => {
-        beforeEach(() => {
-            testSetup.updateDialogState({ activeDetailPromo: false });
+        it("should handle rapid button visibility changes", () => {
+            for (let i = 0; i < 10; i++) {
+                component.controlButtonsVisibility(i % 2 === 0);
+            }
+            expect(mockDialogTransition.show).toHaveBeenCalled();
         });
 
-        it("should_hide_all_buttons_and_background_when_webview_loading", () => {
-            testSetup.dialog.controlButtonsVisibility(true);
-
-            expect(testSetup.dialog.playNow?.active).toBe(false);
-            expect(testSetup.dialog.playLater?.active).toBe(false);
-            expect(testSetup.dialog.closeButton?.active).toBe(false);
-            expect(testSetup.dialog.background.active).toBe(false);
+        it("should throw error when background is null", () => {
+            (component as any).background = null;
+            expect(() => component.controlButtonsVisibility(false)).toThrow("Cannot set properties of null (setting 'active')");
         });
 
-        it("should_show_play_buttons_when_not_loading_and_not_detail_promo", () => {
-            testSetup.dialog.controlButtonsVisibility(false);
-
-            expect(testSetup.dialog.playNow?.active).toBe(true);
-            expect(testSetup.dialog.playLater?.active).toBe(true);
-            expect(testSetup.dialog.closeButton?.active).toBe(false);
-            expect(testSetup.dialog.background.active).toBe(true);
+        it("should handle null playNow button gracefully", () => {
+            (component as any).playNow = null;
+            expect(() => component.controlButtonsVisibility(false)).not.toThrow();
         });
 
-        it("should_show_close_button_when_detail_promo_active", () => {
-            testSetup.updateDialogState({ activeDetailPromo: true });
-            
-            testSetup.dialog.controlButtonsVisibility(false);
-
-            expect(testSetup.dialog.playNow?.active).toBe(false);
-            expect(testSetup.dialog.playLater?.active).toBe(false);
-            expect(testSetup.dialog.closeButton?.active).toBe(true);
-            expect(testSetup.dialog.background.active).toBe(true);
+        it("should handle null playLater button gracefully", () => {
+            (component as any).playLater = null;
+            expect(() => component.controlButtonsVisibility(false)).not.toThrow();
         });
 
-        it("should_handle_null_button_nodes_gracefully", () => {
-            testSetup.updateDialogComponents({
-                playNow: null,
-                playLater: null,
-                closeButton: null,
-            });
+        it("should handle null closeButton gracefully", () => {
+            (component as any).closeButton = null;
+            expect(() => component.controlButtonsVisibility(false)).not.toThrow();
+        });
 
-            expect(() => testSetup.dialog.controlButtonsVisibility(false)).not.toThrow();
-            expect(testSetup.dialog.background.active).toBe(true);
+        it("should handle missing dialog transition component", () => {
+            mockBackground.getComponent = jest.fn().mockReturnValue(null);
+            expect(() => component.controlButtonsVisibility(false)).not.toThrow();
         });
     });
 
-    // Test suite for Announcement Management Responsibility
-    describe("Announcement Management", () => {
-        it("should_activate_announcement_detail_promo_state", () => {
-            testSetup.dialog.setActiveAnnouncement(true);
+    describe("integration scenarios", () => {
+        it("should handle complete free spins flow", () => {
+            // Set up free spins state
+            (component as any).isFreeSpins = true;
+            component.setActiveAnnouncement(false);
             
-            expect(testSetup.dialog.activeDetailPromo).toBe(true);
+            // Play game now should trigger free spins flow
+            component.playGameNow();
+            
+            expect((component as any).onPlayGameNow).toHaveBeenCalled();
+            expect((component as any).setShowFreeSpinMessage).toHaveBeenCalled();
+            expect((component as any).showFreeSpinMessage).toHaveBeenCalled();
         });
 
-        it("should_deactivate_announcement_detail_promo_state", () => {
-            testSetup.updateDialogState({ activeDetailPromo: true });
+        it("should handle complete promotion details flow", () => {
+            // Set up non-free spins state
+            (component as any).isFreeSpins = false;
+            component.setActiveAnnouncement(false);
             
-            testSetup.dialog.setActiveAnnouncement(false);
+            // Play game now should trigger promotion details flow
+            component.playGameNow();
             
-            expect(testSetup.dialog.activeDetailPromo).toBe(false);
+            expect((component as any).onPlayGameNow).toHaveBeenCalled();
+            expect((component as any).openPromotionDetailsPanel).toHaveBeenCalled();
         });
 
-        it("should_handle_multiple_state_toggles_correctly", () => {
-            testSetup.dialog.setActiveAnnouncement(true);
-            expect(testSetup.dialog.activeDetailPromo).toBe(true);
-
-            testSetup.dialog.setActiveAnnouncement(false);
-            expect(testSetup.dialog.activeDetailPromo).toBe(false);
-
-            testSetup.dialog.setActiveAnnouncement(true);
-            expect(testSetup.dialog.activeDetailPromo).toBe(true);
-        });
-    });
-
-    // Test suite for Banner Management Responsibility
-    describe("Banner Management", () => {
-        it("should_close_dialog_when_banner_close_requested", () => {
-            const closeDialogSpy = jest.spyOn(testSetup.dialog, 'closeDialog');
+        it("should handle detail promo active state", () => {
+            // Set up detail promo active state
+            component.setActiveAnnouncement(true);
+            component.controlButtonsVisibility(false);
             
-            testSetup.dialog.closeFSBBanner(true);
-            
-            expect(closeDialogSpy).toHaveBeenCalled();
-        });
-
-        it("should_not_close_dialog_when_banner_close_not_requested", () => {
-            const closeDialogSpy = jest.spyOn(testSetup.dialog, 'closeDialog');
-            
-            testSetup.dialog.closeFSBBanner(false);
-            
-            expect(closeDialogSpy).not.toHaveBeenCalled();
-        });
-
-        it("should_handle_conditional_banner_closing_correctly", () => {
-            const closeDialogSpy = jest.spyOn(testSetup.dialog, 'closeDialog');
-            
-            // Test multiple false calls
-            testSetup.dialog.closeFSBBanner(false);
-            testSetup.dialog.closeFSBBanner(false);
-            expect(closeDialogSpy).not.toHaveBeenCalled();
-            
-            // Test true call
-            testSetup.dialog.closeFSBBanner(true);
-            expect(closeDialogSpy).toHaveBeenCalledTimes(1);
+            // Only close button should be visible
+            expect(mockPlayNow.active).toBe(false);
+            expect(mockPlayLater.active).toBe(false);
+            expect(mockCloseButton.active).toBe(true);
         });
     });
 
-    // Test suite for Handler Methods Validation
-    describe("Handler Methods Validation", () => {
-        it("should_have_all_required_handler_methods_available", () => {
-            expect(typeof testSetup.dialog.onPlayGameNow).toBe('function');
-            expect(typeof testSetup.dialog.openPromotionDetailsPanel).toBe('function');
-            expect(typeof testSetup.dialog.showFreeSpinMessage).toBe('function');
-            expect(typeof testSetup.dialog.resetRedeemSuccess).toBe('function');
-            expect(typeof testSetup.dialog.addPendingUIEvent).toBe('function');
-        });
-
-        it("should_have_callable_handler_methods_without_errors", () => {
+    describe("error scenarios and null safety", () => {
+        it("should demonstrate the null background error", () => {
+            // This test demonstrates the actual error that occurs in the real implementation
+            (component as any).background = null;
+            
             expect(() => {
-                testSetup.dialog.onPlayGameNow();
-                testSetup.dialog.openPromotionDetailsPanel();
-                testSetup.dialog.showFreeSpinMessage();
-                testSetup.dialog.resetRedeemSuccess();
-                testSetup.dialog.addPendingUIEvent();
-            }).not.toThrow();
-        });
-    });
-
-    // Test suite for Integration Scenarios and Complex Workflows
-    describe("Integration Scenarios and Complex Workflows", () => {
-        it("should_handle_comprehensive_game_offers_management", () => {
-            const gameOffers = [
-                createMockGameOffer("Slot Game", 100),
-                createMockGameOffer("Card Game", 200),
-                createMockGameOffer("Roulette", 300)
-            ];
-
-            testSetup.setGameOffers(gameOffers);
-
-            expect(testSetup.dialog.gameOffers).toHaveLength(3);
-            expect(testSetup.dialog.gameOffers.find(game => game.gameId === 200)?.name).toBe("Card Game");
+                component.controlButtonsVisibility(false);
+            }).toThrow();
         });
 
-        it("should_execute_complex_state_change_sequence_correctly", () => {
-            testSetup.dialog.checkFeeSpinInGame(true);
-            testSetup.dialog.setActiveAnnouncement(true);
-            testSetup.dialog.controlButtonsVisibility(false);
-
-            expect(testSetup.dialog.isFreeSpins).toBe(true);
-            expect(testSetup.dialog.activeDetailPromo).toBe(true);
-            expect(testSetup.dialog.playNow?.active).toBe(false);
-            expect(testSetup.dialog.closeButton?.active).toBe(true);
+        it("should work correctly with all UI elements properly initialized", () => {
+            // Ensure all mocks are properly set up
+            (component as any).playNow = { active: true };
+            (component as any).playLater = { active: true };
+            (component as any).closeButton = { active: false };
+            (component as any).background = { 
+                active: true, 
+                getComponent: jest.fn().mockReturnValue(mockDialogTransition) 
+            };
+            
+            expect(() => component.controlButtonsVisibility(false)).not.toThrow();
+            expect(mockPlayNow.active).toBe(true);
+            expect(mockPlayLater.active).toBe(true);
+            expect(mockCloseButton.active).toBe(false);
         });
 
-        it("should_handle_complete_dialog_workflow_from_initialization_to_close", () => {
-            // Setup game offers
-            const gameOffers = [createMockGameOffer("Test Game", 1)];
-            testSetup.setGameOffers(gameOffers);
-
-            // Activate free spins
-            testSetup.dialog.checkFeeSpinInGame(true);
-
-            // Play game and verify flow
-            testSetup.simulatePlayNow();
-
-            expect(testSetup.dialog.onPlayGameNow).toHaveBeenCalled();
-            expect(testSetup.dialog.showFreeSpinMessage).toHaveBeenCalled();
-            expect(testSetup.mockDialog.hide).toHaveBeenCalled();
-        });
-
-        it("should_maintain_component_state_consistency_across_operations", () => {
-            // Initial state verification
-            expect(testSetup.dialog.isFreeSpins).toBe(false);
-            expect(testSetup.dialog.activeDetailPromo).toBe(false);
-
-            // Sequential operations
-            testSetup.dialog.setActiveAnnouncement(true);
-            testSetup.dialog.checkFeeSpinInGame(true);
-            testSetup.dialog.controlButtonsVisibility(false);
-
-            // Verify final state
-            expect(testSetup.dialog.isFreeSpins).toBe(true);
-            expect(testSetup.dialog.activeDetailPromo).toBe(true);
-            expect(testSetup.dialog.closeButton?.active).toBe(true);
+        it("should handle partial null UI elements", () => {
+            // Test with some elements null, some not
+            (component as any).playNow = null;
+            (component as any).playLater = { active: true };
+            (component as any).closeButton = { active: false };
+            
+            expect(() => component.controlButtonsVisibility(false)).not.toThrow();
+            expect(mockPlayLater.active).toBe(true);
+            expect(mockCloseButton.active).toBe(false);
         });
     });
 });
-
-
-

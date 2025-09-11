@@ -6,14 +6,17 @@ import { FreeSpinsPromotionEvents, FSBPromotionUIStore, ITurnOverRequired } from
 import { FSBPromotionStore } from "../stores/fsb-promotion-store";
 import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
 import { GameServiceMessageSlot } from "../../../game-message-slot";
-
-import * as i18n from "db://i18n/LanguageData";
 import SimpleClaimButton from "./simple-claim-button";
-
 import Observer from "observer";
 const { ccclass, property } = _decorator;
 const { handle, render } = Observer;
 
+const PROGRESS_MAP = [
+    { min: 100, main: "FSB_notification_para1a", sub: "TO_requirement_state4_message" },
+    { min: 81, main: "TO_requirement_state3_message", sub: "TO_requirement_state3_message1" },
+    { min: 41, main: "TO_requirement_state2_message", sub: "TO_requirement_state2_message1" },
+    { min: 0, main: "TO_requirement_state1_message", sub: "TO_requirement_state1_message1" },
+] as const;
 @ccclass
 export default class TurnOverRequiredPanel extends ObserverComponent {
     @property(Label) labelTotalWin: Label = null;
@@ -120,7 +123,7 @@ export default class TurnOverRequiredPanel extends ObserverComponent {
         const hours = Math.floor((remaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
-        const dayText = i18n.t("FreeSpinBonus.FSB_days");
+        const dayText = gc.Translator.translate("FreeSpinBonus.FSB_days");
         this.labelTimer.string = `${days} ${dayText} ${this.pad(hours)}:${this.pad(minutes)}:${this.pad(seconds)}`;
     }
 
@@ -145,26 +148,19 @@ export default class TurnOverRequiredPanel extends ObserverComponent {
     }
 
     private getProgressMessage() {
+        const T = (s: string) => gc.Translator.translate(`FreeSpinBonus.${s}`);
         const value = this.progressPercentage;
-        let mainMessageKey = "";
-        let subMessageKey = "";
 
-        if (value >= 100) {
-            mainMessageKey = "FreeSpinBonus.FSB_notification_para1a";
-            subMessageKey = "FreeSpinBonus.TO_requirement_state4_message";
-        } else if (value >= 81) {
-            mainMessageKey = "FreeSpinBonus.TO_requirement_state3_message";
-            subMessageKey = "FreeSpinBonus.TO_requirement_state3_message1";
-        } else if (value >= 41) {
-            mainMessageKey = "FreeSpinBonus.TO_requirement_state2_message";
-            subMessageKey = "FreeSpinBonus.TO_requirement_state2_message1";
-        } else {
-            mainMessageKey = "FreeSpinBonus.TO_requirement_state1_message";
-            subMessageKey = "FreeSpinBonus.TO_requirement_state1_message1";
+        const state = PROGRESS_MAP.find((s) => value >= s.min);
+
+        if (!state) {
+            this.labelMainMessage.string = "";
+            this.labelSubMessage.string = "";
+            return;
         }
 
-        this.labelMainMessage.string = i18n.t(mainMessageKey).toUpperCase();
-        this.labelSubMessage.string = i18n.t(subMessageKey);
+        this.labelMainMessage.string = T(state.main).toUpperCase();
+        this.labelSubMessage.string = T(state.sub);
     }
 
     hidePanel() {

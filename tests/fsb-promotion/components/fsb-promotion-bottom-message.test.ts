@@ -1,6 +1,7 @@
-import { describe, expect, it, beforeEach, jest } from "@jest/globals";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { FSBPromotionBottomMessage } from "../../../assets/fsb-promotion/scripts/components/fsb-promotion-bottom-message";
 
-// Mock decorators - inline to avoid hoisting issues
+// Mock dependencies
 jest.mock("reflect-metadata", () => ({
     Reflect: {
         decorate: jest.fn(),
@@ -9,13 +10,6 @@ jest.mock("reflect-metadata", () => ({
         getMetadata: jest.fn(),
     },
 }));
-
-// Mock cc - inline to avoid hoisting issues
-const mockTweenChain = {
-    delay: jest.fn().mockReturnThis(),
-    call: jest.fn().mockReturnThis(),
-    start: jest.fn(),
-};
 
 jest.mock("cc", () => ({
     _decorator: {
@@ -29,10 +23,9 @@ jest.mock("cc", () => ({
     },
     Node: jest.fn(),
     RichText: jest.fn(),
-    tween: jest.fn(() => mockTweenChain),
+    tween: jest.fn(),
 }));
 
-// Mock game client base - inline to avoid hoisting issues
 jest.mock("@sg/game-client-base", () => ({
     __esModule: true,
     default: {
@@ -42,91 +35,54 @@ jest.mock("@sg/game-client-base", () => ({
     }
 }));
 
-// Mock Dependency Factories (SRP - Single responsibility for creating mocks)
-class MockDependencyFactory {
-    static createTweenChainMock(): any {
-        return {
+describe("FSBPromotionBottomMessage", () => {
+    let component: FSBPromotionBottomMessage;
+    let mockMsgText: any;
+    let mockMsgNode: any;
+    let mockTweenChain: any;
+    let mockTranslator: any;
+    let cc: any;
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+
+        // Create simple mocks
+        mockMsgText = {
+            string: ""
+        };
+
+        mockMsgNode = {
+            active: false
+        };
+
+        mockTweenChain = {
             delay: jest.fn().mockReturnThis(),
             call: jest.fn().mockReturnThis(),
-            start: jest.fn(),
+            start: jest.fn()
         };
-    }
 
-    static createCocosCreatorMocks(): any {
-        const tweenChain = this.createTweenChainMock();
-        return {
-            _decorator: {
-                ccclass: jest.fn(() => jest.fn()),
-                property: jest.fn(() => jest.fn()),
-            },
-            Component: class MockComponent {},
-            Node: jest.fn(),
-            RichText: jest.fn(),
-            tween: jest.fn(() => tweenChain),
-            tweenChain,
-        };
-    }
+        mockTranslator = require("@sg/game-client-base").default.Translator;
 
-    static createGameClientBaseMock(): any {
-        return {
-            Translator: {
-                translate: jest.fn().mockReturnValue("Mocked FSB pending freespin message")
-            }
-        };
-    }
+        // Setup cc mock
+        cc = require("cc");
+        cc.tween = jest.fn().mockReturnValue(mockTweenChain);
 
-    static createRichTextMock(initialString: string = ""): any {
-        return {
-            string: initialString
-        };
-    }
-
-    static createNodeMock(initialActive: boolean = false): any {
-        return {
-            active: initialActive
-        };
-    }
-}
-
-// UI Component Mock Factory (SRP - focused on UI component creation)
-class UIComponentMockFactory {
-    static createCompleteUISetup(): any {
-        return {
-            msgText: MockDependencyFactory.createRichTextMock(),
-            msgNode: MockDependencyFactory.createNodeMock(),
-        };
-    }
-
-    static createMsgTextMock(customString?: string): any {
-        return MockDependencyFactory.createRichTextMock(customString);
-    }
-
-    static createMsgNodeMock(customActive?: boolean): any {
-        return MockDependencyFactory.createNodeMock(customActive);
-    }
-}
-
-// Component Setup Helper (SRP - focused on component setup)
-class ComponentTestSetupHelper {
-    static createBottomMessageComponent(): any {
-        const uiSetup = UIComponentMockFactory.createCompleteUISetup();
-        
-        return {
-            msgText: uiSetup.msgText,
-            msgNode: uiSetup.msgNode,
+        // Create mock component with actual business logic
+        component = {
+            msgText: mockMsgText,
+            msgNode: mockMsgNode,
             DELAY_TIME: 3,
             
-            onLoad() {
+            // Implement actual business logic for testing
+            onLoad: function() {
                 this.showMessage();
             },
             
-            showMessage() {
-                const gc = require("@sg/game-client-base").default;
-                const message = gc.Translator.translate("FreeSpinBonus.FSB_pending_freespin_msg");
+            showMessage: function() {
+                const message = mockTranslator.translate("FreeSpinBonus.FSB_pending_freespin_msg");
                 this.msgText.string = message;
                 this.msgNode.active = true;
                 
-                const cc = require("cc");
                 cc.tween(this.msgNode)
                     .delay(this.DELAY_TIME)
                     .call(() => {
@@ -134,427 +90,212 @@ class ComponentTestSetupHelper {
                     })
                     .start();
             }
-        };
-    }
-
-    static resetMocks(): void {
-        jest.clearAllMocks();
-        
-        // Reset tween chain mocks
-        mockTweenChain.delay.mockReturnThis();
-        mockTweenChain.call.mockReturnThis();
-        mockTweenChain.start.mockClear();
-    }
-
-    static createCompleteTestSetup(): any {
-        this.resetMocks();
-        
-        const component = this.createBottomMessageComponent();
-        const cc = require("cc");
-        const gc = require("@sg/game-client-base").default;
-        
-        return {
-            component,
-            mockTween: cc.tween,
-            mockTranslator: gc.Translator,
-            mockTweenChain,
-        };
-    }
-}
-
-// Specialized Test Helpers (ISP - Interface Segregation for different test concerns)
-class TweenTestHelper {
-    static testTweenSequence(component: any, mockTween: any): void {
-        // Act
-        component.showMessage();
-
-        // Assert sequence
-        expect(mockTween).toHaveBeenCalledWith(component.msgNode);
-        expect(mockTweenChain.delay).toHaveBeenCalledWith(component.DELAY_TIME);
-        expect(mockTweenChain.call).toHaveBeenCalledWith(expect.any(Function));
-        expect(mockTweenChain.start).toHaveBeenCalled();
-    }
-
-    static testTweenCallback(component: any): Function {
-        // Arrange - capture callback
-        let capturedCallback: Function;
-        mockTweenChain.call.mockImplementation((callback: Function) => {
-            capturedCallback = callback;
-            return mockTweenChain;
-        });
-
-        // Act
-        component.showMessage();
-
-        // Assert callback exists and is function
-        expect(capturedCallback!).toBeDefined();
-        expect(typeof capturedCallback!).toBe('function');
-
-        return capturedCallback!;
-    }
-
-    static testCallbackFunctionality(component: any, callback: Function): void {
-        // Arrange
-        component.msgNode.active = true;
-
-        // Act
-        callback();
-
-        // Assert
-        expect(component.msgNode.active).toBe(false);
-    }
-
-    static testDelayTimeUsage(component: any, expectedDelay: number): void {
-        // Act
-        component.showMessage();
-
-        // Assert
-        expect(mockTweenChain.delay).toHaveBeenCalledWith(expectedDelay);
-    }
-}
-
-class TranslationTestHelper {
-    static testTranslationCall(component: any, mockTranslator: any, expectedKey: string): void {
-        // Act
-        component.showMessage();
-
-        // Assert
-        expect(mockTranslator.translate).toHaveBeenCalledWith(expectedKey);
-    }
-
-    static testMessageAssignment(component: any, expectedMessage: string): void {
-        // Act
-        component.showMessage();
-
-        // Assert
-        expect(component.msgText.string).toBe(expectedMessage);
-    }
-
-    static testCustomTranslation(component: any, mockTranslator: any, customMessage: string): void {
-        // Arrange
-        mockTranslator.translate.mockReturnValue(customMessage);
-
-        // Act
-        component.showMessage();
-
-        // Assert
-        expect(component.msgText.string).toBe(customMessage);
-    }
-}
-
-class ComponentBehaviorTestHelper {
-    static testNodeActivation(component: any): void {
-        // Arrange
-        component.msgNode.active = false;
-
-        // Act
-        component.showMessage();
-
-        // Assert
-        expect(component.msgNode.active).toBe(true);
-    }
-
-    static testMultipleCalls(component: any, mockTranslator: any, mockTween: any, callCount: number): void {
-        // Act
-        for (let i = 0; i < callCount; i++) {
-            component.showMessage();
-        }
-
-        // Assert
-        expect(mockTranslator.translate).toHaveBeenCalledTimes(callCount);
-        expect(mockTween).toHaveBeenCalledTimes(callCount);
-        expect(mockTweenChain.start).toHaveBeenCalledTimes(callCount);
-    }
-
-    static testNullHandling(component: any, property: string, expectedError: boolean): void {
-        // Arrange
-        const originalValue = component[property];
-        component[property] = null;
-
-        if (expectedError) {
-            // Act & Assert
-            expect(() => component.showMessage()).toThrow();
-        } else {
-            // Act & Assert (should not throw)
-            expect(() => component.showMessage()).not.toThrow();
-        }
-
-        // Restore
-        component[property] = originalValue;
-    }
-}
-
-class PropertyTestHelper {
-    static testComponentProperties(component: any, expectedProperties: Record<string, any>): void {
-        Object.entries(expectedProperties).forEach(([property, expectedValue]) => {
-            expect(component[property]).toEqual(expectedValue);
-        });
-    }
-
-    static testPropertyExistence(component: any, properties: string[]): void {
-        properties.forEach(property => {
-            expect(component[property]).toBeDefined();
-        });
-    }
-
-    static testConstantValue(component: any, constantName: string, expectedValue: any, expectedType: string): void {
-        expect(component[constantName]).toBe(expectedValue);
-        expect(typeof component[constantName]).toBe(expectedType);
-    }
-}
-
-describe("FSBPromotionBottomMessage", () => {
-    let testSetup: any;
-    let component: any;
-
-    beforeEach(() => {
-        testSetup = ComponentTestSetupHelper.createCompleteTestSetup();
-        component = testSetup.component;
+        } as unknown as FSBPromotionBottomMessage;
     });
 
     describe("initialization", () => {
         it("should initialize with correct default values", () => {
-            const expectedProperties = {
-                DELAY_TIME: 3,
-                msgText: component.msgText,
-                msgNode: component.msgNode
-            };
-            
-            PropertyTestHelper.testComponentProperties(component, expectedProperties);
+            expect(component.msgText).toBe(mockMsgText);
+            expect(component.msgNode).toBe(mockMsgNode);
         });
 
         it("should have required properties defined", () => {
-            const requiredProperties = ["msgText", "msgNode", "DELAY_TIME", "onLoad", "showMessage"];
-            PropertyTestHelper.testPropertyExistence(component, requiredProperties);
-        });
-
-        it("should have correct constant values", () => {
-            PropertyTestHelper.testConstantValue(component, "DELAY_TIME", 3, "number");
+            expect(component.msgText).toBeDefined();
+            expect(component.msgNode).toBeDefined();
+            expect(typeof component.onLoad).toBe('function');
+            expect(typeof component.showMessage).toBe('function');
         });
     });
 
-    describe("onLoad", () => {
-        it("should call showMessage when component loads and verify effects", () => {
-            // Act
+    describe("onLoad method", () => {
+        it("should call showMessage when component loads", () => {
+            const showMessageSpy = jest.spyOn(component, 'showMessage');
+            
+            component.onLoad();
+            
+            expect(showMessageSpy).toHaveBeenCalledTimes(1);
+        });
+
+        it("should execute complete message flow on load", () => {
             component.onLoad();
 
-            // Assert - Check that the effects of showMessage occurred
-            TranslationTestHelper.testTranslationCall(
-                component,
-                testSetup.mockTranslator,
-                "FreeSpinBonus.FSB_pending_freespin_msg"
-            );
-            
-            TranslationTestHelper.testMessageAssignment(
-                component,
-                "Mocked FSB pending freespin message"
-            );
-            
-            ComponentBehaviorTestHelper.testNodeActivation(component);
-            
-            expect(testSetup.mockTween).toHaveBeenCalledWith(component.msgNode);
+            expect(mockTranslator.translate).toHaveBeenCalledWith("FreeSpinBonus.FSB_pending_freespin_msg");
+            expect(mockMsgText.string).toBe("Mocked FSB pending freespin message");
+            expect(mockMsgNode.active).toBe(true);
+            expect(cc.tween).toHaveBeenCalledWith(mockMsgNode);
+        });
+
+        it("should handle multiple onLoad calls", () => {
+            component.onLoad();
+            component.onLoad();
+            component.onLoad();
+
+            expect(mockTranslator.translate).toHaveBeenCalledTimes(3);
         });
     });
 
-    describe("showMessage", () => {
+    describe("showMessage method", () => {
         it("should execute complete message flow correctly", () => {
-            // Test all aspects of showMessage in one comprehensive test
-            TranslationTestHelper.testTranslationCall(
-                component,
-                testSetup.mockTranslator,
-                "FreeSpinBonus.FSB_pending_freespin_msg"
-            );
-            
-            TranslationTestHelper.testMessageAssignment(
-                component,
-                "Mocked FSB pending freespin message"
-            );
-            
-            ComponentBehaviorTestHelper.testNodeActivation(component);
-            
-            TweenTestHelper.testTweenSequence(component, testSetup.mockTween);
+            component.showMessage();
+
+            expect(mockTranslator.translate).toHaveBeenCalledWith("FreeSpinBonus.FSB_pending_freespin_msg");
+            expect(mockMsgText.string).toBe("Mocked FSB pending freespin message");
+            expect(mockMsgNode.active).toBe(true);
+        });
+
+        it("should execute tween sequence correctly", () => {
+            component.showMessage();
+
+            expect(cc.tween).toHaveBeenCalledWith(mockMsgNode);
+            expect(mockTweenChain.delay).toHaveBeenCalledWith(3);
+            expect(mockTweenChain.call).toHaveBeenCalledWith(expect.any(Function));
+            expect(mockTweenChain.start).toHaveBeenCalled();
         });
 
         it("should handle tween callback correctly", () => {
-            // Test tween callback functionality
-            const callback = TweenTestHelper.testTweenCallback(component);
-            TweenTestHelper.testCallbackFunctionality(component, callback);
+            component.showMessage();
+            
+            // Execute the callback
+            const callback = mockTweenChain.call.mock.calls[0][0];
+            callback();
+
+            expect(mockMsgNode.active).toBe(false);
         });
 
-        const multipleCallsTestCases = [
-            { callCount: 1, description: "single call" },
-            { callCount: 3, description: "multiple calls" },
-            { callCount: 5, description: "many calls" }
-        ];
+        it("should use correct delay time", () => {
+            component.showMessage();
 
-        multipleCallsTestCases.forEach(({ callCount, description }) => {
-            it(`should handle ${description} correctly`, () => {
-                ComponentBehaviorTestHelper.testMultipleCalls(
-                    component,
-                    testSetup.mockTranslator,
-                    testSetup.mockTween,
-                    callCount
-                );
-                
-                // Additional assertions specific to multiple calls
-                expect(component.msgText.string).toBe("Mocked FSB pending freespin message");
-                expect(component.msgNode.active).toBe(true);
-            });
+            expect(mockTweenChain.delay).toHaveBeenCalledWith(3);
         });
 
-        it("should use correct delay time constant", () => {
-            TweenTestHelper.testDelayTimeUsage(component, 3);
-            TweenTestHelper.testDelayTimeUsage(component, component.DELAY_TIME);
+        it("should set message text before showing node", () => {
+            component.showMessage();
+
+            expect(mockMsgText.string).toBe("Mocked FSB pending freespin message");
+            expect(mockMsgNode.active).toBe(true);
         });
 
-        const nullHandlingTestCases = [
-            { property: "msgText", expectError: true, description: "null msgText" },
-            { property: "msgNode", expectError: true, description: "null msgNode" }
-        ];
+        it("should call translator with correct key", () => {
+            component.showMessage();
 
-        nullHandlingTestCases.forEach(({ property, expectError, description }) => {
-            it(`should handle ${description} gracefully`, () => {
-                ComponentBehaviorTestHelper.testNullHandling(component, property, expectError);
-            });
+            expect(mockTranslator.translate).toHaveBeenCalledWith("FreeSpinBonus.FSB_pending_freespin_msg");
         });
     });
 
-    describe("tween animation flow", () => {
-        it("should follow correct tween sequence", () => {
-            TweenTestHelper.testTweenSequence(component, testSetup.mockTween);
+    describe("multiple calls handling", () => {
+        it("should handle single call correctly", () => {
+            component.showMessage();
+
+            expect(mockTranslator.translate).toHaveBeenCalledTimes(1);
+            expect(cc.tween).toHaveBeenCalledTimes(1);
+            expect(mockTweenChain.start).toHaveBeenCalledTimes(1);
         });
 
-        it("should handle tween callback correctly", () => {
-            const callback = TweenTestHelper.testTweenCallback(component);
-            TweenTestHelper.testCallbackFunctionality(component, callback);
-        });
-
-        const tweenSequenceTestCases = [
-            { 
-                description: "delay configuration", 
-                testMethod: () => TweenTestHelper.testDelayTimeUsage(component, 3)
-            },
-            { 
-                description: "callback setup", 
-                testMethod: () => {
-                    const callback = TweenTestHelper.testTweenCallback(component);
-                    expect(callback).toBeDefined();
-                    expect(typeof callback).toBe('function');
-                }
+        it("should handle multiple calls correctly", () => {
+            for (let i = 0; i < 3; i++) {
+                component.showMessage();
             }
-        ];
 
-        tweenSequenceTestCases.forEach(({ description, testMethod }) => {
-            it(`should handle ${description} correctly`, testMethod);
+            expect(mockTranslator.translate).toHaveBeenCalledTimes(3);
+            expect(cc.tween).toHaveBeenCalledTimes(3);
+            expect(mockTweenChain.start).toHaveBeenCalledTimes(3);
+        });
+
+        it("should handle many calls correctly", () => {
+            for (let i = 0; i < 5; i++) {
+                component.showMessage();
+            }
+
+            expect(mockTranslator.translate).toHaveBeenCalledTimes(5);
+            expect(cc.tween).toHaveBeenCalledTimes(5);
+            expect(mockTweenChain.start).toHaveBeenCalledTimes(5);
         });
     });
 
     describe("translation integration", () => {
         it("should use correct translation key", () => {
-            TranslationTestHelper.testTranslationCall(
-                component,
-                testSetup.mockTranslator,
-                "FreeSpinBonus.FSB_pending_freespin_msg"
-            );
+            component.showMessage();
+
+            expect(mockTranslator.translate).toHaveBeenCalledWith("FreeSpinBonus.FSB_pending_freespin_msg");
         });
 
-        const translationTestCases = [
-            {
-                description: "different translated messages",
-                customMessage: "Custom FSB message for testing",
-                shouldActivateNode: true
-            },
-            {
-                description: "empty translation result",
-                customMessage: "",
-                shouldActivateNode: true
-            },
-            {
-                description: "long translated message",
-                customMessage: "This is a very long FSB pending freespin message for comprehensive testing purposes",
-                shouldActivateNode: true
-            },
-            {
-                description: "special characters in translation",
-                customMessage: "FSB 特殊字符 測試 🎰",
-                shouldActivateNode: true
-            }
-        ];
+        it("should handle different translated messages", () => {
+            const customMessage = "Custom FSB message for testing";
+            mockTranslator.translate.mockReturnValue(customMessage);
 
-        translationTestCases.forEach(({ description, customMessage, shouldActivateNode }) => {
-            it(`should handle ${description}`, () => {
-                // Test custom translation
-                TranslationTestHelper.testCustomTranslation(
-                    component,
-                    testSetup.mockTranslator,
-                    customMessage
-                );
+            component.showMessage();
 
-                // Verify node activation behavior
-                if (shouldActivateNode) {
-                    expect(component.msgNode.active).toBe(true);
-                }
-            });
+            expect(mockMsgText.string).toBe(customMessage);
+            expect(mockMsgNode.active).toBe(true);
+        });
+
+        it("should handle empty translation result", () => {
+            mockTranslator.translate.mockReturnValue("");
+
+            component.showMessage();
+
+            expect(mockMsgText.string).toBe("");
+            expect(mockMsgNode.active).toBe(true);
+        });
+
+        it("should handle long translated message", () => {
+            const longMessage = "This is a very long FSB pending freespin message for comprehensive testing purposes";
+            mockTranslator.translate.mockReturnValue(longMessage);
+
+            component.showMessage();
+
+            expect(mockMsgText.string).toBe(longMessage);
+            expect(mockMsgNode.active).toBe(true);
+        });
+
+        it("should handle special characters in translation", () => {
+            const specialMessage = "FSB 特殊字符 測試 🎰";
+            mockTranslator.translate.mockReturnValue(specialMessage);
+
+            component.showMessage();
+
+            expect(mockMsgText.string).toBe(specialMessage);
+            expect(mockMsgNode.active).toBe(true);
         });
     });
 
     describe("constants and configuration", () => {
-        const constantTestCases = [
-            {
-                name: "DELAY_TIME",
-                expectedValue: 3,
-                expectedType: "number",
-                description: "delay time constant"
-            }
-        ];
+        it("should use correct delay time in tween operations", () => {
+            component.showMessage();
 
-        constantTestCases.forEach(({ name, expectedValue, expectedType, description }) => {
-            it(`should have correct ${description}`, () => {
-                PropertyTestHelper.testConstantValue(component, name, expectedValue, expectedType);
-            });
+            expect(mockTweenChain.delay).toHaveBeenCalledWith(3);
         });
 
-        it("should use DELAY_TIME constant in tween operations", () => {
-            TweenTestHelper.testDelayTimeUsage(component, component.DELAY_TIME);
+        it("should have private DELAY_TIME constant", () => {
+            // DELAY_TIME is private, so we test it indirectly through behavior
+            component.showMessage();
+            expect(mockTweenChain.delay).toHaveBeenCalledWith(3);
         });
     });
 
-    describe("integration scenarios", () => {
-        it("should handle complete lifecycle: onLoad -> showMessage -> tween completion", () => {
-            // Act - simulate complete lifecycle
-            component.onLoad();
-            
-            // Capture and execute tween callback
-            const callback = TweenTestHelper.testTweenCallback(component);
-            callback();
+    describe("error handling", () => {
+        it("should handle null msgText gracefully", () => {
+            component.msgText = null;
 
-            // Assert final state
-            expect(component.msgNode.active).toBe(false); // Should be deactivated after callback
+            expect(() => component.showMessage()).toThrow();
         });
 
-        const edgeCaseTestScenarios = [
-            {
-                description: "rapid multiple onLoad calls",
-                testMethod: () => {
-                    component.onLoad();
-                    component.onLoad();
-                    component.onLoad();
-                    expect(testSetup.mockTranslator.translate).toHaveBeenCalledTimes(3);
-                }
-            },
-            {
-                description: "mixed onLoad and showMessage calls",
-                testMethod: () => {
-                    component.onLoad();
-                    component.showMessage();
-                    component.onLoad();
-                    expect(testSetup.mockTranslator.translate).toHaveBeenCalledTimes(3);
-                }
-            }
-        ];
+        it("should handle null msgNode gracefully", () => {
+            component.msgNode = null;
 
-        edgeCaseTestScenarios.forEach(({ description, testMethod }) => {
-            it(`should handle ${description}`, testMethod);
+            expect(() => component.showMessage()).toThrow();
+        });
+
+        it("should handle undefined msgText gracefully", () => {
+            component.msgText = undefined;
+
+            expect(() => component.showMessage()).toThrow();
+        });
+
+        it("should handle undefined msgNode gracefully", () => {
+            component.msgNode = undefined;
+
+            expect(() => component.showMessage()).toThrow();
         });
     });
 });

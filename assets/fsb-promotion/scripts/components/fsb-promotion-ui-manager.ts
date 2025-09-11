@@ -5,7 +5,6 @@ import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-pro
 import Observer from "observer";
 import { AnimationUtils } from "db://shared-components/shared/utils/utils";
 import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
-import { CascadingUIStore } from "db://shared-cascading-slot/stores/cascading-ui-store";
 import gc from "@sg/game-client-base";
 
 const { handle, render } = Observer;
@@ -111,6 +110,9 @@ export class FSBPromotionUIManager extends ObserverComponent {
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent)
     initPromotionInfo(pendingUIEvent: any) {
         if (pendingUIEvent?.event === FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO) {
+            if (this.fsbPromotionInfoNode?.active) {
+                return;
+            }
             this.loadAndShowPromotionInfo(pendingUIEvent.data);
         }
     }
@@ -201,7 +203,9 @@ export class FSBPromotionUIManager extends ObserverComponent {
         }
     }
 
-    @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.SPIN_ON_FSB_PROMOTION_FIRST_TIME))
+    @handle(FSBPromotionUIHandler, (handler) =>
+        handler.changeUIPendingEvent(FreeSpinsPromotionEvents.SPIN_ON_FSB_PROMOTION_FIRST_TIME, { delayMs: 800, isPlaceBet: true })
+    )
     spinOnFSBPromotionFirstTime() {}
 
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.UPDATE_BALANCE_BONUS)
@@ -213,10 +217,10 @@ export class FSBPromotionUIManager extends ObserverComponent {
 
     @render(FSBPromotionUIStore, (store) => store.hasServerFinishPromotion)
     private handleHasServerFinishPromotion(hasServerFinishPromotion: boolean) {
-       this.hasServerFinishPromotion = hasServerFinishPromotion;
+        this.hasServerFinishPromotion = hasServerFinishPromotion;
     }
 
-    @render(CascadingUIStore, (store) => store.isFreeSpinEffectCompleted)
+    @render(FSBPromotionUIStore, (store) => store.isUsedFSBPromotionBonus)
     private handleFreeSpinEffectCompleted(isFreeSpinEffectCompleted: boolean) {
         if (isFreeSpinEffectCompleted && this.hasServerFinishPromotion) {
             this.tryShowPromotionEndedPopup();
@@ -395,7 +399,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
         w.alignMode = opts?.alignMode ?? Widget.AlignMode.ON_WINDOW_RESIZE;
         w.updateAlignment();
     }
-    
+
     private findAutoScaleWidget(): Node | null {
         const center = this.node.getChildByName(NODE_NAMES.CENTER);
         if (!center) {
@@ -448,7 +452,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
             const fsbBannerNode = instantiate(prefab);
             this.fsbPromotionPopupContainer.addChild(fsbBannerNode);
             this.fsbBannerNode = fsbBannerNode;
-            
+
             const effectReddeemSuccess = this.fsbPromotionPopupContainer.getChildByName(NODE_NAMES.EFFECT_REDEEM_SUCCESS);
             if (effectReddeemSuccess) {
                 const inGameMenuIndex = effectReddeemSuccess.getSiblingIndex();

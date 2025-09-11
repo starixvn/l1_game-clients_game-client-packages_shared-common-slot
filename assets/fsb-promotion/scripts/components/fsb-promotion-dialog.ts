@@ -1,11 +1,10 @@
-import { _decorator, Node} from "cc";
+import { _decorator, Node } from "cc";
 import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
 import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
 import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
 import Observer from "observer";
 import { Dialog } from "db://shared-components/shared/common-components/dialogs/dialog";
 import { DialogTransition } from "db://shared-components/shared/common-components/dialogs/transition/dialog-transition";
-import { CascadingUIStore } from "db://shared-cascading-slot/stores/cascading-ui-store";
 import { FSBPromotionHandlers } from "../handlers/fsb-promotion-handlers";
 const { ccclass, property } = _decorator;
 const { handle, render } = Observer;
@@ -39,6 +38,7 @@ export class FsbPromotionDialog extends ObserverComponent {
         this.closeDialog();
         this.onPlayGameNow();
         if (this.isFreeSpins) {
+            this.setShowFreeSpinMessage();
             this.showFreeSpinMessage();
         } else {
             this.openPromotionDetailsPanel();
@@ -48,7 +48,7 @@ export class FsbPromotionDialog extends ObserverComponent {
     @handle(FSBPromotionUIHandler, (handle) => handle.setIsClickPlayNow(true))
     onPlayGameNow() {}
 
-    @render(CascadingUIStore, (store) => store.isFreeSpins)
+      @render(FSBPromotionUIStore, (store) => store.isFreeSpinInGame)
     checkFeeSpinInGame(isFreeSpins: boolean) {
         if (isFreeSpins) {
             this.isFreeSpins = true;
@@ -86,9 +86,11 @@ export class FsbPromotionDialog extends ObserverComponent {
     @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.SHOW_FREE_SPIN_MESSAGE))
     showFreeSpinMessage() {}
 
+    @handle(FSBPromotionUIHandler, (handler) => handler.setShowFreeSpinMessage(true))
+    setShowFreeSpinMessage() {}
+
     @handle(FSBPromotionHandlers, (handler) => handler.resetRedeemSuccess())
-    resetRedeemSuccess() {
-    }
+    resetRedeemSuccess() {}
 
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.CLOSE_FSB_BANNER)
     closeFSBBanner(shouldClose: boolean) {
@@ -98,6 +100,5 @@ export class FsbPromotionDialog extends ObserverComponent {
     }
 
     @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.DESTROY_BANNER_NODE))
-    addPendingUIEvent() {
-    }
+    addPendingUIEvent() {}
 }

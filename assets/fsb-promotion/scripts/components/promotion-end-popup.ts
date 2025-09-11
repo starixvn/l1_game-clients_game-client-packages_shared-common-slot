@@ -1,7 +1,6 @@
 import { _decorator, Button, Label } from "cc";
 import gc from "@sg/game-client-base";
 import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
-import * as i18n from "db://i18n/LanguageData";
 import { FSBPromotionStore } from "../stores/fsb-promotion-store";
 import { FSBPromotionHandlers } from "../handlers/fsb-promotion-handlers";
 import Observer from "observer";
@@ -40,43 +39,31 @@ export default class PromotionEndPopup extends ObserverComponent {
         this.labelTotalWin.string = gc.FormatUtils.numberWithCommas(totalWin, 2, false);
         this.node.active = true;
         this.setupContent(totalWin);
+        this.setShowFreeSpinMessage();
     }
 
-    @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.CLOSE_FSB_END_BANNER))
+    @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.CLOSE_FSB_BANNER))
     closeFSBBanner() {}
 
     private setupContent(totalWin: number) {
-        const hasUsedAllBonusSpins = this.currentSpinCount === 0;
+        const usedAll = this.currentSpinCount === 0;
+        const T = (suffix: string) => (suffix ? gc.Translator.translate(`FreeSpinBonus.${suffix}`) : "");
 
-        const keyMap = {
-            win_allUsed: {
-                title: "FreeSpinBonus.FSB_notification_para1a",
-                main: "FreeSpinBonus.FSB_end_notification",
-                sub: "FreeSpinBonus.FSB_end_notification_message",
-            },
-            win_withRemaining: {
-                title: "FreeSpinBonus.FSB_end_notification_unusedFS",
-                main: "FreeSpinBonus.FSB_end_notification_unusedFS_message",
-                sub: "FreeSpinBonus.FSB_end_notification_unusedFS_message1",
-            },
-            zero_allUsed: {
-                title: "FreeSpinBonus.FSB_end_notification_zero_win",
-                main: "",
-                sub: "FreeSpinBonus.FSB_end_notification_zero_win_message",
-            },
-            zero_withRemaining: {
-                title: "FreeSpinBonus.FSB_end_notification_unusedFS",
-                main: "FreeSpinBonus.FSB_end_notification_unusedFS_message",
-                sub: "FreeSpinBonus.FSB_end_notification_unusedFS_message1",
-            },
-        };
+        const withRemaining = [
+            "FSB_end_notification_unusedFS",
+            "FSB_end_notification_unusedFS_message",
+            "FSB_end_notification_unusedFS_message1",
+        ] as const;
 
-        const conditionKey = `${totalWin > 0 ? "win" : "zero"}_${hasUsedAllBonusSpins ? "allUsed" : "withRemaining"}`;
-        const { title, main, sub } = keyMap[conditionKey];
+        const allUsedWin = ["FSB_notification_para1a", "FSB_end_notification", "FSB_end_notification_message"] as const;
 
-        this.labelTitle.string = i18n.t(title).toUpperCase();
-        this.labelMainMessage.string = main ? i18n.t(main) : "";
-        this.labelSubMessage.string = sub ? i18n.t(sub) : "";
+        const allUsedZero = ["FSB_end_notification_zero_win", "", "FSB_end_notification_zero_win_message"] as const;
+
+        const [titleK, mainK, subK] = usedAll ? (totalWin > 0 ? allUsedWin : allUsedZero) : withRemaining;
+
+        this.labelTitle.string = T(titleK).toUpperCase();
+        this.labelMainMessage.string = T(mainK);
+        this.labelSubMessage.string = T(subK);
     }
 
     private onCloseClicked() {
@@ -89,4 +76,7 @@ export default class PromotionEndPopup extends ObserverComponent {
 
     @handle(FSBPromotionUIHandler, (handler) => handler.openTurnOverRequired("end-promotion"))
     private openTurnOverRequired() {}
+
+    @handle(FSBPromotionUIHandler, (handler) => handler.setShowFreeSpinMessage(false))
+    setShowFreeSpinMessage() {}
 }

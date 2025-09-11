@@ -3,9 +3,18 @@ import mobx from "mobx";
 import { FSBPromotionStore } from "./fsb-promotion-store";
 import inversify from "inversify";
 import { settings } from "db://assets/game/scripts/game-settings";
-import { CascadingUIStore } from "db://shared-cascading-slot/stores/cascading-ui-store";
 
 const { injectable, inject } = inversify;
+
+export enum FreeSpinSource {
+    GAME = "game",
+    PROMOTION = "promotion",
+}
+
+export interface FreeSpinSignal {
+    source: FreeSpinSource;
+    active: boolean;
+}
 
 export const endpointConstants = {
     bannerPromotion: "banner-promotions",
@@ -65,15 +74,13 @@ export const FreeSpinsPromotionEvents = {
     SHOW_FREE_SPIN_MESSAGE: "SHOW_FREE_SPIN_MESSAGE",
     HIDE_GIFT_CODE_ICON: "HIDE_GIFT_CODE_ICON",
     EFFECT_REDEEM_SUCCESS: "EFFECT_REDEEM_SUCCESS",
-    CLOSE_FSB_BANNER: "CLOSE_FSB_BANNER",
-    CLOSE_FSB_END_BANNER: "CLOSE_FSB_END_BANNER",
+    CLOSE_FSB_BANNER: "CLOSE_FSB_BANNER"
 };
 
 @injectable()
 export class FSBPromotionUIStore {
     @inject(gc.Configs.SiteConfigs) protected readonly siteConfigs: gc.Configs.SiteConfigs;
     @inject(FSBPromotionStore) protected readonly fsbPromotionStore: FSBPromotionStore;
-    @inject(CascadingUIStore) protected readonly cascadingUIStore: CascadingUIStore;
 
     constructor() {
         mobx.makeAutoObservable(this);
@@ -91,6 +98,8 @@ export class FSBPromotionUIStore {
     public resumedFSBPromotion = false;
     public hasServerFinishPromotion = false;
     public fsbConsumedThisRound = false;
+    public changeUserBalance = false;
+    public isSpinningFSB = false;
     public promotionUrl = "";
     public gameOffers: { name: string; gameId: number }[] = [{ name: settings.name.toLowerCase(), gameId: settings.id }];
     public isWebViewLoading = false;
@@ -102,6 +111,8 @@ export class FSBPromotionUIStore {
 
     public isClickPlayNow = false;
 
+    public isShowFreeSpinMessage = false;
+
     // TurnOverRequired state properties
     private _toProgress: ITurnOverRequired = null;
     public readonly turnOverRequiredDataKey = [TurnOverRequiredDataKey.PROMOTION_TO_PROGRESS];
@@ -109,7 +120,35 @@ export class FSBPromotionUIStore {
     // UI Events state
     public pendingUIEvent: { event: string; data?: any } = null;
 
-    // Getters and Setters
+    private _freeSpinActiveBySource: Record<FreeSpinSource, boolean> = {
+        [FreeSpinSource.GAME]: false,
+        [FreeSpinSource.PROMOTION]: false,
+    };
+
+    get isAnyFreeSpinActive() {
+        return this._freeSpinActiveBySource[FreeSpinSource.GAME] || this._freeSpinActiveBySource[FreeSpinSource.PROMOTION];
+    }
+
+    get isFreeSpinInGame() {
+        return this._freeSpinActiveBySource[FreeSpinSource.GAME];
+    }
+
+    set isFreeSpinInGame(v: boolean) {
+        this._freeSpinActiveBySource[FreeSpinSource.GAME] = v;
+    }
+
+    get isUsedFSBPromotionBonus() {
+        return this._freeSpinActiveBySource[FreeSpinSource.PROMOTION];
+    }
+
+    set isUsedFSBPromotionBonus(v: boolean) {
+        this._freeSpinActiveBySource[FreeSpinSource.PROMOTION] = v;
+    }
+
+    setActiveFreeSpin(source: FreeSpinSource, active: boolean) {
+        this._freeSpinActiveBySource[source] = active;
+    }
+
     getStorageKey() {
         return this.storageKey;
     }
@@ -166,11 +205,15 @@ export class FSBPromotionUIStore {
     }
 
     get isEligibleForNextFSBSpin() {
-        return this.cascadingUIStore.isUsedFSBPromotionBonus && this.currentSpinCount > 0 && this.isFSBInfoReady;
+        return this.isUsedFSBPromotionBonus && this.currentSpinCount > 0 && this.isFSBInfoReady;
+    }
+
+    get canSpinNextFSB() {
+        return this.isEligibleForNextFSBSpin && !this.hasServerFinishPromotion;
     }
 
     get isFSBPromotionInProgress() {
-        return this.fsbState === FSBPromotionState.Ready || this.fsbState === FSBPromotionState.Spinning;
+        return this.fsbState === FSBPromotionState.Ready || this.fsbState === FSBPromotionState.Spinning || this.isPromotionConsumed();
     }
     get isUpdateTotalWin() {
         return this.fsbConsumedThisRound || this.resumedFSBPromotion;
@@ -190,7 +233,6 @@ export class FSBPromotionUIStore {
         }
 
         if (this.currentSpinCount >= 0 && this.fsbConsumedThisRound) {
-            this.cascadingUIStore.fsbPromotionInProgress = true;
             return FSBPromotionState.Spinning;
         }
 
@@ -241,6 +283,14 @@ export class FSBPromotionUIStore {
 
     hasPromo(): boolean {
         return !!this.fsbPromotionStore.promotion;
+    }
+
+    isPromotionConsumed(): boolean {
+        if (!this.fsbPromotionStore.promotion) {
+            return false;
+        }
+        const { isClaimed, remainingBonusItems, initialBonusItem } = this.fsbPromotionStore.promotion;
+        return isClaimed && remainingBonusItems < initialBonusItem && !this.hasServerFinishPromotion;
     }
 
     shouldSkipPromo(): boolean {
@@ -306,13 +356,5 @@ export class FSBPromotionUIStore {
 
     setWebViewLoading(isLoading: boolean) {
         this.isWebViewLoading = isLoading;
-    }
-    get shouldOpenPromotionInfo(): boolean {
-        const isFSBUsed = this.cascadingUIStore?.isUsedFSBPromotionBonus ?? false;
-        const isClaimed = this.fsbPromotionStore?.isClaimed ?? false;
-        const isFSBInfoReady = this.isFSBInfoReady ?? false;
-        const isClickPlayNow = this.isClickPlayNow ?? false;
-
-        return isFSBUsed && isClaimed && !isFSBInfoReady && isClickPlayNow;
     }
 }

@@ -1,8 +1,8 @@
 import gc from "@sg/game-client-base";
+import { settings } from "db://assets/game/scripts/game-settings";
+import inversify from "inversify";
 import mobx from "mobx";
 import { FSBPromotionStore } from "./fsb-promotion-store";
-import inversify from "inversify";
-import { settings } from "db://assets/game/scripts/game-settings";
 
 const { injectable, inject } = inversify;
 
@@ -74,7 +74,8 @@ export const FreeSpinsPromotionEvents = {
     SHOW_FREE_SPIN_MESSAGE: "SHOW_FREE_SPIN_MESSAGE",
     HIDE_GIFT_CODE_ICON: "HIDE_GIFT_CODE_ICON",
     EFFECT_REDEEM_SUCCESS: "EFFECT_REDEEM_SUCCESS",
-    CLOSE_FSB_BANNER: "CLOSE_FSB_BANNER"
+    CLOSE_FSB_BANNER: "CLOSE_FSB_BANNER",
+    BEGIN_USING_FBS: "BEGIN_USING_FBS",
 };
 
 @injectable()
@@ -314,6 +315,9 @@ export class FSBPromotionUIStore {
         if (this.currentSpinCount > 0 && !this.fsbConsumedThisRound) {
             this.currentSpinCount--;
             this.fsbConsumedThisRound = true;
+            if (this.currentSpinCount === this.fsbPromotionStore.promotion.initialBonusItem - 1) {
+                this.addPendingUIEvent(FreeSpinsPromotionEvents.BEGIN_USING_FBS);
+            }
             return true;
         }
         return false;

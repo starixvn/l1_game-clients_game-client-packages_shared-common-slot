@@ -1,17 +1,11 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { FSBPromotionUIStore, FSBPromotionState, FreeSpinsPromotionEvents, TurnOverRequiredDataKey, endpointConstants } from "../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store";
 import gc from "@sg/game-client-base";
-
+import { FSBPromotionStore } from "db://shared-common-slot/fsb-promotion/scripts/stores/fsb-promotion-store";
+import { stub } from "jest-auto-stub";
+import { FSBPromotionState, FSBPromotionUIStore, FreeSpinsPromotionEvents, TurnOverRequiredDataKey, endpointConstants } from "../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store";
 // Mock dependencies
 jest.mock("@sg/game-client-base");
-jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-store", () => ({
-    FSBPromotionStore: jest.fn().mockImplementation(() => ({
-        promotion: null,
-        finishPromotion: null,
-        isRedeemSuccess: false,
-        isClaimed: false
-    }))
-}));
+
 jest.mock("db://assets/game/scripts/game-settings", () => ({
     settings: {
         name: "TestGame",
@@ -29,12 +23,7 @@ describe("FSBPromotionUIStore", () => {
         jest.clearAllMocks();
 
         // Create simple mocks
-        mockFSBPromotionStore = {
-            promotion: null,
-            finishPromotion: null,
-            isRedeemSuccess: false,
-            isClaimed: false
-        };
+        mockFSBPromotionStore = stub<FSBPromotionStore>();
 
         mockSiteConfigs = {
             systemType: "NORMAL"
@@ -343,8 +332,8 @@ describe("FSBPromotionUIStore", () => {
                 mockFSBPromotionStore.promotion = { promotionId: "123" };
                 store.currentSpinCount = -1;
                 expect(store.fsbState).toBe(FSBPromotionState.Idle);
-                });
             });
+        });
     });
 
     describe("toProgress property", () => {

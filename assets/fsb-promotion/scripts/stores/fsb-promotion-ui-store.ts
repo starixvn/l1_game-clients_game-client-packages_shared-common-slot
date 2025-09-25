@@ -120,6 +120,7 @@ export class FSBPromotionUIStore {
 
     // UI Events state
     public pendingUIEvent: { event: string; data?: any } = null;
+    public event: { event: string; data?: any } = null;
 
     private _freeSpinActiveBySource: Record<FreeSpinSource, boolean> = {
         [FreeSpinSource.GAME]: false,
@@ -316,7 +317,7 @@ export class FSBPromotionUIStore {
             this.currentSpinCount--;
             this.fsbConsumedThisRound = true;
             if (this.currentSpinCount === this.fsbPromotionStore.promotion.initialBonusItem - 1) {
-                this.addPendingUIEvent(FreeSpinsPromotionEvents.BEGIN_USING_FBS);
+                this.setEvent(FreeSpinsPromotionEvents.BEGIN_USING_FBS);
             }
             return true;
         }
@@ -344,6 +345,10 @@ export class FSBPromotionUIStore {
 
     addPendingUIEvent(event: string, data?: any) {
         this.pendingUIEvent = { event, data };
+    }
+
+    setEvent(event: string, data?: any) {
+        this.event = { event, data };
     }
 
     removePendingUIEvent() {

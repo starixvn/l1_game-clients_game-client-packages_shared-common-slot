@@ -1,11 +1,11 @@
-import { _decorator, Node, instantiate, Prefab, Vec3, tween, UITransform, Widget } from "cc";
+import gc from "@sg/game-client-base";
+import { _decorator, instantiate, Node, Prefab, tween, UITransform, Vec3, Widget } from "cc";
 import { bundleManager } from "db://shared-components/shared/common-components/bundle-manager/bundle-manager";
 import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
-import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
-import Observer from "observer";
 import { AnimationUtils } from "db://shared-components/shared/utils/utils";
+import Observer from "observer";
 import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
-import gc from "@sg/game-client-base";
+import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
 
 const { handle, render } = Observer;
 const { ccclass } = _decorator;
@@ -151,7 +151,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
     }
 
     @handle(FSBPromotionUIHandler, (handler) => handler.setFSBInfoReady(true))
-    setFSBInfoReady() {}
+    setFSBInfoReady() { }
 
     private async loadAndShowTurnOverRequired() {
         if (this.turnOverRequiredNode) {
@@ -206,7 +206,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
     @handle(FSBPromotionUIHandler, (handler) =>
         handler.changeUIPendingEvent(FreeSpinsPromotionEvents.SPIN_ON_FSB_PROMOTION_FIRST_TIME, { delayMs: 800, isPlaceBet: true })
     )
-    spinOnFSBPromotionFirstTime() {}
+    spinOnFSBPromotionFirstTime() { }
 
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.UPDATE_BALANCE_BONUS)
     updateBalanceBonus(isUpdateBalanceBonus: boolean) {
@@ -215,23 +215,8 @@ export class FSBPromotionUIManager extends ObserverComponent {
         }
     }
 
-    @render(FSBPromotionUIStore, (store) => store.hasServerFinishPromotion)
-    private handleHasServerFinishPromotion(hasServerFinishPromotion: boolean) {
-        this.hasServerFinishPromotion = hasServerFinishPromotion;
-    }
-
-    @render(FSBPromotionUIStore, (store) => store.isUsedFSBPromotionBonus)
-    private handleFreeSpinEffectCompleted(isFreeSpinEffectCompleted: boolean) {
-        if (isFreeSpinEffectCompleted && this.hasServerFinishPromotion) {
-            this.tryShowPromotionEndedPopup();
-        }
-    }
-
-    @handle(FSBPromotionUIHandler, (handler) => handler.tryShowEndedPopup())
-    private tryShowPromotionEndedPopup() {}
-
     @handle(gc.Auth.AuthHandlers.GetBalance)
-    getBalance() {}
+    getBalance() { }
 
     private async loadAndPlayEffectUnboxGift() {
         if (this.effectUnboxGiftNode && this.effectUnboxGiftNode.isValid) {
@@ -284,7 +269,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
     }
 
     @handle(FSBPromotionUIHandler, (handle) => handle.changeUIPendingEvent(FreeSpinsPromotionEvents.OPEN_GIFT_CODE_REDEEM_POPUP))
-    private openGiftCodeRedeemPopup() {}
+    private openGiftCodeRedeemPopup() { }
 
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.SHOW_FREE_SPIN_MESSAGE)
     initShowFreeSpinMessage(isShowFreeSpinMessage: boolean) {
@@ -485,5 +470,5 @@ export class FSBPromotionUIManager extends ObserverComponent {
     }
 
     @handle(gc.Audios.AudioHandler, (handler) => handler.playSFX("fsb-promotion"))
-    playSoundEffect() {}
+    playSoundEffect() { }
 }

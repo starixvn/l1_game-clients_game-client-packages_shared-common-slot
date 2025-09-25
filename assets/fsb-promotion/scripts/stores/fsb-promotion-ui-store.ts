@@ -98,6 +98,7 @@ export class FSBPromotionUIStore {
     private readonly fallbackGameOffers: { name: string; gameId: number }[] = [];
     public resumedFSBPromotion = false;
     public hasServerFinishPromotion = false;
+    public hasShowFinishPromotion = false;
     public fsbConsumedThisRound = false;
     public changeUserBalance = false;
     public isSpinningFSB = false;

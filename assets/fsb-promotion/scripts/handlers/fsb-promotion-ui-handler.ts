@@ -1,15 +1,15 @@
-import {
-    FreeSpinsPromotionEvents,
-    endpointConstants,
-    FSBPromotionUIStore,
-    ITurnOverRequired,
-    FreeSpinSignal,
-} from "../stores/fsb-promotion-ui-store";
 import gc from "@sg/game-client-base";
 import inversify from "inversify";
-import { FSBPromotionStore, RedeemStatus } from "../stores/fsb-promotion-store";
-import { GameClientMessageSlot } from "../../../game-message-slot";
 import mobx from "mobx";
+import { GameClientMessageSlot } from "../../../game-message-slot";
+import { FSBPromotionStore, RedeemStatus } from "../stores/fsb-promotion-store";
+import {
+    endpointConstants,
+    FreeSpinSignal,
+    FreeSpinsPromotionEvents,
+    FSBPromotionUIStore,
+    ITurnOverRequired,
+} from "../stores/fsb-promotion-ui-store";
 
 const { injectable, inject } = inversify;
 
@@ -148,9 +148,11 @@ export class FSBPromotionUIHandler {
     }
 
     public tryShowEndedPopup() {
-        if (this.fsbPromotionUIStore.hasServerFinishPromotion) {
+        if (this.fsbPromotionUIStore.hasServerFinishPromotion && !this.fsbPromotionUIStore.hasShowFinishPromotion) {
             this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.CLOSE_PROMOTION_DETAILS_PANEL);
             this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_ENDED_POPUP);
+
+            this.fsbPromotionUIStore.hasShowFinishPromotion = true;
         }
     }
 

@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { stub } from "jest-auto-stub";
 import { FSBPromotionHandlers } from "../../../assets/fsb-promotion/scripts/handlers/fsb-promotion-handlers";
+import { FSBPromotionUIHandler } from "../../../assets/fsb-promotion/scripts/handlers/fsb-promotion-ui-handler";
 import { RedeemStatus } from "../../../assets/fsb-promotion/scripts/stores/fsb-promotion-store";
 import { FreeSpinsPromotionEvents } from "../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store";
 import { GameServiceMessageSlot } from "../../../assets/game-message-slot";
@@ -11,9 +13,22 @@ jest.mock("@sg/game-client-base", () => ({
     Shared: { IMultipleHandlers: jest.fn() },
 }));
 
+jest.mock("../../../assets/fsb-promotion/scripts/handlers/fsb-promotion-ui-handler", () => {
+    return {
+        FSBPromotionUIHandler: {
+            handlePromotionDisplay: jest.fn(),
+            openTurnOverRequired: jest.fn(),
+            onReceivedTOProgressData: jest.fn(),
+            claimedBonusSuccess: jest.fn(),
+            markFSBEndFromServer: jest.fn(),
+            handleRedemptionNotice: jest.fn(),
+        }
+    }
+});
+
 jest.mock("inversify", () => ({
     injectable: jest.fn(() => (target: any) => target),
-    inject: jest.fn(() => (target: any, propertyKey: string) => {}),
+    inject: jest.fn(() => (target: any, propertyKey: string) => { }),
 }));
 
 jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-store", () => ({
@@ -45,9 +60,6 @@ jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store",
     },
 }));
 
-jest.mock("../../../assets/fsb-promotion/scripts/handlers/fsb-promotion-ui-handler", () => ({
-    FSBPromotionUIHandler: jest.fn(),
-}));
 
 jest.mock("../../../assets/game-message-slot", () => ({
     GameServiceMessageSlot: {
@@ -87,14 +99,7 @@ describe("FSBPromotionHandlers", () => {
             send: jest.fn(),
         };
 
-        mockFSBPromotionUIHandler = {
-            handlePromotionDisplay: jest.fn(),
-            openTurnOverRequired: jest.fn(),
-            onReceivedTOProgressData: jest.fn(),
-            claimedBonusSuccess: jest.fn(),
-            markFSBEndFromServer: jest.fn(),
-            handleRedemptionNotice: jest.fn(),
-        };
+
 
         mockFSBPromotionUIStore = {
             toProgress: null,
@@ -106,6 +111,8 @@ describe("FSBPromotionHandlers", () => {
                 on: jest.fn(),
             },
         };
+
+        mockFSBPromotionUIHandler = stub<FSBPromotionUIHandler>();
 
         // Create handlers and inject dependencies
         handlers = new FSBPromotionHandlers();
@@ -434,7 +441,7 @@ describe("FSBPromotionHandlers", () => {
 
         it("should contain all required event names", () => {
             const eventNames = handlers.eventHandleList.map(event => event.name);
-            
+
             const requiredEvents = [
                 GameServiceMessageSlot.Promotion.eventName,
                 GameServiceMessageSlot.PromotionTOProgress.eventName,
@@ -455,7 +462,7 @@ describe("FSBPromotionHandlers", () => {
                 acc[event.name] = event.handle;
                 return acc;
             }, {} as Record<string, Function>);
-            
+
             expect(eventMap[GameServiceMessageSlot.Promotion.eventName]).toBe(handlers.handlePromotion);
             expect(eventMap[GameServiceMessageSlot.PromotionTOProgress.eventName]).toBe(handlers.handlePromotionTOProgress);
             expect(eventMap[GameServiceMessageSlot.ClaimedAmount.eventName]).toBe(handlers.handleClaimedAmount);
@@ -479,7 +486,7 @@ describe("FSBPromotionHandlers", () => {
                 betLevel: 1,
             };
             handlers.handlePromotion(promotionData);
-            
+
             expect(mockPromotionStore.promotion).toBe(promotionData);
             expect(mockFSBPromotionUIHandler.handlePromotionDisplay).toHaveBeenCalledTimes(1);
 
@@ -495,13 +502,13 @@ describe("FSBPromotionHandlers", () => {
                 expire: "2024-12-31",
             };
             handlers.handlePromotionTOProgress(toProgressData);
-            
+
             expect(mockPromotionStore.promotionTOProgress).toBe(toProgressData);
             expect(mockFSBPromotionUIHandler.openTurnOverRequired).toHaveBeenCalledWith("in-game");
 
             // Step 3: Handle successful claim
             handlers.handleClaimedAmount(500);
-            
+
             expect(mockPromotionStore.claimedAmount).toBe(500);
             expect(mockFSBPromotionUIHandler.claimedBonusSuccess).toHaveBeenCalledTimes(1);
 
@@ -511,7 +518,7 @@ describe("FSBPromotionHandlers", () => {
                 endPromotion: true,
             };
             handlers.handleFinishPromotion(finishPromotionData);
-            
+
             expect(mockPromotionStore.finishPromotion).toBe(finishPromotionData);
             expect(mockFSBPromotionUIHandler.markFSBEndFromServer).toHaveBeenCalledTimes(1);
         });
@@ -522,13 +529,13 @@ describe("FSBPromotionHandlers", () => {
                 errorCode: "ERROR",
             };
             handlers.handleRedemptionNotice(errorNotice);
-            
+
             expect(mockPromotionStore.redemptionNotice).toBe(errorNotice);
             expect(mockFSBPromotionUIHandler.handleRedemptionNotice).toHaveBeenCalledTimes(1);
 
             // Handle claimed bonus failure
             handlers.handleClaimedBonusFailed("SB3023");
-            
+
             expect(mockPromotionStore.claimedBonusFailed).toBe("SB3023");
             expect(mockFSBPromotionUIStore.addPendingUIEvent).toHaveBeenCalledWith(
                 FreeSpinsPromotionEvents.EXPIRE_CLAIM_BONUS,

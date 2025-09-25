@@ -2,8 +2,8 @@ import gc from "@sg/game-client-base";
 import inversify from "inversify";
 import { GameServiceMessageSlot } from "../../../game-message-slot";
 import { FSBPromotionStore, RedeemStatus } from "../stores/fsb-promotion-store";
-import { FSBPromotionUIHandler } from "./fsb-promotion-ui-handler";
 import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
+import { FSBPromotionUIHandler } from "./fsb-promotion-ui-handler";
 
 const { injectable, inject } = inversify;
 
@@ -17,6 +17,7 @@ export class FSBPromotionHandlers implements gc.Shared.IMultipleHandlers {
 
     handlePromotion(data: GameServiceMessageSlot.Promotion) {
         this.promotionStore.promotion = data;
+        this.fsbPromotionUIHandler.setCurrentSpinCount(data.remainingBonusItems);
         this.fsbPromotionUIHandler.handlePromotionDisplay();
     }
 

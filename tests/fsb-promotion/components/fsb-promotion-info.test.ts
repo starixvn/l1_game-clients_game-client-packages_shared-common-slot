@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { GameServiceMessageSlot } from "../../../assets/game-message-slot";
-import { FreeSpinsPromotionEvents } from "../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store";
 import { FSBPromotionInfo } from "../../../assets/fsb-promotion/scripts/components/fsb-promotion-info";
+import { FreeSpinsPromotionEvents } from "../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store";
+import { GameServiceMessageSlot } from "../../../assets/game-message-slot";
 
 // Mock dependencies first - use doMock to ensure mocks are applied before imports
 jest.mock("reflect-metadata", () => ({
@@ -55,9 +55,11 @@ jest.mock("@sg/game-client-base", () => ({
                 lastReceivedBet: { value: 0 }
             }
         },
-        Configs: {SiteConfigs: jest.fn(() => ({
-            systemType: "NORMAL"
-        }))}
+        Configs: {
+            SiteConfigs: jest.fn(() => ({
+                systemType: "NORMAL"
+            }))
+        }
     },
     Auth: {
         AuthStore: jest.fn()
@@ -74,20 +76,22 @@ jest.mock("@sg/game-client-base", () => ({
     Connection: {
         ConnectionStore: jest.fn()
     },
-        FormatUtils: {
-            numberWithCommas: jest.fn().mockImplementation((value: number, decimals: number = 2, useGrouping: boolean = true) => {
-                if (value === undefined || value === null) return "0.00";
-                return value.toFixed(decimals);
-            })
-        },
+    FormatUtils: {
+        numberWithCommas: jest.fn().mockImplementation((value: number, decimals: number = 2, useGrouping: boolean = true) => {
+            if (value === undefined || value === null) return "0.00";
+            return value.toFixed(decimals);
+        })
+    },
     Bet: {
         BetStore: {
             lastReceivedBet: { value: 0 }
         }
     },
-    Configs: {SiteConfigs: jest.fn(() => ({
-        systemType: "NORMAL"
-    }))}
+    Configs: {
+        SiteConfigs: jest.fn(() => ({
+            systemType: "NORMAL"
+        }))
+    }
 }));
 
 jest.mock("db://shared-components/shared/common-components/observer-component/scripts/observer-component", () => ({
@@ -119,7 +123,7 @@ jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store")
 jest.mock("../../../assets/fsb-promotion/scripts/handlers/fsb-promotion-ui-handler");
 
 describe("FSBPromotionInfo", () => {
-    let component: FSBPromotionInfo;  
+    let component: FSBPromotionInfo;
     let mockLabelTotalWin: any;
     let mockLabelFSB: any;
     let mockLabelTotalBet: any;
@@ -156,7 +160,6 @@ describe("FSBPromotionInfo", () => {
             component.labelTotalBet = mockLabelTotalBet;
 
             // Mock methods - only mock public methods
-            component.setCurrentSpinCount = jest.fn() as any;
             component.revertLastFSB = jest.fn();
             (component as any).getComponent = jest.fn();
         } catch (error) {
@@ -233,7 +236,7 @@ describe("FSBPromotionInfo", () => {
                 remainingBonusItems: undefined,
                 totalBet: undefined
             };
-            
+
             // Mock updateUI method to handle undefined values safely
             const mockUpdateUI = jest.fn().mockImplementation(({ totalWin, remainingBonusItems, totalBet }) => {
                 mockLabelTotalWin.string = totalWin ? totalWin.toFixed(2) : "0.00";
@@ -271,7 +274,6 @@ describe("FSBPromotionInfo", () => {
 
             // Assert
             expect((component as any).totalWin).toBe(1500);
-            expect(component.setCurrentSpinCount).toHaveBeenCalledWith(3);
         });
 
         it("should handle promotion with missing properties", () => {
@@ -286,7 +288,6 @@ describe("FSBPromotionInfo", () => {
 
             // Assert
             expect((component as any).totalWin).toBe(0);
-            expect(component.setCurrentSpinCount).toHaveBeenCalledWith(0);
         });
     });
 

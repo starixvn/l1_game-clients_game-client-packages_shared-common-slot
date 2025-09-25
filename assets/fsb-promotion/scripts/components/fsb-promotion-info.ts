@@ -1,12 +1,12 @@
-import { _decorator, Label } from "cc";
-import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
-import DraggableItem from "db://shared-components/shared/common-components/draggable/draggable-item";
-import { FSBPromotionStore } from "../stores/fsb-promotion-store";
-import { GameServiceMessageSlot } from "../../../game-message-slot";
-import Observer from "observer";
-import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
-import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
 import gc from "@sg/game-client-base";
+import { _decorator, Label } from "cc";
+import DraggableItem from "db://shared-components/shared/common-components/draggable/draggable-item";
+import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
+import Observer from "observer";
+import { GameServiceMessageSlot } from "../../../game-message-slot";
+import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
+import { FSBPromotionStore } from "../stores/fsb-promotion-store";
+import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
 
 const { render, handle } = Observer;
 const { ccclass, property } = _decorator;
@@ -37,7 +37,7 @@ export class FSBPromotionInfo extends ObserverComponent {
             });
     }
 
-    private onCollapseMenu() {}
+    private onCollapseMenu() { }
 
     @render(FSBPromotionStore, (store) => store.promotion)
     onFSBPromotionInfo(promotion: GameServiceMessageSlot.Promotion) {
@@ -45,7 +45,6 @@ export class FSBPromotionInfo extends ObserverComponent {
         this.totalWin = totalWin;
         const totalBet = this.calculateTotalBet(coinValue, betLevel);
         this.updateUI({ totalWin, remainingBonusItems, totalBet });
-        this.setCurrentSpinCount(remainingBonusItems);
     }
 
     private calculateTotalBet(coinValue: number, betLevel: number): number {
@@ -61,11 +60,6 @@ export class FSBPromotionInfo extends ObserverComponent {
         this.labelFSB.string = remainingBonusItems.toString();
 
         this.labelTotalBet.string = gc.FormatUtils.numberWithCommas(totalBet, 2, false);
-    }
-
-    @handle(FSBPromotionUIHandler, (handler, remainingBonusItems: number) => handler.setCurrentSpinCount(remainingBonusItems))
-    setCurrentSpinCount(remainingBonusItems: number) {
-        return remainingBonusItems;
     }
 
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent)
@@ -106,14 +100,14 @@ export class FSBPromotionInfo extends ObserverComponent {
     }
 
     @handle(FSBPromotionUIHandler, (handler) => handler.undoLastFSBSpin())
-    revertLastFSB() {}
+    revertLastFSB() { }
 
     @handle(FSBPromotionUIHandler, (handler) => handler.updatePromotionURL())
-    private updatePromotionURL() {}
+    private updatePromotionURL() { }
 
     @handle(FSBPromotionUIHandler, (handler) => handler.activeDetailPromo(true))
-    private activeDetailPromo() {}
+    private activeDetailPromo() { }
 
     @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.OPEN_FREE_SPINS_PROMOTION))
-    private openFreeSpinsPromotion() {}
+    private openFreeSpinsPromotion() { }
 }

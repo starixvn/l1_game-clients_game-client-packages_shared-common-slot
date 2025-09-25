@@ -1,11 +1,11 @@
 import { _decorator, Node } from "cc";
-import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
-import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
-import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
-import Observer from "observer";
 import { Dialog } from "db://shared-components/shared/common-components/dialogs/dialog";
 import { DialogTransition } from "db://shared-components/shared/common-components/dialogs/transition/dialog-transition";
+import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
+import Observer from "observer";
 import { FSBPromotionHandlers } from "../handlers/fsb-promotion-handlers";
+import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
+import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
 const { ccclass, property } = _decorator;
 const { handle, render } = Observer;
 
@@ -48,7 +48,7 @@ export class FsbPromotionDialog extends ObserverComponent {
     @handle(FSBPromotionUIHandler, (handle) => handle.setIsClickPlayNow(true))
     onPlayGameNow() {}
 
-      @render(FSBPromotionUIStore, (store) => store.isFreeSpinInGame)
+    @render(FSBPromotionUIStore, (store) => store.isFreeSpinInGame)
     checkFeeSpinInGame(isFreeSpins: boolean) {
         if (isFreeSpins) {
             this.isFreeSpins = true;
@@ -80,7 +80,7 @@ export class FsbPromotionDialog extends ObserverComponent {
         this.activeDetailPromo = activeDetailPromo;
     }
 
-    @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO, true))
+    @handle(FSBPromotionUIHandler, (handler) => handler.openPromotionInfo())
     openPromotionDetailsPanel() {}
 
     @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.SHOW_FREE_SPIN_MESSAGE))

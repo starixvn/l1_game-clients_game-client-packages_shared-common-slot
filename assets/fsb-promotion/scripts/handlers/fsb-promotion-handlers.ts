@@ -17,7 +17,6 @@ export class FSBPromotionHandlers implements gc.Shared.IMultipleHandlers {
 
     handlePromotion(data: GameServiceMessageSlot.Promotion) {
         this.promotionStore.promotion = data;
-        this.fsbPromotionUIHandler.setCurrentSpinCount(data.remainingBonusItems);
         this.fsbPromotionUIHandler.handlePromotionDisplay();
     }
 
@@ -57,8 +56,7 @@ export class FSBPromotionHandlers implements gc.Shared.IMultipleHandlers {
         this.promotionStore.claimedBonusFailed = errorCode;
         if (errorCode === "SB3023") {
             this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.EXPIRE_CLAIM_BONUS, errorCode);
-        }
-        else {
+        } else {
             this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.SHOW_NOTICE_ERROR, errorCode);
         }
     }

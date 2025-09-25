@@ -149,7 +149,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
     }
 
     @handle(FSBPromotionUIHandler, (handler) => handler.setFSBInfoReady(true))
-    setFSBInfoReady() { }
+    setFSBInfoReady() {}
 
     private async loadAndShowTurnOverRequired() {
         if (this.turnOverRequiredNode) {
@@ -184,11 +184,13 @@ export class FSBPromotionUIManager extends ObserverComponent {
             return;
         }
 
+        console.log("delay ====================== ", delay);
         await AnimationUtils.delayTime(delay);
 
         this.fsbPromotionInfoNode.active = true;
         this.fsbPromotionInfoNode.setScale(new Vec3(0, 0, 0));
         const timeShowNode = isAutoPlay ? 0.8 : 0.3;
+        console.log("timeShowNode ====================== ", timeShowNode);
         await new Promise<void>((resolve) => {
             tween(this.fsbPromotionInfoNode)
                 .to(timeShowNode, { scale: new Vec3(1, 1, 1) }, { easing: "backOut" })
@@ -204,7 +206,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
     @handle(FSBPromotionUIHandler, (handler) =>
         handler.changeUIPendingEvent(FreeSpinsPromotionEvents.SPIN_ON_FSB_PROMOTION_FIRST_TIME, { delayMs: 800, isPlaceBet: true })
     )
-    spinOnFSBPromotionFirstTime() { }
+    spinOnFSBPromotionFirstTime() {}
 
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.UPDATE_BALANCE_BONUS)
     updateBalanceBonus(isUpdateBalanceBonus: boolean) {
@@ -214,7 +216,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
     }
 
     @handle(gc.Auth.AuthHandlers.GetBalance)
-    getBalance() { }
+    getBalance() {}
 
     private async loadAndPlayEffectUnboxGift() {
         if (this.effectUnboxGiftNode && this.effectUnboxGiftNode.isValid) {
@@ -267,7 +269,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
     }
 
     @handle(FSBPromotionUIHandler, (handle) => handle.changeUIPendingEvent(FreeSpinsPromotionEvents.OPEN_GIFT_CODE_REDEEM_POPUP))
-    private openGiftCodeRedeemPopup() { }
+    private openGiftCodeRedeemPopup() {}
 
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.SHOW_FREE_SPIN_MESSAGE)
     initShowFreeSpinMessage(isShowFreeSpinMessage: boolean) {
@@ -468,5 +470,5 @@ export class FSBPromotionUIManager extends ObserverComponent {
     }
 
     @handle(gc.Audios.AudioHandler, (handler) => handler.playSFX("fsb-promotion"))
-    playSoundEffect() { }
+    playSoundEffect() {}
 }

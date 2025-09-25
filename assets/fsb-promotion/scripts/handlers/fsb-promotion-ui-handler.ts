@@ -68,7 +68,7 @@ export class FSBPromotionUIHandler {
 
         if (this.fsbPromotionUIStore.skipGiftCode) {
             this.fsbPromotionUIStore.skipGiftCode = false;
-            this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO);
+            this.openPromotionInfo();
             return;
         }
 
@@ -78,8 +78,13 @@ export class FSBPromotionUIHandler {
             this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_FREE_SPINS_PROMOTION);
             this.fsbPromotionUIStore.promotionUrl = this.getPromoUrl();
         } else {
-            this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO);
+            this.openPromotionInfo();
         }
+    }
+
+    public openPromotionInfo() {
+        this.setCurrentSpinCount(this.fsbPromotionStore.promotion?.remainingBonusItems);
+        this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO);
     }
 
     private shouldShowGiftCode() {

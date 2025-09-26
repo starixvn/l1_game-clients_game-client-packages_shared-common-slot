@@ -23,7 +23,7 @@ jest.mock("mobx", () => ({
 
 jest.mock("inversify", () => ({
     injectable: jest.fn(() => (target: any) => target),
-    inject: jest.fn(() => (target: any, propertyKey: string) => {}),
+    inject: jest.fn(() => (target: any, propertyKey: string) => { }),
 }));
 
 jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-store", () => ({
@@ -177,41 +177,41 @@ describe("FSBPromotionUIHandler", () => {
     describe("handlePromotionDisplay", () => {
         it("should not display promotion when transition effect is active", () => {
             mockFSBPromotionUIStore.activeTransitionEffect = true;
-            
+
             handler.handlePromotionDisplay();
-            
+
             expect(mockFSBPromotionUIStore.addPendingUIEvent).not.toHaveBeenCalled();
         });
 
         it("should not display promotion when no promo available", () => {
             mockFSBPromotionUIStore.hasPromo.mockReturnValue(false);
-            
+
             handler.handlePromotionDisplay();
-            
+
             expect(mockFSBPromotionUIStore.addPendingUIEvent).not.toHaveBeenCalled();
         });
 
         it("should not display promotion in trial mode", () => {
             mockFSBPromotionUIStore.isTrialMode = true;
-            
+
             handler.handlePromotionDisplay();
-            
+
             expect(mockFSBPromotionUIStore.addPendingUIEvent).not.toHaveBeenCalled();
         });
 
         it("should not display promotion when should skip", () => {
             mockFSBPromotionUIStore.shouldSkipPromo.mockReturnValue(true);
-            
+
             handler.handlePromotionDisplay();
-            
+
             expect(mockFSBPromotionUIStore.addPendingUIEvent).not.toHaveBeenCalled();
         });
 
         it("should display promotion when all conditions met", () => {
             handler.handlePromotionDisplay();
-            
+
             expect(mockFSBPromotionUIStore.addPendingUIEvent).toHaveBeenCalledWith(
-                FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO
+                FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO, false
             );
         });
 
@@ -219,9 +219,9 @@ describe("FSBPromotionUIHandler", () => {
             mockFSBPromotionUIStore.hasPromo.mockImplementation(() => {
                 throw new Error("Test error");
             });
-            
+
             handler.handlePromotionDisplay();
-            
+
             expect(mockGc.sentryLogger.logError).toHaveBeenCalledWith(
                 "handlePromotionDisplay error: Test error"
             );
@@ -235,9 +235,9 @@ describe("FSBPromotionUIHandler", () => {
                 isClaimed: false
             };
             mockFSBPromotionUIStore.isTrialMode = false;
-            
+
             const result = (handler as any).shouldShowGiftCode();
-            
+
             expect(result).toBe(true);
         });
 
@@ -247,9 +247,9 @@ describe("FSBPromotionUIHandler", () => {
                 isClaimed: false
             };
             mockFSBPromotionUIStore.isTrialMode = true;
-            
+
             const result = (handler as any).shouldShowGiftCode();
-            
+
             expect(result).toBe(false);
         });
 
@@ -259,9 +259,9 @@ describe("FSBPromotionUIHandler", () => {
                 isClaimed: true
             };
             mockFSBPromotionUIStore.isTrialMode = false;
-            
+
             const result = (handler as any).shouldShowGiftCode();
-            
+
             expect(result).toBe(false);
         });
 
@@ -271,9 +271,9 @@ describe("FSBPromotionUIHandler", () => {
                 isClaimed: false
             };
             mockFSBPromotionUIStore.isTrialMode = false;
-            
+
             const result = (handler as any).shouldShowGiftCode();
-            
+
             expect(result).toBe(false);
         });
     });
@@ -282,7 +282,7 @@ describe("FSBPromotionUIHandler", () => {
         describe("buildPromotionSiteUrl", () => {
             it("should build secure url with subdomain", () => {
                 const result = (handler as any).buildPromotionSiteUrl();
-                
+
                 expect(result).toBe("https://promo.example.com");
             });
         });
@@ -290,15 +290,15 @@ describe("FSBPromotionUIHandler", () => {
         describe("buildProxyUrl", () => {
             it("should build proxy url with environment path", () => {
                 const result = (handler as any).buildProxyUrl("/test");
-                
+
                 expect(result).toBe("http://example.com/prod/test");
             });
 
             it("should build proxy url without environment when empty", () => {
                 mockSiteConfigs.env = "";
-                
+
                 const result = (handler as any).buildProxyUrl("/test");
-                
+
                 expect(result).toBe("http://example.com/test");
             });
         });
@@ -306,31 +306,31 @@ describe("FSBPromotionUIHandler", () => {
         describe("getPromoUrl", () => {
             it("should build url with promotion id from store", () => {
                 const result = handler.getPromoUrl();
-                
+
                 expect(result).toContain("promotionId=test-123");
             });
 
             it("should fallback to promotion to progress when no promotion", () => {
                 mockFSBPromotionStore.promotion = null;
-                
+
                 const result = handler.getPromoUrl();
-                
+
                 expect(result).toContain("promotionId=test-123");
             });
 
             it("should include game offers in url", () => {
                 mockFSBPromotionUIStore.gameOffers = [{ gameId: 1, name: "Test Game" }];
-                
+
                 const result = handler.getPromoUrl();
-                
+
                 expect(result).toContain("game=");
             });
 
             it("should use announcement details endpoint when active", () => {
                 mockFSBPromotionUIStore.activeDetailPromo = true;
-                
+
                 const result = handler.getPromoUrl();
-                
+
                 expect(result).toContain("announcement-details");
             });
         });
@@ -338,7 +338,7 @@ describe("FSBPromotionUIHandler", () => {
         describe("buildParams", () => {
             it("should build authentication parameters", () => {
                 const result = (handler as any).buildParams();
-                
+
                 expect(result).toEqual({
                     sessionId: "dGVzdC1zZXNzaW9u",
                     username: "testuser",
@@ -350,7 +350,7 @@ describe("FSBPromotionUIHandler", () => {
         describe("getQueryString", () => {
             it("should build complete query string with all parameters", () => {
                 const result = (handler as any).getQueryString("test-123", [{ gameId: 1, name: "Test" }]);
-                
+
                 expect(result).toContain("sessionId=");
                 expect(result).toContain("username=");
                 expect(result).toContain("language=");
@@ -360,7 +360,7 @@ describe("FSBPromotionUIHandler", () => {
 
             it("should build basic query string without optional parameters", () => {
                 const result = (handler as any).getQueryString();
-                
+
                 expect(result).not.toContain("promotionId=");
                 expect(result).not.toContain("game=");
             });
@@ -371,7 +371,7 @@ describe("FSBPromotionUIHandler", () => {
         describe("setCurrentSpinCount", () => {
             it("should update current spin count", () => {
                 handler.setCurrentSpinCount(5);
-                
+
                 expect(mockFSBPromotionUIStore.currentSpinCount).toBe(5);
             });
         });
@@ -379,9 +379,9 @@ describe("FSBPromotionUIHandler", () => {
         describe("tryShowEndedPopup", () => {
             it("should show ended popup when server confirms finish", () => {
                 mockFSBPromotionUIStore.hasServerFinishPromotion = true;
-                
+
                 handler.tryShowEndedPopup();
-                
+
                 expect(mockFSBPromotionUIStore.addPendingUIEvent).toHaveBeenCalledWith(
                     FreeSpinsPromotionEvents.CLOSE_PROMOTION_DETAILS_PANEL
                 );
@@ -392,9 +392,9 @@ describe("FSBPromotionUIHandler", () => {
 
             it("should not show ended popup when no server finish", () => {
                 mockFSBPromotionUIStore.hasServerFinishPromotion = false;
-                
+
                 handler.tryShowEndedPopup();
-                
+
                 expect(mockFSBPromotionUIStore.addPendingUIEvent).not.toHaveBeenCalled();
             });
         });
@@ -402,7 +402,7 @@ describe("FSBPromotionUIHandler", () => {
         describe("changeUIPendingEvent", () => {
             it("should add pending ui event with data", () => {
                 handler.changeUIPendingEvent("TEST_EVENT", { data: "test" });
-                
+
                 expect(mockFSBPromotionUIStore.addPendingUIEvent).toHaveBeenCalledWith("TEST_EVENT", { data: "test" });
             });
         });
@@ -410,7 +410,7 @@ describe("FSBPromotionUIHandler", () => {
         describe("removeUIPendingEvent", () => {
             it("should remove pending ui event", () => {
                 handler.removeUIPendingEvent();
-                
+
                 expect(mockFSBPromotionUIStore.removePendingUIEvent).toHaveBeenCalled();
             });
         });
@@ -420,9 +420,9 @@ describe("FSBPromotionUIHandler", () => {
         describe("tryConsumeFSB", () => {
             it("should consume fsb and update count when successful", () => {
                 mockFSBPromotionUIStore.tryConsumeFSB.mockReturnValue(true);
-                
+
                 handler.tryConsumeFSB();
-                
+
                 expect(mockFSBPromotionUIStore.addPendingUIEvent).toHaveBeenCalledWith(
                     FreeSpinsPromotionEvents.UPDATE_FSB_COUNT,
                     0
@@ -431,9 +431,9 @@ describe("FSBPromotionUIHandler", () => {
 
             it("should not update count when fsb consumption fails", () => {
                 mockFSBPromotionUIStore.tryConsumeFSB.mockReturnValue(false);
-                
+
                 handler.tryConsumeFSB();
-                
+
                 expect(mockFSBPromotionUIStore.addPendingUIEvent).not.toHaveBeenCalled();
             });
         });
@@ -441,9 +441,9 @@ describe("FSBPromotionUIHandler", () => {
         describe("undoLastFSBSpin", () => {
             it("should undo fsb spin and update count when successful", () => {
                 mockFSBPromotionUIStore.undoLastFSBSpin.mockReturnValue(true);
-                
+
                 handler.undoLastFSBSpin();
-                
+
                 expect(mockFSBPromotionUIStore.addPendingUIEvent).toHaveBeenCalledWith(
                     FreeSpinsPromotionEvents.UPDATE_FSB_COUNT,
                     0
@@ -452,9 +452,9 @@ describe("FSBPromotionUIHandler", () => {
 
             it("should not update count when undo fails", () => {
                 mockFSBPromotionUIStore.undoLastFSBSpin.mockReturnValue(false);
-                
+
                 handler.undoLastFSBSpin();
-                
+
                 expect(mockFSBPromotionUIStore.addPendingUIEvent).not.toHaveBeenCalled();
             });
         });
@@ -462,7 +462,7 @@ describe("FSBPromotionUIHandler", () => {
         describe("commitFSBSpins", () => {
             it("should commit fsb spins", () => {
                 handler.commitFSBSpins();
-                
+
                 expect(mockFSBPromotionUIStore.commitFSB).toHaveBeenCalled();
             });
         });
@@ -471,9 +471,9 @@ describe("FSBPromotionUIHandler", () => {
             it("should mark end and show popup when server confirms and not consumed", () => {
                 mockFSBPromotionUIStore.hasServerFinishPromotion = true;
                 mockFSBPromotionUIStore.fsbConsumedThisRound = false;
-                
+
                 handler.markFSBEndFromServer();
-                
+
                 expect(mockFSBPromotionUIStore.markServerConfirmedEnd).toHaveBeenCalled();
                 expect(mockCascadingUIStore.fsbPromotionInProgress).toBe(false);
                 expect(mockFSBPromotionUIStore.addPendingUIEvent).toHaveBeenCalledWith(
@@ -483,9 +483,9 @@ describe("FSBPromotionUIHandler", () => {
 
             it("should not show popup when fsb consumed this round", () => {
                 mockFSBPromotionUIStore.fsbConsumedThisRound = true;
-                
+
                 handler.markFSBEndFromServer();
-                
+
                 expect(mockFSBPromotionUIStore.addPendingUIEvent).not.toHaveBeenCalledWith(
                     FreeSpinsPromotionEvents.OPEN_PROMOTION_ENDED_POPUP
                 );
@@ -498,27 +498,27 @@ describe("FSBPromotionUIHandler", () => {
             it("should be eligible when has total win and no current spins", () => {
                 mockFSBPromotionStore.finishPromotion = { totalWin: 1000 };
                 mockFSBPromotionUIStore.currentSpinCount = 0;
-                
+
                 const result = handler.isEligibleForTurnOverPanel();
-                
+
                 expect(result).toBe(true);
             });
 
             it("should not be eligible when no total win", () => {
                 mockFSBPromotionStore.finishPromotion = { totalWin: 0 };
                 mockFSBPromotionUIStore.currentSpinCount = 0;
-                
+
                 const result = handler.isEligibleForTurnOverPanel();
-                
+
                 expect(result).toBe(false);
             });
 
             it("should not be eligible when has current spins", () => {
                 mockFSBPromotionStore.finishPromotion = { totalWin: 1000 };
                 mockFSBPromotionUIStore.currentSpinCount = 5;
-                
+
                 const result = handler.isEligibleForTurnOverPanel();
-                
+
                 expect(result).toBe(false);
             });
         });
@@ -528,7 +528,7 @@ describe("FSBPromotionUIHandler", () => {
         describe("claimBonusWin", () => {
             it("should send claim bonus win event to server", () => {
                 handler.claimBonusWin();
-                
+
                 expect(mockConnectionStore.send).toHaveBeenCalledWith(
                     GameClientMessageSlot.ClaimBonusWin.eventName,
                     null
@@ -539,7 +539,7 @@ describe("FSBPromotionUIHandler", () => {
         describe("redeemGiftCode", () => {
             it("should send redeem gift code event with code", () => {
                 handler.redeemGiftCode("TESTCODE");
-                
+
                 expect(mockConnectionStore.send).toHaveBeenCalledWith(
                     GameClientMessageSlot.RedeemGifCode.eventName,
                     { giftCode: "TESTCODE" }
@@ -550,7 +550,7 @@ describe("FSBPromotionUIHandler", () => {
         describe("handleRedemptionNotice", () => {
             it("should handle redemption notice with error message", () => {
                 handler.handleRedemptionNotice();
-                
+
                 expect(mockFSBPromotionUIStore.addPendingUIEvent).toHaveBeenCalledWith(
                     FreeSpinsPromotionEvents.REDEMPTION_NOTICE,
                     "FreeSpinBonus.Invalide_gift_code_error_message"
@@ -561,7 +561,7 @@ describe("FSBPromotionUIHandler", () => {
         describe("resetFSBRedemptionState", () => {
             it("should reset redeem result to idle state", () => {
                 handler.resetFSBRedemptionState();
-                
+
                 expect(mockFSBPromotionStore.redeemResult).toBe(RedeemStatus.Idle);
             });
         });
@@ -571,25 +571,25 @@ describe("FSBPromotionUIHandler", () => {
         describe("mapErrorCodeToMessageKey", () => {
             it("should map sb3019 to gift code error message", () => {
                 const result = (handler as any).mapErrorCodeToMessageKey("SB3019");
-                
+
                 expect(result).toBe("FreeSpinBonus.gift_code_error_message");
             });
 
             it("should map sb3020 to invalid gift code error message", () => {
                 const result = (handler as any).mapErrorCodeToMessageKey("SB3020");
-                
+
                 expect(result).toBe("FreeSpinBonus.Invalide_gift_code_error_message");
             });
 
             it("should map sb3021 to unexpected gift code error message", () => {
                 const result = (handler as any).mapErrorCodeToMessageKey("SB3021");
-                
+
                 expect(result).toBe("FreeSpinBonus.Unexpected_gift_code_error_message");
             });
 
             it("should return default message for unknown error code", () => {
                 const result = (handler as any).mapErrorCodeToMessageKey("UNKNOWN");
-                
+
                 expect(result).toBe("FreeSpinBonus.Invalide_gift_code_error_message");
             });
         });
@@ -599,7 +599,7 @@ describe("FSBPromotionUIHandler", () => {
         describe("updateTotalWin", () => {
             it("should update total win and resume promotion when enabled", () => {
                 handler.updateTotalWin({ win: 500, totalFreeSpins: 5 });
-                
+
                 expect(mockFSBPromotionUIStore.resumedFSBPromotion).toBe(true);
                 expect(mockFSBPromotionUIStore.addPendingUIEvent).toHaveBeenCalledWith(
                     FreeSpinsPromotionEvents.UPDATE_TOTAL_WIN,
@@ -609,15 +609,15 @@ describe("FSBPromotionUIHandler", () => {
 
             it("should not update when total win update disabled", () => {
                 mockFSBPromotionUIStore.isUpdateTotalWin = false;
-                
+
                 handler.updateTotalWin({ win: 500, totalFreeSpins: 5 });
-                
+
                 expect(mockFSBPromotionUIStore.addPendingUIEvent).not.toHaveBeenCalled();
             });
 
             it("should commit fsb and end promotion when no free spins remaining", () => {
                 handler.updateTotalWin({ win: 500, totalFreeSpins: 0 });
-                
+
                 expect(mockFSBPromotionUIStore.commitFSB).toHaveBeenCalled();
                 expect(mockFSBPromotionUIStore.resumedFSBPromotion).toBe(false);
             });
@@ -626,7 +626,7 @@ describe("FSBPromotionUIHandler", () => {
         describe("setFSBInfoReady", () => {
             it("should set fsb info ready status", () => {
                 handler.setFSBInfoReady(true);
-                
+
                 expect(mockFSBPromotionUIStore.setFSBInfoReady).toHaveBeenCalledWith(true);
             });
         });
@@ -634,7 +634,7 @@ describe("FSBPromotionUIHandler", () => {
         describe("setIsClickPlayNow", () => {
             it("should set click play now status", () => {
                 handler.setIsClickPlayNow(true);
-                
+
                 expect(mockFSBPromotionUIStore.isClickPlayNow).toBe(true);
             });
         });
@@ -644,33 +644,33 @@ describe("FSBPromotionUIHandler", () => {
         describe("triggerFSBManual", () => {
             it("should not trigger fsb when already consumed this round", () => {
                 mockFSBPromotionUIStore.fsbConsumedThisRound = true;
-                
+
                 handler.triggerFSBManual();
-                
+
                 expect(mockBetControlHandlers.init).not.toHaveBeenCalled();
             });
 
             it("should not trigger fsb when in free spins mode", () => {
                 mockCascadingUIStore.isFreeSpins = true;
-                
+
                 handler.triggerFSBManual();
-                
+
                 expect(mockBetControlHandlers.init).not.toHaveBeenCalled();
             });
 
             it("should not trigger fsb when no current spin count", () => {
                 mockFSBPromotionUIStore.currentSpinCount = 0;
-                
+
                 handler.triggerFSBManual();
-                
+
                 expect(mockBetControlHandlers.init).not.toHaveBeenCalled();
             });
 
             it("should not trigger fsb when promotion resumed", () => {
                 mockFSBPromotionUIStore.resumedFSBPromotion = true;
-                
+
                 handler.triggerFSBManual();
-                
+
                 expect(mockBetControlHandlers.init).not.toHaveBeenCalled();
             });
         });
@@ -680,7 +680,7 @@ describe("FSBPromotionUIHandler", () => {
         describe("activeDetailPromo", () => {
             it("should set active detail promo status", () => {
                 handler.activeDetailPromo(true);
-                
+
                 expect(mockFSBPromotionUIStore.activeDetailPromo).toBe(true);
             });
         });
@@ -688,7 +688,7 @@ describe("FSBPromotionUIHandler", () => {
         describe("updatePromotionURL", () => {
             it("should update promotion url", () => {
                 handler.updatePromotionURL();
-                
+
                 expect(mockFSBPromotionUIStore.promotionUrl).toBeDefined();
             });
         });
@@ -696,9 +696,9 @@ describe("FSBPromotionUIHandler", () => {
         describe("onReceivedTOProgressData", () => {
             it("should update to progress and add event when data changed", () => {
                 const progressData = { win: 100, totalTO: 1000, minTO: 100, progress: 0.1 };
-                
+
                 handler.onReceivedTOProgressData(progressData);
-                
+
                 expect(mockFSBPromotionUIStore.updateTOProgress).toHaveBeenCalledWith(progressData);
                 expect(mockFSBPromotionUIStore.addPendingUIEvent).toHaveBeenCalledWith(
                     FreeSpinsPromotionEvents.UPDATE_TURN_OVER_REQUIRED,
@@ -709,9 +709,9 @@ describe("FSBPromotionUIHandler", () => {
             it("should not add event when to progress data unchanged", () => {
                 mockFSBPromotionUIStore.updateTOProgress.mockReturnValue(false);
                 const progressData = { win: 100, totalTO: 1000, minTO: 100, progress: 0.1 };
-                
+
                 handler.onReceivedTOProgressData(progressData);
-                
+
                 expect(mockFSBPromotionUIStore.addPendingUIEvent).not.toHaveBeenCalled();
             });
         });
@@ -719,15 +719,15 @@ describe("FSBPromotionUIHandler", () => {
         describe("openTurnOverRequired", () => {
             it("should set pending open to when finish promotion exists for in game", () => {
                 handler.openTurnOverRequired("in-game");
-                
+
                 expect(mockFSBPromotionUIStore.pendingOpenTOAfterFinish).toBe(true);
             });
 
             it("should open to immediately when no finish promotion for in game", () => {
                 mockFSBPromotionStore.finishPromotion = null;
-                
+
                 handler.openTurnOverRequired("in-game");
-                
+
                 expect(mockFSBPromotionUIStore.addPendingUIEvent).toHaveBeenCalledWith(
                     FreeSpinsPromotionEvents.OPEN_TURN_OVER_REQUIRED
                 );
@@ -736,9 +736,9 @@ describe("FSBPromotionUIHandler", () => {
             it("should open to when eligible for end promotion", () => {
                 mockFSBPromotionStore.finishPromotion = { totalWin: 1000 };
                 mockFSBPromotionUIStore.currentSpinCount = 0;
-                
+
                 handler.openTurnOverRequired("end-promotion");
-                
+
                 expect(mockFSBPromotionUIStore.addPendingUIEvent).toHaveBeenCalledWith(
                     FreeSpinsPromotionEvents.OPEN_TURN_OVER_REQUIRED
                 );
@@ -747,9 +747,9 @@ describe("FSBPromotionUIHandler", () => {
 
             it("should not open to when not eligible for end promotion", () => {
                 mockFSBPromotionStore.finishPromotion = { totalWin: 0 };
-                
+
                 handler.openTurnOverRequired("end-promotion");
-                
+
                 expect(mockFSBPromotionUIStore.addPendingUIEvent).not.toHaveBeenCalled();
             });
         });
@@ -759,7 +759,7 @@ describe("FSBPromotionUIHandler", () => {
         describe("showNoticeError", () => {
             it("should show notice error with error code", () => {
                 handler.showNoticeError("ERROR_CODE");
-                
+
                 expect(mockNoticeErrorsHandlers.showErrorNotice).toHaveBeenCalledWith("ERROR_CODE");
             });
         });
@@ -767,7 +767,7 @@ describe("FSBPromotionUIHandler", () => {
         describe("handleTrialMode", () => {
             it("should set trial mode status", () => {
                 handler.handleTrialMode(true);
-                
+
                 expect(mockFSBPromotionUIStore.isTrialMode).toBe(true);
             });
         });
@@ -775,7 +775,7 @@ describe("FSBPromotionUIHandler", () => {
         describe("claimedBonusSuccess", () => {
             it("should add claimed bonus success event", () => {
                 handler.claimedBonusSuccess();
-                
+
                 expect(mockFSBPromotionUIStore.addPendingUIEvent).toHaveBeenCalledWith(
                     FreeSpinsPromotionEvents.CLAIMED_BONUS_SUCCESS
                 );

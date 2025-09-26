@@ -46,7 +46,7 @@ export class FsbPromotionDialog extends ObserverComponent {
     }
 
     @handle(FSBPromotionUIHandler, (handle) => handle.setIsClickPlayNow(true))
-    onPlayGameNow() {}
+    onPlayGameNow() { }
 
     @render(FSBPromotionUIStore, (store) => store.isFreeSpinInGame)
     checkFeeSpinInGame(isFreeSpins: boolean) {
@@ -80,17 +80,17 @@ export class FsbPromotionDialog extends ObserverComponent {
         this.activeDetailPromo = activeDetailPromo;
     }
 
-    @handle(FSBPromotionUIHandler, (handler) => handler.openPromotionInfo())
-    openPromotionDetailsPanel() {}
+    @handle(FSBPromotionUIHandler, (handler) => handler.openPromotionInfo(true))
+    openPromotionDetailsPanel() { }
 
     @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.SHOW_FREE_SPIN_MESSAGE))
-    showFreeSpinMessage() {}
+    showFreeSpinMessage() { }
 
     @handle(FSBPromotionUIHandler, (handler) => handler.setShowFreeSpinMessage(true))
-    setShowFreeSpinMessage() {}
+    setShowFreeSpinMessage() { }
 
     @handle(FSBPromotionHandlers, (handler) => handler.resetRedeemSuccess())
-    resetRedeemSuccess() {}
+    resetRedeemSuccess() { }
 
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.CLOSE_FSB_BANNER)
     closeFSBBanner(shouldClose: boolean) {
@@ -100,5 +100,5 @@ export class FsbPromotionDialog extends ObserverComponent {
     }
 
     @handle(FSBPromotionUIHandler, (handler) => handler.changeUIPendingEvent(FreeSpinsPromotionEvents.DESTROY_BANNER_NODE))
-    addPendingUIEvent() {}
+    addPendingUIEvent() { }
 }

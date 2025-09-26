@@ -82,9 +82,9 @@ export class FSBPromotionUIHandler {
         }
     }
 
-    public openPromotionInfo() {
+    public openPromotionInfo(isAutoPlay = false) {
         this.setCurrentSpinCount(this.fsbPromotionStore.promotion?.remainingBonusItems);
-        this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO);
+        this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_PROMOTION_INFO, isAutoPlay);
     }
 
     private shouldShowGiftCode() {

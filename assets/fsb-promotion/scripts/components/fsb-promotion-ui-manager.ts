@@ -6,7 +6,7 @@ import { AnimationUtils } from "db://shared-components/shared/utils/utils";
 import Observer from "observer";
 import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
 import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
-import { isPortraitMode } from "../../fsb-promotion-resource/config/orientation";
+import { FunctionUtils } from "db://shared-components/shared/utils/function-utils";
 
 const { handle, render } = Observer;
 const { ccclass } = _decorator;
@@ -36,7 +36,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
     private currentPortrait: boolean;
 
     async onLoad() {
-        this.currentPortrait = isPortraitMode();
+        this.currentPortrait = FunctionUtils.isPortraitMode();
         await this.loadConfigFor(this.currentPortrait);
         this.createFsbPromotionContainer();
         this.createFsbPromotionPopupContainer();

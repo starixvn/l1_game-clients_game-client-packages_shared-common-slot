@@ -10,6 +10,7 @@ import {
     FSBPromotionUIStore,
     ITurnOverRequired,
 } from "../stores/fsb-promotion-ui-store";
+import { FunctionUtils } from "db://shared-components/shared/utils/function-utils";
 
 const { injectable, inject } = inversify;
 
@@ -142,6 +143,9 @@ export class FSBPromotionUIHandler {
         if (gameOffers && Array.isArray(gameOffers)) {
             const jsonString = JSON.stringify(gameOffers);
             searchParams.append("game", jsonString);
+        }
+        if(FunctionUtils.isPortraitMode()) {
+            searchParams.append("isPortrait", "true");
         }
 
         return searchParams.toString();

@@ -18,6 +18,17 @@ jest.mock("cc", () => ({
         ccclass: jest.fn(() => jest.fn()),
         property: jest.fn(() => jest.fn()),
     },
+    Component: class MockComponent {
+        node = { getComponent: jest.fn() };
+        onLoad() {}
+        onDestroy() {}
+        start() {}
+        update() {}
+        schedule = jest.fn();
+        scheduleOnce = jest.fn();
+        unschedule = jest.fn();
+        unscheduleAllCallbacks = jest.fn();
+    },
     Node: jest.fn(),
     EventTarget: jest.fn().mockImplementation(() => ({
         addEventListener: jest.fn(),

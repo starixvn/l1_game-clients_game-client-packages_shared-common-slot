@@ -40,7 +40,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": -83,
-      "y": 454,
+      "y": 305,
       "z": 0
     },
     "_lrot": {
@@ -190,7 +190,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 798.3642578125,
+      "width": 176.0498046875,
       "height": 75.6
     },
     "_anchorPoint": {
@@ -226,7 +226,7 @@
       "b": 255,
       "a": 255
     },
-    "_string": "FREESPINBONUS.GIFT_CODE_REDEEM",
+    "_string": "REDEEM",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_actualFontSize": 50,

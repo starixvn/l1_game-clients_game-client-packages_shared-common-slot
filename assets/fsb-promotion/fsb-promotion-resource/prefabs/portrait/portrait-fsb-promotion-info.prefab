@@ -40,7 +40,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": 150,
-      "y": 566,
+      "y": 520,
       "z": 0
     },
     "_lrot": {
@@ -112,8 +112,8 @@
     },
     "_lscale": {
       "__type__": "cc.Vec3",
-      "x": 1,
-      "y": 1,
+      "x": 1.3,
+      "y": 1.3,
       "z": 1
     },
     "_mobility": 0,
@@ -256,7 +256,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 275.50341796875,
+      "width": 248.841796875,
       "height": 50.4
     },
     "_anchorPoint": {
@@ -295,8 +295,8 @@
     "_string": "PROMOTION INFO",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
-    "_actualFontSize": 31,
-    "_fontSize": 31,
+    "_actualFontSize": 28,
+    "_fontSize": 28,
     "_fontFamily": "Arial",
     "_lineHeight": 40,
     "_overflow": 0,
@@ -534,8 +534,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 0,
-      "height": null
+      "width": 182.12890625,
+      "height": 63
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -573,8 +573,8 @@
     "_string": "TOTAL WIN",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
-    "_actualFontSize": 0,
-    "_fontSize": 0,
+    "_actualFontSize": 40,
+    "_fontSize": 40,
     "_fontFamily": "Arial",
     "_lineHeight": 50,
     "_overflow": 0,
@@ -1056,7 +1056,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 236.60888671875,
-      "height": 40.32
+      "height": 44.1
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -1097,7 +1097,7 @@
     "_actualFontSize": 35,
     "_fontSize": 35,
     "_fontFamily": "Arial",
-    "_lineHeight": 32,
+    "_lineHeight": 35,
     "_overflow": 0,
     "_enableWrapText": true,
     "_font": {
@@ -1191,6 +1191,8 @@
       "__id__": 0
     },
     "fileId": "2a1XbyR0FN2YPNwWdpboeI",
+    "instance": null,
+    "targetOverrides": null,
     "nestedPrefabInstanceRoots": null
   },
   {
@@ -1520,8 +1522,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 120.875,
-      "height": 40.32
+      "width": 132.20703125,
+      "height": 44.1
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -1559,10 +1561,10 @@
     "_string": "Total Bet",
     "_horizontalAlign": 0,
     "_verticalAlign": 1,
-    "_actualFontSize": 32,
-    "_fontSize": 32,
+    "_actualFontSize": 35,
+    "_fontSize": 35,
     "_fontFamily": "Arial",
-    "_lineHeight": 32,
+    "_lineHeight": 35,
     "_overflow": 0,
     "_enableWrapText": true,
     "_font": {
@@ -1656,6 +1658,8 @@
       "__id__": 0
     },
     "fileId": "d4X4BWdFBLCq3ti+Vptx/T",
+    "instance": null,
+    "targetOverrides": null,
     "nestedPrefabInstanceRoots": null
   },
   {
@@ -2314,8 +2318,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 207,
-      "height": 231
+      "width": 260,
+      "height": 250
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",

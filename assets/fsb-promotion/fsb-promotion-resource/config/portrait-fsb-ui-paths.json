@@ -14,7 +14,7 @@
     },
     "nodes": {
       "CENTER": "center",
-      "AUTO_SCALE_WIDGET": "auto-scale-widget",
+      "AUTO_SCALE_WIDGET": "full-widget",
       "IN_GAME_MENU": "in-game-menu",
       "OUTER_CONTAINER": "outer-container",
       "EFFECT_REDEEM_SUCCESS": "effect-redeem-success"

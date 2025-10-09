@@ -1,7 +1,7 @@
 import { _decorator } from 'cc';
 import LoadWebView from "db://shared-components/shared/common-components/web-view/load-web-view";
-import { FSBPromotionUIStore } from '../stores/fsb-promotion-ui-store';
 import Observer from "observer";
+import { FSBPromotionUIStore } from '../stores/fsb-promotion-ui-store';
 const { render, handle } = Observer;
 
 const { ccclass, property } = _decorator;
@@ -9,6 +9,8 @@ const { ccclass, property } = _decorator;
 export class FsbWebView extends LoadWebView {
     onLoad(): void {
         super.onLoad();
+        this.hideWebView();
+        this.showLoading();
     }
 
     @render(FSBPromotionUIStore, (store) => store.promotionUrl)
@@ -16,9 +18,11 @@ export class FsbWebView extends LoadWebView {
         if (!promotionUrl) {
             return;
         }
-        this.showLoading();
-        this.hideWebView();
-        this.webView && (this.webView.url = promotionUrl);
+        this.scheduleOnce(() => {
+            this.showLoading();
+            this.hideWebView();
+            this.webView && (this.webView.url = promotionUrl);
+        }, 0.3);
     }
 
     showWebView() {

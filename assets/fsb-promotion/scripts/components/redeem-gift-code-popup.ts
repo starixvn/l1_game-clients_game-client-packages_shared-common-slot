@@ -6,6 +6,7 @@ import { FSBPromotionStore } from "../stores/fsb-promotion-store";
 import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
 import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
 import { Dialog } from "db://shared-components/shared/common-components/dialogs/dialog";
+import { FunctionUtils } from "db://shared-components/shared/utils";
 const { ccclass, property } = _decorator;
 const { render, handle } = Observer;
 
@@ -80,7 +81,7 @@ export class RedeemGiftCodePopup extends ObserverComponent {
             clearTimeout(this._debounceTimer);
         }
         this._debounceTimer = setTimeout(() => {
-            if (sys.isMobile) {
+            if (sys.isMobile && !FunctionUtils.isPortraitMode()) {
                 this.contentNode.y += 200;
                 this._isKeyboardOpen = true;
             }
@@ -98,7 +99,7 @@ export class RedeemGiftCodePopup extends ObserverComponent {
     }
 
     onEditBoxBlur() {
-        if (sys.isMobile) {
+        if (sys.isMobile && !FunctionUtils.isPortraitMode()) {
             this.scheduleOnce(() => {
                 this.contentNode.y = this._originalY;
                 this._isKeyboardOpen = false;

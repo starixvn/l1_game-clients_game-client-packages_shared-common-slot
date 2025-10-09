@@ -13,6 +13,17 @@ jest.mock("cc", () => ({
         isMobile: false,
     },
     Node: jest.fn(),
+    Component: class MockComponent {
+        node = { getComponent: jest.fn() };
+        onLoad() {}
+        onDestroy() {}
+        start() {}
+        update() {}
+        schedule = jest.fn();
+        scheduleOnce = jest.fn();
+        unschedule = jest.fn();
+        unscheduleAllCallbacks = jest.fn();
+    },
 }));
 
 // Mock navigator.clipboard
@@ -80,6 +91,12 @@ jest.mock("@sg/game-client-base", () => ({
 
 jest.mock("db://shared-components/shared/common-components/dialogs/dialog", () => ({
     Dialog: jest.fn(),
+}));
+
+jest.mock("db://shared-components/shared/utils", () => ({
+    FunctionUtils: {
+        isPortraitMode: jest.fn(() => false),
+    },
 }));
 
 jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-store", () => ({
@@ -154,7 +171,6 @@ describe("RedeemGiftCodePopup", () => {
             expect(redeemGiftCodePopup).toHaveProperty("contentNode");
         });
     });
-
     describe("redeemGifCode method", () => {
         it("should return trimmed and uppercased gift code", () => {
             mockGiftCodeInput.string = "  test123  ";
@@ -307,7 +323,7 @@ describe("RedeemGiftCodePopup", () => {
             jest.useRealTimers();
         });
 
-        it("should schedule mobile keyboard adjustment", () => {
+        it("should schedule mobile keyboard adjustment when mobile and not portrait", () => {
             const mockSetTimeout = jest.spyOn(global, 'setTimeout');
             const mockDispatchEvent = jest.fn();
             (global as any).window = { dispatchEvent: mockDispatchEvent };
@@ -315,6 +331,10 @@ describe("RedeemGiftCodePopup", () => {
             // Mock cc.sys.isMobile
             const cc = require("cc");
             cc.sys.isMobile = true;
+            
+            // Mock FunctionUtils.isPortraitMode to return false
+            const FunctionUtils = require("db://shared-components/shared/utils").FunctionUtils;
+            FunctionUtils.isPortraitMode.mockReturnValue(false);
             
             redeemGiftCodePopup.onEditBoxFocus();
             
@@ -324,9 +344,34 @@ describe("RedeemGiftCodePopup", () => {
             jest.advanceTimersByTime(200);
             expect(mockContentNode.y).toBe(300); // 100 + 200
             expect(mockDispatchEvent).toHaveBeenCalledWith(expect.any(Event));
+            expect((redeemGiftCodePopup as any)._isKeyboardOpen).toBe(true);
         });
 
-        it("should not schedule adjustment on desktop", () => {
+        it("should not adjust position when mobile but in portrait mode", () => {
+            const mockSetTimeout = jest.spyOn(global, 'setTimeout');
+            const mockDispatchEvent = jest.fn();
+            (global as any).window = { dispatchEvent: mockDispatchEvent };
+            
+            // Mock cc.sys.isMobile
+            const cc = require("cc");
+            cc.sys.isMobile = true;
+            
+            // Mock FunctionUtils.isPortraitMode to return true
+            const FunctionUtils = require("db://shared-components/shared/utils").FunctionUtils;
+            FunctionUtils.isPortraitMode.mockReturnValue(true);
+            
+            redeemGiftCodePopup.onEditBoxFocus();
+            
+            expect(mockSetTimeout).toHaveBeenCalled();
+            
+            // Advance timer to trigger the callback
+            jest.advanceTimersByTime(200);
+            expect(mockContentNode.y).toBe(100); // Should remain unchanged
+            expect(mockDispatchEvent).toHaveBeenCalledWith(expect.any(Event));
+            expect((redeemGiftCodePopup as any)._isKeyboardOpen).toBe(false);
+        });
+
+        it("should not adjust position on desktop", () => {
             const mockSetTimeout = jest.spyOn(global, 'setTimeout');
             const mockDispatchEvent = jest.fn();
             (global as any).window = { dispatchEvent: mockDispatchEvent };
@@ -343,21 +388,51 @@ describe("RedeemGiftCodePopup", () => {
             jest.advanceTimersByTime(200);
             expect(mockContentNode.y).toBe(100); // Should remain unchanged
             expect(mockDispatchEvent).toHaveBeenCalledWith(expect.any(Event));
+            expect((redeemGiftCodePopup as any)._isKeyboardOpen).toBe(false);
+        });
+
+        it("should clear existing debounce timer", () => {
+            const mockClearTimeout = jest.spyOn(global, 'clearTimeout');
+            (redeemGiftCodePopup as any)._debounceTimer = 123;
+            
+            redeemGiftCodePopup.onEditBoxFocus();
+            
+            expect(mockClearTimeout).toHaveBeenCalledWith(123);
         });
     });
 
     describe("onEditBoxBlur method", () => {
-        it("should schedule position restore on mobile", () => {
+        it("should schedule position restore on mobile when not in portrait mode", () => {
             (redeemGiftCodePopup as any)._originalY = 100;
             
             // Mock cc.sys.isMobile
             const cc = require("cc");
             cc.sys.isMobile = true;
             
+            // Mock FunctionUtils.isPortraitMode to return false
+            const FunctionUtils = require("db://shared-components/shared/utils").FunctionUtils;
+            FunctionUtils.isPortraitMode.mockReturnValue(false);
+            
             redeemGiftCodePopup.onEditBoxBlur();
             
             expect((redeemGiftCodePopup as any).scheduleOnce).toHaveBeenCalledTimes(1);
             expect((redeemGiftCodePopup as any).scheduleOnce).toHaveBeenCalledWith(expect.any(Function), 0.2);
+        });
+
+        it("should not schedule position restore on mobile when in portrait mode", () => {
+            (redeemGiftCodePopup as any)._originalY = 100;
+            
+            // Mock cc.sys.isMobile
+            const cc = require("cc");
+            cc.sys.isMobile = true;
+            
+            // Mock FunctionUtils.isPortraitMode to return true
+            const FunctionUtils = require("db://shared-components/shared/utils").FunctionUtils;
+            FunctionUtils.isPortraitMode.mockReturnValue(true);
+            
+            redeemGiftCodePopup.onEditBoxBlur();
+            
+            expect((redeemGiftCodePopup as any).scheduleOnce).not.toHaveBeenCalled();
         });
 
         it("should not schedule position restore on desktop", () => {
@@ -370,6 +445,28 @@ describe("RedeemGiftCodePopup", () => {
             redeemGiftCodePopup.onEditBoxBlur();
             
             expect((redeemGiftCodePopup as any).scheduleOnce).not.toHaveBeenCalled();
+        });
+
+        it("should restore position and reset keyboard state when scheduled callback runs", () => {
+            (redeemGiftCodePopup as any)._originalY = 100;
+            (redeemGiftCodePopup as any)._isKeyboardOpen = true;
+            
+            // Mock cc.sys.isMobile
+            const cc = require("cc");
+            cc.sys.isMobile = true;
+            
+            // Mock FunctionUtils.isPortraitMode to return false
+            const FunctionUtils = require("db://shared-components/shared/utils").FunctionUtils;
+            FunctionUtils.isPortraitMode.mockReturnValue(false);
+            
+            redeemGiftCodePopup.onEditBoxBlur();
+            
+            // Get the scheduled callback and execute it
+            const scheduledCallback = (redeemGiftCodePopup as any).scheduleOnce.mock.calls[0][0];
+            scheduledCallback();
+            
+            expect(mockContentNode.y).toBe(100);
+            expect((redeemGiftCodePopup as any)._isKeyboardOpen).toBe(false);
         });
     });
 
@@ -391,6 +488,26 @@ describe("RedeemGiftCodePopup", () => {
             redeemGiftCodePopup.onInputFinalized(mockGiftCodeInput);
             
             expect(mockGiftCodeInput.string).toBe("TEST123");
+            expect(mockOnEditBoxBlur).toHaveBeenCalledTimes(1);
+        });
+
+        it("should handle mixed case input", () => {
+            mockGiftCodeInput.string = "aBc123DeF";
+            const mockOnEditBoxBlur = jest.spyOn(redeemGiftCodePopup, 'onEditBoxBlur');
+            
+            redeemGiftCodePopup.onInputFinalized(mockGiftCodeInput);
+            
+            expect(mockGiftCodeInput.string).toBe("ABC123DEF");
+            expect(mockOnEditBoxBlur).toHaveBeenCalledTimes(1);
+        });
+
+        it("should handle empty input", () => {
+            mockGiftCodeInput.string = "";
+            const mockOnEditBoxBlur = jest.spyOn(redeemGiftCodePopup, 'onEditBoxBlur');
+            
+            redeemGiftCodePopup.onInputFinalized(mockGiftCodeInput);
+            
+            expect(mockGiftCodeInput.string).toBe("");
             expect(mockOnEditBoxBlur).toHaveBeenCalledTimes(1);
         });
     });
@@ -426,6 +543,27 @@ describe("RedeemGiftCodePopup", () => {
             
             expect(() => redeemGiftCodePopup.renderRedemptionNotice(null)).not.toThrow();
             expect(mockErrorLabel.string).toBe("");
+        });
+
+        it("should handle undefined pending UI event", () => {
+            const mockTranslate = jest.fn((key: string) => key);
+            const gc = require("@sg/game-client-base");
+            gc.Translator.translate = mockTranslate;
+            
+            expect(() => redeemGiftCodePopup.renderRedemptionNotice(undefined)).not.toThrow();
+            expect(mockErrorLabel.string).toBe("");
+        });
+
+        it("should handle pending UI event with null data", () => {
+            const noticeEvent = { event: "REDEMPTION_NOTICE", data: null };
+            const mockTranslate = jest.fn((key: string) => key);
+            const gc = require("@sg/game-client-base");
+            gc.Translator.translate = mockTranslate;
+            
+            redeemGiftCodePopup.renderRedemptionNotice(noticeEvent);
+            
+            expect(mockTranslate).toHaveBeenCalledWith(null);
+            expect(mockErrorLabel.string).toBe(null);
         });
     });
 
@@ -479,6 +617,10 @@ describe("RedeemGiftCodePopup", () => {
             cc.sys.isMobile = true;
             (redeemGiftCodePopup as any)._originalY = 100;
 
+            // Mock FunctionUtils.isPortraitMode to return false
+            const FunctionUtils = require("db://shared-components/shared/utils").FunctionUtils;
+            FunctionUtils.isPortraitMode.mockReturnValue(false);
+
             // Focus - should adjust position
             jest.useFakeTimers();
             const mockSetTimeout = jest.spyOn(global, 'setTimeout');
@@ -491,10 +633,17 @@ describe("RedeemGiftCodePopup", () => {
             expect(mockSetTimeout).toHaveBeenCalled();
             expect(mockContentNode.y).toBe(300); // 100 + 200
             expect(mockDispatchEvent).toHaveBeenCalledWith(expect.any(Event));
+            expect((redeemGiftCodePopup as any)._isKeyboardOpen).toBe(true);
 
             // Blur - should restore position
             redeemGiftCodePopup.onEditBoxBlur();
             expect((redeemGiftCodePopup as any).scheduleOnce).toHaveBeenCalledTimes(1);
+
+            // Execute the scheduled callback
+            const scheduledCallback = (redeemGiftCodePopup as any).scheduleOnce.mock.calls[0][0];
+            scheduledCallback();
+            expect(mockContentNode.y).toBe(100);
+            expect((redeemGiftCodePopup as any)._isKeyboardOpen).toBe(false);
 
             jest.useRealTimers();
         });

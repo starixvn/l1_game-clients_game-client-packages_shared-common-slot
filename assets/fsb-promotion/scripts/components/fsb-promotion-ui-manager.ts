@@ -44,10 +44,13 @@ export class FSBPromotionUIManager extends ObserverComponent {
     }
     private async loadConfigFor(portrait: boolean) {
         const configFile = portrait ? "config/portrait-fsb-ui-paths" : "config/landscape-fsb-ui-paths";
-        const asset = await bundleManager.loadAssetsFromBundle<JsonAsset>("fsb-promotion-resource", configFile, JsonAsset, null);
 
+        // thứ tự ưu tiên: resources → fsb-promotion-resource
+        const bundles = ["resources", "fsb-promotion-resource"];
+
+        const asset = await this.loadJsonFromBundles<JsonAsset>(bundles, configFile);
         if (!asset) {
-            throw new Error(`[FSBUI] Không tìm thấy file config: ${configFile}.json`);
+            throw new Error(`[FSBUI] Không tìm thấy file config ở bất kỳ bundle nào: ${configFile}.json (tried: ${bundles.join(", ")})`);
         }
 
         this.fsbUIConfig = asset.json as FSBUIConfig;
@@ -65,11 +68,22 @@ export class FSBPromotionUIManager extends ObserverComponent {
             "turnOverRequired",
         ];
 
-        for (const key of requiredPrefabs) {
-            if (!this.fsbUIConfig.prefabs[key]) {
-                console.warn(`[FSBUI] Thiếu prefab "${key}" trong ${configFile}.json`);
+        for (const k of requiredPrefabs) {
+            if (!this.fsbUIConfig?.prefabs?.[k as string]) {
+                console.warn(`[FSBUI] Thiếu prefab "${k}" trong ${configFile}.json`);
             }
         }
+    }
+    private async loadJsonFromBundles<T extends JsonAsset>(bundleNames: string[], pathFile: string): Promise<T | null> {
+        for (const bundle of bundleNames) {
+            try {
+                const jsonAsset = await bundleManager.loadAssetsFromBundle<T>(bundle, pathFile, JsonAsset, null);
+                if (jsonAsset) {
+                    return jsonAsset;
+                }
+            } catch (err) {}
+        }
+        return null;
     }
 
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.OPEN_GIFT_CODE)

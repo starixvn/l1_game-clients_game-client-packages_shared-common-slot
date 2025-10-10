@@ -9,7 +9,6 @@ const { ccclass, property } = _decorator;
 export class FsbWebView extends LoadWebView {
     onLoad(): void {
         super.onLoad();
-        this.hideWebView();
         this.showLoading();
     }
 
@@ -18,26 +17,21 @@ export class FsbWebView extends LoadWebView {
         if (!promotionUrl) {
             return;
         }
-        this.scheduleOnce(() => {
-            this.showLoading();
-            this.hideWebView();
-            this.webView && (this.webView.url = promotionUrl);
-        }, 0.3);
+        this.hideWebView();
+        this.webView && (this.webView.url = promotionUrl);
     }
 
-    showWebView() {
-        this.setOpacity(255);
+    override showWebView() {
         this.onWebViewLoaded();
+        this.changeWebViewLoadingFalse();
+        this.scheduleOnce(() => {
+            this.setOpacity(255);
+        }, 0.1);
     }
 
     showLoading() {
         this.nodeLoading.active = true;
         this.changeWebViewLoadingTrue();
-    }
-
-    hideLoading() {
-        this.nodeLoading.active = false;
-        this.changeWebViewLoadingFalse();
     }
 
 

@@ -1,37 +1,23 @@
 import gc from "@sg/game-client-base";
-import { _decorator, instantiate, Node, Prefab, tween, UITransform, Vec3, Widget } from "cc";
+import { _decorator, instantiate, Node, Prefab, tween, UITransform, Vec3, Widget, JsonAsset } from "cc";
 import { bundleManager } from "db://shared-components/shared/common-components/bundle-manager/bundle-manager";
 import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
 import { AnimationUtils } from "db://shared-components/shared/utils/utils";
 import Observer from "observer";
 import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
 import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
+import { FunctionUtils } from "db://shared-components/shared/utils/function-utils";
 
 const { handle, render } = Observer;
 const { ccclass } = _decorator;
 
-// Constants
-const BUNDLE_NAME = "fsb-promotion-resource";
-const PREFAB_GIFT_CODE_PATH = "prefabs/gift-code";
-const PREFAB_REDEEM_GIFT_CODE_POPUP_PATH = "prefabs/redeem-gift-code-popup";
-const PREFAB_EFFECT_REDEEM_SUCCESS_PATH = "prefabs/effect-redeem-success";
-const PREFAB_EFFECT_UNBOX_GIFT_PATH = "prefabs/effect-unbox-gift";
-const PREFAB_FSB_BANNER_PATH = "prefabs/fsb-banner";
-const PREFAB_PROMOTION_INFO_PATH = "prefabs/fsb-promotion-info";
-const PREFAB_PROMOTION_ENDED_POPUP_PATH = "prefabs/promotion-ended-popup";
-const PREFAB_CLAIM_BONUS_NOTIFICATION_PATH = "prefabs/claim-bonus-notification";
-const PREFAB_FREE_SPIN_MESSAGE_PATH = "prefabs/fsb-bottom-message";
-const CONTAINER_NAME = "fsb-promotion-container";
-const POPUP_CONTAINER_NAME = "fsb-promotion-popup-container";
-const PREFAB_TURN_OVER_REQUIRED_PATH = "prefabs/turn-over-required-panel";
-const NODE_NAMES = {
-    CENTER: "center",
-    AUTO_SCALE_WIDGET: "auto-scale-widget",
-    IN_GAME_MENU: "in-game-menu",
-    OUTER_CONTAINER: "outer-container",
-    EFFECT_REDEEM_SUCCESS: "effect-redeem-success",
-} as const;
-
+type FSBUIConfig = {
+    bundle: string;
+    prefabs: Record<string, string>;
+    nodes: { CENTER: string; AUTO_SCALE_WIDGET: string; IN_GAME_MENU: string; OUTER_CONTAINER: string; EFFECT_REDEEM_SUCCESS: string };
+    containers: { main: string; popup: string };
+    timing: { unitSecondEffectUnboxGift: number; unitSecondRedeemSuccess: number; unitSecondAnimationUnboxGift: number };
+};
 @ccclass("FSBPromotionUIManager")
 export class FSBPromotionUIManager extends ObserverComponent {
     public fsbPromotionContainer: Node = null;
@@ -46,13 +32,58 @@ export class FSBPromotionUIManager extends ObserverComponent {
     private freeSpinMessageNode: Node = null;
     private fsbPromotionInfoNode: Node = null;
     private turnOverRequiredNode: Node = null;
-    private readonly UNIT_SECOND_EFFECT_UNBOX_GIFT = 2;
-    private readonly UNIT_SECOND_REDEEM_SUCCESS = 2;
-    private readonly UNIT_SECOND_ANIMATION_UNBOX_GIFT = 0.8;
-    onLoad() {
+    private fsbUIConfig: FSBUIConfig;
+    private currentPortrait: boolean;
+
+    async onLoad() {
+        this.currentPortrait = FunctionUtils.isPortraitMode();
+        await this.loadConfigFor(this.currentPortrait);
         this.createFsbPromotionContainer();
         this.createFsbPromotionPopupContainer();
         super.onLoad();
+    }
+    private async loadConfigFor(portrait: boolean) {
+        const configFile = portrait ? "config/portrait-fsb-ui-paths" : "config/landscape-fsb-ui-paths";
+
+        // thứ tự ưu tiên: resources → fsb-promotion-resource
+        const bundles = ["resources", "fsb-promotion-resource"];
+
+        const asset = await this.loadJsonFromBundles<JsonAsset>(bundles, configFile);
+        if (!asset) {
+            throw new Error(`[FSBUI] Không tìm thấy file config ở bất kỳ bundle nào: ${configFile}.json (tried: ${bundles.join(", ")})`);
+        }
+
+        this.fsbUIConfig = asset.json as FSBUIConfig;
+
+        const requiredPrefabs = [
+            "giftCode",
+            "redeemGiftCodePopup",
+            "effectRedeemSuccess",
+            "effectUnboxGift",
+            "fsbBanner",
+            "promotionInfo",
+            "promotionEndedPopup",
+            "claimBonusNotification",
+            "freeSpinMessage",
+            "turnOverRequired",
+        ];
+
+        for (const k of requiredPrefabs) {
+            if (!this.fsbUIConfig?.prefabs?.[k]) {
+                console.warn(`[FSBUI] Thiếu prefab "${k}" trong ${configFile}.json`);
+            }
+        }
+    }
+    private async loadJsonFromBundles<T extends JsonAsset>(bundleNames: string[], pathFile: string): Promise<T | null> {
+        for (const bundle of bundleNames) {
+            try {
+                const jsonAsset = await bundleManager.loadAssetsFromBundle<T>(bundle, pathFile, JsonAsset, null);
+                if (jsonAsset) {
+                    return jsonAsset;
+                }
+            } catch (err) {}
+        }
+        return null;
     }
 
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.OPEN_GIFT_CODE)
@@ -149,13 +180,13 @@ export class FSBPromotionUIManager extends ObserverComponent {
     }
 
     @handle(FSBPromotionUIHandler, (handler) => handler.setFSBInfoReady(true))
-    setFSBInfoReady() { }
+    setFSBInfoReady() {}
 
     private async loadAndShowTurnOverRequired() {
         if (this.turnOverRequiredNode) {
             this.turnOverRequiredNode.active = true;
         } else {
-            const prefab = await this.loadPrefab(PREFAB_TURN_OVER_REQUIRED_PATH);
+            const prefab = await this.loadPrefab(this.fsbUIConfig.prefabs.turnOverRequired);
             const turnOverRequiredNode = instantiate(prefab);
             this.fsbPromotionContainer.addChild(turnOverRequiredNode);
             this.turnOverRequiredNode = turnOverRequiredNode;
@@ -168,7 +199,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
         if (this.fsbPromotionInfoNode && this.fsbPromotionInfoNode.isValid) {
             this.showPromotionInfoWithAnimation(delay, isAutoSpin);
         } else {
-            const prefab = await this.loadPrefab(PREFAB_PROMOTION_INFO_PATH);
+            const prefab = await this.loadPrefab(this.fsbUIConfig.prefabs.promotionInfo);
             const fsbPromotionInfoNode = instantiate(prefab);
             fsbPromotionInfoNode.active = false;
 
@@ -204,7 +235,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
     @handle(FSBPromotionUIHandler, (handler) =>
         handler.changeUIPendingEvent(FreeSpinsPromotionEvents.SPIN_ON_FSB_PROMOTION_FIRST_TIME, { delayMs: 800, isPlaceBet: true })
     )
-    spinOnFSBPromotionFirstTime() { }
+    spinOnFSBPromotionFirstTime() {}
 
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.UPDATE_BALANCE_BONUS)
     updateBalanceBonus(isUpdateBalanceBonus: boolean) {
@@ -214,7 +245,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
     }
 
     @handle(gc.Auth.AuthHandlers.GetBalance)
-    getBalance() { }
+    getBalance() {}
 
     private async loadAndPlayEffectUnboxGift() {
         if (this.effectUnboxGiftNode && this.effectUnboxGiftNode.isValid) {
@@ -222,15 +253,15 @@ export class FSBPromotionUIManager extends ObserverComponent {
             this.effectUnboxGiftNode = null;
         }
 
-        const prefab = await this.loadPrefab(PREFAB_EFFECT_UNBOX_GIFT_PATH);
+        const prefab = await this.loadPrefab(this.fsbUIConfig.prefabs.effectUnboxGift);
         const effectNode = instantiate(prefab);
 
         this.fsbPromotionPopupContainer.addChild(effectNode);
         this.effectUnboxGiftNode = effectNode;
         this.scheduleOnce(() => {
             this.openGiftCodeRedeemPopup();
-        }, this.UNIT_SECOND_ANIMATION_UNBOX_GIFT);
-        await AnimationUtils.delayTime(this.UNIT_SECOND_EFFECT_UNBOX_GIFT);
+        }, this.fsbUIConfig.timing.unitSecondAnimationUnboxGift);
+        await AnimationUtils.delayTime(this.fsbUIConfig.timing.unitSecondEffectUnboxGift);
 
         this.effectUnboxGiftNode.destroy();
         this.effectUnboxGiftNode = null;
@@ -247,13 +278,13 @@ export class FSBPromotionUIManager extends ObserverComponent {
             this.effectRedeemSuccessNode = null;
         }
 
-        const prefab = await this.loadPrefab(PREFAB_EFFECT_REDEEM_SUCCESS_PATH);
+        const prefab = await this.loadPrefab(this.fsbUIConfig.prefabs.effectRedeemSuccess);
         const effectNode = instantiate(prefab);
         this.playSoundEffect();
         this.fsbPromotionPopupContainer.addChild(effectNode);
         this.effectRedeemSuccessNode = effectNode;
         this.loadAndShowFsbBanner();
-        await AnimationUtils.delayTime(this.UNIT_SECOND_REDEEM_SUCCESS);
+        await AnimationUtils.delayTime(this.fsbUIConfig.timing.unitSecondRedeemSuccess);
 
         this.effectRedeemSuccessNode.destroy();
         this.effectRedeemSuccessNode = null;
@@ -267,7 +298,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
     }
 
     @handle(FSBPromotionUIHandler, (handle) => handle.changeUIPendingEvent(FreeSpinsPromotionEvents.OPEN_GIFT_CODE_REDEEM_POPUP))
-    private openGiftCodeRedeemPopup() { }
+    private openGiftCodeRedeemPopup() {}
 
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.SHOW_FREE_SPIN_MESSAGE)
     initShowFreeSpinMessage(isShowFreeSpinMessage: boolean) {
@@ -280,7 +311,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
         if (this.freeSpinMessageNode) {
             this.freeSpinMessageNode.active = true;
         } else {
-            const prefab = await this.loadPrefab(PREFAB_FREE_SPIN_MESSAGE_PATH);
+            const prefab = await this.loadPrefab(this.fsbUIConfig.prefabs.freeSpinMessage);
             const freeSpinMessageNode = instantiate(prefab);
             this.fsbPromotionPopupContainer.addChild(freeSpinMessageNode);
             this.freeSpinMessageNode = freeSpinMessageNode;
@@ -293,13 +324,13 @@ export class FSBPromotionUIManager extends ObserverComponent {
             throw new Error("Auto-scale widget not found");
         }
 
-        const existingContainer = autoScaleWidget.getChildByName(CONTAINER_NAME);
+        const existingContainer = autoScaleWidget.getChildByName(this.fsbUIConfig.containers.main);
         if (existingContainer) {
             this.fsbPromotionContainer = existingContainer;
             return;
         }
 
-        const fsbPromotionContainer = new Node(CONTAINER_NAME);
+        const fsbPromotionContainer = new Node(this.fsbUIConfig.containers.main);
         autoScaleWidget.addChild(fsbPromotionContainer);
 
         this.positionContainer(fsbPromotionContainer, autoScaleWidget);
@@ -310,7 +341,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
         if (this.promotionEndedPopupNode) {
             this.promotionEndedPopupNode.active = true;
         } else {
-            const prefab = await this.loadPrefab(PREFAB_PROMOTION_ENDED_POPUP_PATH);
+            const prefab = await this.loadPrefab(this.fsbUIConfig.prefabs.promotionEndedPopup);
             const promotionEndedPopupNode = instantiate(prefab);
             this.fsbPromotionPopupContainer.addChild(promotionEndedPopupNode);
             this.promotionEndedPopupNode = promotionEndedPopupNode;
@@ -322,7 +353,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
         if (this.claimBonusNotificationNode) {
             this.claimBonusNotificationNode.active = true;
         } else {
-            const prefab = await this.loadPrefab(PREFAB_CLAIM_BONUS_NOTIFICATION_PATH);
+            const prefab = await this.loadPrefab(this.fsbUIConfig.prefabs.claimBonusNotification);
             const claimBonusNotificationNode = instantiate(prefab);
             this.fsbPromotionPopupContainer.addChild(claimBonusNotificationNode);
             this.claimBonusNotificationNode = claimBonusNotificationNode;
@@ -330,22 +361,22 @@ export class FSBPromotionUIManager extends ObserverComponent {
     }
 
     createFsbPromotionPopupContainer(): void {
-        const center = this.node.getChildByName(NODE_NAMES.CENTER);
+        const center = this.node.getChildByName(this.fsbUIConfig.nodes.CENTER);
         if (!center) {
             throw new Error("center not found");
         }
 
-        const existing = center.getChildByName(POPUP_CONTAINER_NAME);
+        const existing = center.getChildByName(this.fsbUIConfig.containers.popup);
         if (existing) {
             this.fsbPromotionPopupContainer = existing;
             this.ensureFullWidget(this.fsbPromotionPopupContainer);
             return;
         }
 
-        const popupNode = new Node(POPUP_CONTAINER_NAME);
+        const popupNode = new Node(this.fsbUIConfig.containers.popup);
         center.addChild(popupNode);
 
-        const outer = center.getChildByName(NODE_NAMES.OUTER_CONTAINER);
+        const outer = center.getChildByName(this.fsbUIConfig.nodes.OUTER_CONTAINER);
         if (outer) {
             popupNode.setSiblingIndex(outer.getSiblingIndex());
         }
@@ -384,12 +415,12 @@ export class FSBPromotionUIManager extends ObserverComponent {
     }
 
     private findAutoScaleWidget(): Node | null {
-        const center = this.node.getChildByName(NODE_NAMES.CENTER);
+        const center = this.node.getChildByName(this.fsbUIConfig.nodes.CENTER);
         if (!center) {
             return null;
         }
 
-        const autoScaleWidget = center.getChildByName(NODE_NAMES.AUTO_SCALE_WIDGET);
+        const autoScaleWidget = center.getChildByName(this.fsbUIConfig.nodes.AUTO_SCALE_WIDGET);
         if (!autoScaleWidget) {
             return null;
         }
@@ -398,7 +429,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
     }
 
     private positionContainer(container: Node, parent: Node): void {
-        const inGameMenu = parent.getChildByName(NODE_NAMES.IN_GAME_MENU);
+        const inGameMenu = parent.getChildByName(this.fsbUIConfig.nodes.IN_GAME_MENU);
         if (inGameMenu) {
             const inGameMenuIndex = inGameMenu.getSiblingIndex();
             container.setSiblingIndex(Math.max(0, inGameMenuIndex - 1));
@@ -409,7 +440,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
         if (this.giftCodeNode) {
             this.showGiftCode();
         } else {
-            const prefab = await this.loadPrefab(PREFAB_GIFT_CODE_PATH);
+            const prefab = await this.loadPrefab(this.fsbUIConfig.prefabs.giftCode);
             const giftCodeNode = instantiate(prefab);
             this.fsbPromotionContainer.addChild(giftCodeNode);
             this.giftCodeNode = giftCodeNode;
@@ -420,7 +451,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
         if (this.redeemGiftCodePopupNode) {
             this.redeemGiftCodePopupNode.active = true;
         } else {
-            const prefab = await this.loadPrefab(PREFAB_REDEEM_GIFT_CODE_POPUP_PATH);
+            const prefab = await this.loadPrefab(this.fsbUIConfig.prefabs.redeemGiftCodePopup);
             const redeemGiftCodePopupNode = instantiate(prefab);
             this.fsbPromotionPopupContainer.addChild(redeemGiftCodePopupNode);
             this.redeemGiftCodePopupNode = redeemGiftCodePopupNode;
@@ -431,12 +462,12 @@ export class FSBPromotionUIManager extends ObserverComponent {
         if (this.fsbBannerNode) {
             this.fsbBannerNode.active = true;
         } else {
-            const prefab = await this.loadPrefab(PREFAB_FSB_BANNER_PATH);
+            const prefab = await this.loadPrefab(this.fsbUIConfig.prefabs.fsbBanner);
             const fsbBannerNode = instantiate(prefab);
             this.fsbPromotionPopupContainer.addChild(fsbBannerNode);
             this.fsbBannerNode = fsbBannerNode;
 
-            const effectReddeemSuccess = this.fsbPromotionPopupContainer.getChildByName(NODE_NAMES.EFFECT_REDEEM_SUCCESS);
+            const effectReddeemSuccess = this.fsbPromotionPopupContainer.getChildByName(this.fsbUIConfig.nodes.EFFECT_REDEEM_SUCCESS);
             if (effectReddeemSuccess) {
                 const inGameMenuIndex = effectReddeemSuccess.getSiblingIndex();
                 this.fsbBannerNode.setSiblingIndex(Math.max(0, inGameMenuIndex - 1));
@@ -445,7 +476,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
     }
 
     private async loadPrefab(prefabPath: string): Promise<Prefab | null> {
-        return bundleManager.loadAssetsFromBundle<Prefab>(BUNDLE_NAME, prefabPath, Prefab, null);
+        return bundleManager.loadAssetsFromBundle<Prefab>(this.fsbUIConfig.bundle, prefabPath, Prefab, null);
     }
 
     showGiftCode() {
@@ -468,5 +499,5 @@ export class FSBPromotionUIManager extends ObserverComponent {
     }
 
     @handle(gc.Audios.AudioHandler, (handler) => handler.playSFX("fsb-promotion"))
-    playSoundEffect() { }
+    playSoundEffect() {}
 }

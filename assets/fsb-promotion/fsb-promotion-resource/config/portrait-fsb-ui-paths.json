@@ -1,0 +1,25 @@
+{
+    "bundle": "fsb-promotion-resource",
+    "prefabs": {
+      "giftCode": "prefabs/portrait/portrait-gift-code",
+      "redeemGiftCodePopup": "prefabs/portrait/portrait-redeem-gift-code-popup",
+      "effectRedeemSuccess": "prefabs/portrait/portrait-effect-redeem-success",
+      "effectUnboxGift": "prefabs/portrait/portrait-effect-unbox-gift",
+      "fsbBanner": "prefabs/portrait/portrait-fsb-banner",
+      "promotionInfo": "prefabs/portrait/portrait-fsb-promotion-info",
+      "promotionEndedPopup": "prefabs/portrait/portrait-promotion-ended-popup",
+      "claimBonusNotification": "prefabs/portrait/portrait-claim-bonus-notification",
+      "freeSpinMessage": "prefabs/portrait/portrait-fsb-bottom-message",
+      "turnOverRequired": "prefabs/portrait/portrait-turn-over-required-panel"
+    },
+    "nodes": {
+      "CENTER": "center",
+      "AUTO_SCALE_WIDGET": "fsb-container",
+      "IN_GAME_MENU": "in-game-menu",
+      "OUTER_CONTAINER": "outer-container",
+      "EFFECT_REDEEM_SUCCESS": "effect-redeem-success"
+    },
+    "containers": { "main": "fsb-promotion-container", "popup": "fsb-promotion-popup-container" },
+    "timing": { "unitSecondEffectUnboxGift": 2, "unitSecondRedeemSuccess": 2, "unitSecondAnimationUnboxGift": 0.8 }
+  }
+  

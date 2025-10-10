@@ -32,6 +32,10 @@ export class LocalizedUTMSwissFont extends LocalizedFont {
                 name: "noto-serif-bold-zhcn",
                 loadRemote: false,
             },
+            "es-ES": {
+                name: utmSwiss,
+                loadRemote: false,
+            },
             ...globalThis?.fontMapping?.bold,
         } as FontMapping;
     }

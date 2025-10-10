@@ -32,6 +32,10 @@ export class LocalizedUTMBryantLGFont extends LocalizedFont {
                 name: "noto-serif-regular-zhcn",
                 loadRemote: false,
             },
+            "es-ES": {
+                name: utmBryantLG,
+                loadRemote: false,
+            },
             ...globalThis?.fontMapping?.bold,
         } as FontMapping;
     }

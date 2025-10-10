@@ -69,7 +69,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
         ];
 
         for (const k of requiredPrefabs) {
-            if (!this.fsbUIConfig?.prefabs?.[k as string]) {
+            if (!this.fsbUIConfig?.prefabs?.[k]) {
                 console.warn(`[FSBUI] Thiếu prefab "${k}" trong ${configFile}.json`);
             }
         }

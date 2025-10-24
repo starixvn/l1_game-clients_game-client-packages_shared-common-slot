@@ -270,7 +270,7 @@ describe("RedeemGiftCodePopup", () => {
         });
 
         it("should handle successful clipboard read", async () => {
-            const mockReadText = jest.fn() as jest.MockedFunction<() => Promise<string>>;
+            const mockReadText = jest.fn() as unknown as jest.MockedFunction<() => Promise<string>>;
             mockReadText.mockResolvedValue("PASTE123");
             (global.navigator.clipboard as any).readText = mockReadText;
             
@@ -280,7 +280,7 @@ describe("RedeemGiftCodePopup", () => {
         });
 
         it("should handle clipboard read failure gracefully", async () => {
-            const mockReadText = jest.fn() as jest.MockedFunction<() => Promise<string>>;
+            const mockReadText = jest.fn() as unknown as jest.MockedFunction<() => Promise<string>>;
             mockReadText.mockRejectedValue(new Error("Clipboard access denied"));
             (global.navigator.clipboard as any).readText = mockReadText;
             const consoleSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
@@ -294,7 +294,7 @@ describe("RedeemGiftCodePopup", () => {
         });
 
         it("should trim and convert clipboard text to uppercase", async () => {
-            const mockReadText = jest.fn() as jest.MockedFunction<() => Promise<string>>;
+            const mockReadText = jest.fn() as unknown as jest.MockedFunction<() => Promise<string>>;
             mockReadText.mockResolvedValue("  paste456  ");
             (global.navigator.clipboard as any).readText = mockReadText;
             
@@ -304,7 +304,7 @@ describe("RedeemGiftCodePopup", () => {
         });
 
         it("should handle empty clipboard text", async () => {
-            const mockReadText = jest.fn() as jest.MockedFunction<() => Promise<string>>;
+            const mockReadText = jest.fn() as unknown as jest.MockedFunction<() => Promise<string>>;
             mockReadText.mockResolvedValue("");
             (global.navigator.clipboard as any).readText = mockReadText;
             

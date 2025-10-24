@@ -33,6 +33,11 @@ jest.mock("@sg/game-client-base", () => {
         Shared: {
             IHandler: class {},
             IMultipleHandlers: class {},
+            utils: {
+                StorageManager: {
+                    setPrefixKey: jest.fn(),
+                },
+            },
         },
         UserSettings: {
             UserSettingHandlers: class {

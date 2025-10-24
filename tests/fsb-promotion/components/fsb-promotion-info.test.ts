@@ -70,6 +70,15 @@ jest.mock("@sg/game-client-base", () => ({
             SiteConfigs: jest.fn(() => ({
                 systemType: "NORMAL"
             }))
+        },
+        Shared: {
+            IHandler: class {},
+            IMultipleHandlers: class {},
+            utils: {
+                StorageManager: {
+                    setPrefixKey: jest.fn(),
+                },
+            },
         }
     },
     Auth: {
@@ -102,6 +111,15 @@ jest.mock("@sg/game-client-base", () => ({
         SiteConfigs: jest.fn(() => ({
             systemType: "NORMAL"
         }))
+    },
+    Shared: {
+        IHandler: class {},
+        IMultipleHandlers: class {},
+        utils: {
+            StorageManager: {
+                setPrefixKey: jest.fn(),
+            },
+        },
     }
 }));
 

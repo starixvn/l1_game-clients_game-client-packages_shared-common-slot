@@ -14,6 +14,13 @@ jest.mock("@sg/game-client-base", () => ({
     UrlUtils: { getRootDomain: jest.fn(), buildUrl: jest.fn() },
     GameUtils: { base64Encode: jest.fn() },
     Player: { PlayerStore: jest.fn(), MainPlayerStore: jest.fn() },
+    Shared: {
+        utils: {
+            StorageManager: {
+                setPrefixKey: jest.fn(),
+            },
+        },
+    },
 }));
 
 jest.mock("mobx", () => ({

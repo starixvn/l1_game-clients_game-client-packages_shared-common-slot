@@ -71,9 +71,6 @@ export default class PromotionEndPopup extends ObserverComponent {
         this.openTurnOverRequired();
     }
 
-    @handle(FSBPromotionHandlers, (handler) => handler.handleFinishPromotion(null))
-    onDestroy() {}
-
     @handle(FSBPromotionUIHandler, (handler) => handler.openTurnOverRequired("end-promotion"))
     private openTurnOverRequired() {}
 

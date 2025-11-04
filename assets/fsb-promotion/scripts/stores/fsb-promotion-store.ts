@@ -25,8 +25,6 @@ export class FSBPromotionStore {
     reset() {
         // Reset all promotion data
         this.promotion = undefined;
-        this.finishPromotion = undefined;
-        this.promotionTOProgress = undefined;
         this.redemptionNotice = undefined;
         this.claimedBonusFailed = undefined;
         

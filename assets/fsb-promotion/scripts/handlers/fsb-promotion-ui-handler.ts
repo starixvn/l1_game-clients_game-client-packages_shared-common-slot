@@ -323,6 +323,7 @@ export class FSBPromotionUIHandler {
                 this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.OPEN_TURN_OVER_REQUIRED);
                 this.fsbPromotionUIStore.pendingOpenTOAfterFinish = false;
             }
+            this.fsbPromotionUIStore.resetFinishPromotion();
         }
     }
 

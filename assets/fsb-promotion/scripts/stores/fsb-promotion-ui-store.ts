@@ -282,8 +282,6 @@ export class FSBPromotionUIStore {
         
         // Reset FSB promotion flags
         this.resumedFSBPromotion = false;
-        this.hasServerFinishPromotion = false;
-        this.hasShowFinishPromotion = false;
         this.fsbConsumedThisRound = false;
         this.changeUserBalance = false;
         this.isSpinningFSB = false;
@@ -308,6 +306,11 @@ export class FSBPromotionUIStore {
         
         // Reset TurnOver progress
         this.resetTOProgress();
+    }
+
+    resetFinishPromotion() {
+        this.hasServerFinishPromotion = false;
+        this.hasShowFinishPromotion = false;
     }
 
     hasPromo(): boolean {

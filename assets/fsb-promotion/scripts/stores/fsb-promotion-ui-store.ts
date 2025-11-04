@@ -273,14 +273,40 @@ export class FSBPromotionUIStore {
 
     // State management methods
     public reset() {
+        // Reset promotion state
         this.receivedPromotionInGame = false;
-        this.skipGiftCode = false;
+        this._skipGiftCode = false;
+        this._activeTransitionEffect = false;
+        this._activeDetailPromo = false;
+        this._currentSpinCount = -1;
+        
+        // Reset FSB promotion flags
         this.resumedFSBPromotion = false;
-        this.activeTransitionEffect = false;
-        this.activeDetailPromo = false;
         this.hasServerFinishPromotion = false;
+        this.hasShowFinishPromotion = false;
         this.fsbConsumedThisRound = false;
-        this.currentSpinCount = -1;
+        this.changeUserBalance = false;
+        this.isSpinningFSB = false;
+        
+        // Reset UI state
+        this.promotionUrl = "";
+        this.isWebViewLoading = false;
+        this.isFSBInfoReady = false;
+        this.pendingOpenTOAfterFinish = false;
+        this.isClickPlayNow = false;
+        this.isShowFreeSpinMessage = false;
+        
+        // Reset events
+        this.pendingUIEvent = null;
+        this.event = null;
+        
+        // Reset free spin tracking
+        this._freeSpinActiveBySource = {
+            [FreeSpinSource.GAME]: false,
+            [FreeSpinSource.PROMOTION]: false,
+        };
+        
+        // Reset TurnOver progress
         this.resetTOProgress();
     }
 

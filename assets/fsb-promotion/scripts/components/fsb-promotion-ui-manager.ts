@@ -27,8 +27,6 @@ export class FSBPromotionUIManager extends ObserverComponent {
     private effectRedeemSuccessNode: Node = null;
     private effectUnboxGiftNode: Node = null;
     private fsbBannerNode: Node = null;
-    private promotionEndedPopupNode: Node = null;
-    private claimBonusNotificationNode: Node = null;
     private freeSpinMessageNode: Node = null;
     private fsbPromotionInfoNode: Node = null;
     private turnOverRequiredNode: Node = null;
@@ -117,6 +115,7 @@ export class FSBPromotionUIManager extends ObserverComponent {
         if (isRedeemSuccess) {
             this.loadAndPlayRedeemSuccess();
             this.destroyNode(this.giftCodeNode);
+            this.giftCodeNode = null;
         }
     }
 
@@ -183,14 +182,10 @@ export class FSBPromotionUIManager extends ObserverComponent {
     setFSBInfoReady() {}
 
     private async loadAndShowTurnOverRequired() {
-        if (this.turnOverRequiredNode) {
-            this.turnOverRequiredNode.active = true;
-        } else {
-            const prefab = await this.loadPrefab(this.fsbUIConfig.prefabs.turnOverRequired);
-            const turnOverRequiredNode = instantiate(prefab);
-            this.fsbPromotionContainer.addChild(turnOverRequiredNode);
-            this.turnOverRequiredNode = turnOverRequiredNode;
-        }
+        const prefab = await this.loadPrefab(this.fsbUIConfig.prefabs.turnOverRequired);
+        const turnOverRequiredNode = instantiate(prefab);
+        this.fsbPromotionContainer.addChild(turnOverRequiredNode);
+        this.turnOverRequiredNode = turnOverRequiredNode;
     }
 
     private async loadAndShowPromotionInfo(isAutoSpin = false) {
@@ -338,26 +333,17 @@ export class FSBPromotionUIManager extends ObserverComponent {
     }
 
     private async loadAndShowPromotionEndedPopup() {
-        if (this.promotionEndedPopupNode) {
-            this.promotionEndedPopupNode.active = true;
-        } else {
-            const prefab = await this.loadPrefab(this.fsbUIConfig.prefabs.promotionEndedPopup);
-            const promotionEndedPopupNode = instantiate(prefab);
-            this.fsbPromotionPopupContainer.addChild(promotionEndedPopupNode);
-            this.promotionEndedPopupNode = promotionEndedPopupNode;
-        }
+        const prefab = await this.loadPrefab(this.fsbUIConfig.prefabs.promotionEndedPopup);
+        const promotionEndedPopupNode = instantiate(prefab);
+        this.fsbPromotionPopupContainer.addChild(promotionEndedPopupNode);
+        this.turnOverRequiredNode?.destroy();
     }
 
     private async loadAndShowClaimBonusNotification() {
         this.playSoundEffect();
-        if (this.claimBonusNotificationNode) {
-            this.claimBonusNotificationNode.active = true;
-        } else {
-            const prefab = await this.loadPrefab(this.fsbUIConfig.prefabs.claimBonusNotification);
-            const claimBonusNotificationNode = instantiate(prefab);
-            this.fsbPromotionPopupContainer.addChild(claimBonusNotificationNode);
-            this.claimBonusNotificationNode = claimBonusNotificationNode;
-        }
+        const prefab = await this.loadPrefab(this.fsbUIConfig.prefabs.claimBonusNotification);
+        const claimBonusNotificationNode = instantiate(prefab);
+        this.fsbPromotionPopupContainer.addChild(claimBonusNotificationNode);
     }
 
     createFsbPromotionPopupContainer(): void {

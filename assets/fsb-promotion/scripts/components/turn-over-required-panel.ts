@@ -169,12 +169,15 @@ export default class TurnOverRequiredPanel extends ObserverComponent {
 
     @render(FSBPromotionStore, (store) => store.promotionTOProgress)
     private updateTOProgress(data: GameServiceMessageSlot.PromotionTOProgress) {
+        if (!data) {
+            return;
+        }
         this.updateBonusWallet(data);
     }
 
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent)
     private updatePromotionProgress(data: { event: string; data?: any }) {
-        if (data.event === FreeSpinsPromotionEvents.UPDATE_TURN_OVER_REQUIRED) {
+        if (data.event === FreeSpinsPromotionEvents.UPDATE_TURN_OVER_REQUIRED && data.data) {
             this.updateBonusWallet(data.data as ITurnOverRequired);
         }
     }

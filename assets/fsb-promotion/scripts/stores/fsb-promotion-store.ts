@@ -22,6 +22,18 @@ export class FSBPromotionStore {
     claimedBonusFailed?: string;
     private _redeemStatus: RedeemStatus = RedeemStatus.Idle;
 
+    reset() {
+        // Reset all promotion data
+        this.promotion = undefined;
+        this.finishPromotion = undefined;
+        this.promotionTOProgress = undefined;
+        this.redemptionNotice = undefined;
+        this.claimedBonusFailed = undefined;
+        
+        // Reset redeem status
+        this._redeemStatus = RedeemStatus.Idle;
+    }
+
     get isRedeemSuccess() {
         return this._redeemStatus === RedeemStatus.Success;
     }

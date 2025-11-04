@@ -93,6 +93,7 @@ describe("FSBPromotionHandlers", () => {
             finishPromotion: null,
             redemptionNotice: null,
             claimedBonusFailed: null,
+            reset: jest.fn(),
         };
 
         mockConnectionStore = {
@@ -104,6 +105,7 @@ describe("FSBPromotionHandlers", () => {
         mockFSBPromotionUIStore = {
             toProgress: null,
             addPendingUIEvent: jest.fn(),
+            reset: jest.fn(),
         };
 
         mockNotificationStore = {

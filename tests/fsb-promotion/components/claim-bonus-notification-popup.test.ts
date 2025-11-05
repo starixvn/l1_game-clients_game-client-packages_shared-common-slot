@@ -5,7 +5,13 @@ import ClaimBonusNotificationPopup from "../../../assets/fsb-promotion/scripts/c
 // Mock external dependencies
 jest.mock("@sg/game-client-base", () => {
     const mockGc = {
-        Connection: {},
+        Connection: {
+            ConnectionStore: jest.fn(() => ({
+                connection: {
+                    on: jest.fn(),
+                },
+            })),
+        },
         Audios: {
             AudioHandler: {},
             AudioIds: {
@@ -29,6 +35,14 @@ jest.mock("@sg/game-client-base", () => {
         },
         Rounds: {
             RoundStore: {},
+        },
+        Notification: {
+            NotificationStore: jest.fn(() => ({
+                connection: {
+                    on: jest.fn(),
+                    off: jest.fn(),
+                },
+            })),
         },
         Shared: {
             IHandler: class {},

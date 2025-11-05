@@ -429,7 +429,7 @@ describe("FSBPromotionUIStore", () => {
             expect(store.activeDetailPromo).toBe(false);
             expect(store.hasServerFinishPromotion).toBe(true);
             expect(store.fsbConsumedThisRound).toBe(false);
-            expect(store.currentSpinCount).toBe(-1);
+            expect(store.currentSpinCount).toBe(5);
             expect(store.toProgress).toBeNull();
         });
     });

@@ -16,6 +16,7 @@ export class FSBPromotionStore {
 
     claimedAmount = 0;
     promotion?: GameServiceMessageSlot.Promotion;
+    nextPromotion?: GameServiceMessageSlot.Promotion;
     finishPromotion?: GameServiceMessageSlot.FinishPromotion;
     promotionTOProgress?: GameServiceMessageSlot.PromotionTOProgress;
     redemptionNotice?: GameServiceMessageSlot.RedemptionNotice;

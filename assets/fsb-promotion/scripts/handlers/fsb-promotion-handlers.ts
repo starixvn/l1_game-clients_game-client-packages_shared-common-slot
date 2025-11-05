@@ -16,8 +16,16 @@ export class FSBPromotionHandlers implements gc.Shared.IMultipleHandlers {
     @inject(gc.Notification.NotificationStore) protected readonly notificationStore: gc.Notification.NotificationStore;
 
     handlePromotion(data: GameServiceMessageSlot.Promotion) {
+        if(!data && !this.promotionStore.nextPromotion) {
+            return;
+        }
+        if (this.fsbPromotionUIStore.hasServerFinishPromotion || this.fsbPromotionUIStore.hasClaimedBonus) {
+            this.promotionStore.nextPromotion = data;
+            return;
+        }
         this.fsbPromotionUIStore.reset();
-        this.promotionStore.promotion = data;
+        this.promotionStore.promotion = data ? data : this.promotionStore.nextPromotion;
+        this.promotionStore.nextPromotion = null;
         this.fsbPromotionUIHandler.handlePromotionDisplay();
     }
 
@@ -41,6 +49,7 @@ export class FSBPromotionHandlers implements gc.Shared.IMultipleHandlers {
     }
 
     handleClaimedAmount(claimedAmount: number) {
+        this.fsbPromotionUIStore.hasClaimedBonus = true;
         this.promotionStore.claimedAmount = claimedAmount;
         this.fsbPromotionUIHandler.claimedBonusSuccess();
     }

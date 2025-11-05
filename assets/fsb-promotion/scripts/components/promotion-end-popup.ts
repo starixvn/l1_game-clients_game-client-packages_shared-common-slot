@@ -6,6 +6,7 @@ import Observer from "observer";
 import { GameServiceMessageSlot } from "../../../game-message-slot";
 import { Dialog } from "db://shared-components/shared/common-components/dialogs/dialog";
 import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
+import { FSBPromotionHandlers } from "../handlers/fsb-promotion-handlers";
 import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
 const { render, handle } = Observer;
 
@@ -21,6 +22,7 @@ export default class PromotionEndPopup extends ObserverComponent {
     public static hasShown = false;
 
     private currentSpinCount = 0;
+    private nextPromotion: GameServiceMessageSlot.Promotion = null;
 
     @render(FSBPromotionUIStore, (store) => store.currentSpinCount)
     updateCurrentSpinCount(currentSpinCount: number) {
@@ -68,6 +70,11 @@ export default class PromotionEndPopup extends ObserverComponent {
     private onCloseClicked() {
         this.node.getComponent(Dialog)?.hide();
         this.openTurnOverRequired();
+        this.handlePromotion();
+    }
+
+    @handle(FSBPromotionHandlers, (handler) => handler.handlePromotion(null))
+    handlePromotion() {
     }
 
     @handle(FSBPromotionUIHandler, (handler) => handler.openTurnOverRequired("end-promotion"))

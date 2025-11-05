@@ -197,6 +197,10 @@ export class FSBPromotionUIHandler {
     public changeUIPendingEvent(event: string, data?: any) {
         this.fsbPromotionUIStore.addPendingUIEvent(event, data);
     }
+    
+    public updateStatusClaimedPopup(hasClaimedBonus: boolean) {
+        this.fsbPromotionUIStore.hasClaimedBonus = hasClaimedBonus;
+    }
 
     public removeUIPendingEvent() {
         this.fsbPromotionUIStore.removePendingUIEvent();

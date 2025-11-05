@@ -98,6 +98,7 @@ export class FSBPromotionUIStore {
     private readonly fallbackGameOffers: { name: string; gameId: number }[] = [];
     public resumedFSBPromotion = false;
     public hasServerFinishPromotion = false;
+    public hasClaimedBonus = false;
     public hasShowFinishPromotion = false;
     public fsbConsumedThisRound = false;
     public changeUserBalance = false;
@@ -278,13 +279,13 @@ export class FSBPromotionUIStore {
         this._skipGiftCode = false;
         this._activeTransitionEffect = false;
         this._activeDetailPromo = false;
-        this._currentSpinCount = -1;
         
         // Reset FSB promotion flags
         this.resumedFSBPromotion = false;
         this.fsbConsumedThisRound = false;
         this.changeUserBalance = false;
         this.isSpinningFSB = false;
+        this.hasClaimedBonus = false;
         
         // Reset UI state
         this.promotionUrl = "";
@@ -311,6 +312,7 @@ export class FSBPromotionUIStore {
     resetFinishPromotion() {
         this.hasServerFinishPromotion = false;
         this.hasShowFinishPromotion = false;
+        this._currentSpinCount = -1;
     }
 
     hasPromo(): boolean {

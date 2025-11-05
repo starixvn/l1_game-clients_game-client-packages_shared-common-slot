@@ -24,12 +24,18 @@ export class FSBPromotionHandlers implements gc.Shared.IMultipleHandlers {
         this.promotionStore.promotionTOProgress = data;
         this.fsbPromotionUIStore.toProgress = data;
         this.fsbPromotionUIHandler.openTurnOverRequired("in-game");
-        this.notificationStore.connection.on("promotionProgress", (data: GameServiceMessageSlot.PromotionTOProgress) => {
-            this.handleNotificationReceived(data);
-        });
+        this.initNotificationListeners();
     }
 
-    handleNotificationReceived(data: GameServiceMessageSlot.PromotionTOProgress) {
+    initNotificationListeners() {
+        this.notificationStore.connection.on("promotionProgress", this.handleNotificationReceived);
+    }
+
+    removeNotificationListeners() {
+        this.notificationStore.connection.off("promotionProgress", this.handleNotificationReceived);
+    }
+
+    handleNotificationReceived = (data: GameServiceMessageSlot.PromotionTOProgress) => {
         this.fsbPromotionUIHandler.onReceivedTOProgressData(data);
     }
 

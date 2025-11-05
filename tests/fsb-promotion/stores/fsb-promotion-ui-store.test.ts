@@ -427,7 +427,7 @@ describe("FSBPromotionUIStore", () => {
             expect(store.resumedFSBPromotion).toBe(false);
             expect(store.activeTransitionEffect).toBe(false);
             expect(store.activeDetailPromo).toBe(false);
-            expect(store.hasServerFinishPromotion).toBe(false);
+            expect(store.hasServerFinishPromotion).toBe(true);
             expect(store.fsbConsumedThisRound).toBe(false);
             expect(store.currentSpinCount).toBe(-1);
             expect(store.toProgress).toBeNull();

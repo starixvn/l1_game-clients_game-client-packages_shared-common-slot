@@ -2,7 +2,6 @@ import { _decorator, Button, Label } from "cc";
 import gc from "@sg/game-client-base";
 import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
 import { FSBPromotionStore } from "../stores/fsb-promotion-store";
-import { FSBPromotionHandlers } from "../handlers/fsb-promotion-handlers";
 import Observer from "observer";
 import { GameServiceMessageSlot } from "../../../game-message-slot";
 import { Dialog } from "db://shared-components/shared/common-components/dialogs/dialog";

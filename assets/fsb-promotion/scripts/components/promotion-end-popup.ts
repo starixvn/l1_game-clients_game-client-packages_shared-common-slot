@@ -22,7 +22,6 @@ export default class PromotionEndPopup extends ObserverComponent {
     public static hasShown = false;
 
     private currentSpinCount = 0;
-    private nextPromotion: GameServiceMessageSlot.Promotion = null;
 
     @render(FSBPromotionUIStore, (store) => store.currentSpinCount)
     updateCurrentSpinCount(currentSpinCount: number) {

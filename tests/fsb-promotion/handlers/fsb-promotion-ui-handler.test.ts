@@ -134,6 +134,7 @@ describe("FSBPromotionUIHandler", () => {
             pendingOpenTOAfterFinish: false,
             isFSBInfoReady: true,
             activeTransitionEffect: false,
+            resetFinishPromotion: jest.fn(),
         };
 
         mockAuthStore = {

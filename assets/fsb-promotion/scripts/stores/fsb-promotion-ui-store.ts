@@ -306,6 +306,9 @@ export class FSBPromotionUIStore {
         
         // Reset TurnOver progress
         this.resetTOProgress();
+        
+        // Reset finish promotion flags
+        this.resetFinishPromotion();
     }
 
     resetFinishPromotion() {

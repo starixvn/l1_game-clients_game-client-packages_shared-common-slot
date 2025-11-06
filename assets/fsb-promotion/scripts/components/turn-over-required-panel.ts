@@ -41,10 +41,10 @@ export default class TurnOverRequiredPanel extends ObserverComponent {
 
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent)
     private updatePendingUIEvent(data: { event: string; data?: any }) {
-        if (data.event === FreeSpinsPromotionEvents.SHOW_NOTICE_ERROR) {
+        if (data?.event === FreeSpinsPromotionEvents.SHOW_NOTICE_ERROR) { 
             this.showNoticeError(data.data as string);
         }
-        if (data.event === FreeSpinsPromotionEvents.EXPIRE_CLAIM_BONUS) {
+        if (data?.event === FreeSpinsPromotionEvents.EXPIRE_CLAIM_BONUS) {
             this.hidePanel();
             this.showNoticeError(data.data as string);
         }
@@ -177,7 +177,7 @@ export default class TurnOverRequiredPanel extends ObserverComponent {
 
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent)
     private updatePromotionProgress(data: { event: string; data?: any }) {
-        if (data.event === FreeSpinsPromotionEvents.UPDATE_TURN_OVER_REQUIRED && data.data) {
+        if (data?.event === FreeSpinsPromotionEvents.UPDATE_TURN_OVER_REQUIRED && data?.data) {
             this.updateBonusWallet(data.data as ITurnOverRequired);
         }
     }
@@ -204,7 +204,7 @@ export default class TurnOverRequiredPanel extends ObserverComponent {
 
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent)
     private updateClaimedBonusSuccess(data: { event: string; data?: any }) {
-        if (data.event === FreeSpinsPromotionEvents.CLAIMED_BONUS_SUCCESS) {
+        if (data?.event === FreeSpinsPromotionEvents.CLAIMED_BONUS_SUCCESS) {
             this.hidePanel();
             this.openClaimBonusNotification();
         }

@@ -41,6 +41,9 @@ export class FSBPromotionInfo extends ObserverComponent {
 
     @render(FSBPromotionStore, (store) => store.promotion)
     onFSBPromotionInfo(promotion: GameServiceMessageSlot.Promotion) {
+        if (!promotion) {
+            return;
+        }
         const { coinValue, betLevel = 0, totalWin = 0, remainingBonusItems = 0 } = promotion;
         this.totalWin = totalWin;
         const totalBet = this.calculateTotalBet(coinValue, betLevel);

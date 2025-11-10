@@ -85,7 +85,14 @@ export class FSBPromotionHandlers implements gc.Shared.IMultipleHandlers {
         this.promotionStore.claimedBonusFailed = errorCode;
         if (errorCode === "SB3023") {
             this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.EXPIRE_CLAIM_BONUS, errorCode);
-        } else {
+        }
+        if (errorCode === "SB3030") {
+            this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.CANCEL_PROMOTION, errorCode);
+            this.promotionStore.reset();
+            this.fsbPromotionUIStore.reset();
+            this.fsbPromotionUIStore.resetFinishPromotion();
+        }
+        else {
             this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.SHOW_NOTICE_ERROR, errorCode);
         }
     }

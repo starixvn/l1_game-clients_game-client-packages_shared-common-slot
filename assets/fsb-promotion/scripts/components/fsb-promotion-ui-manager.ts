@@ -91,6 +91,32 @@ export class FSBPromotionUIManager extends ObserverComponent {
         }
     }
 
+    @render(FSBPromotionUIStore, (store) => store.pendingUIEvent?.event === FreeSpinsPromotionEvents.CANCEL_PROMOTION)
+    initCancelPromotion(isCancelPromotion: boolean) {
+        if (isCancelPromotion) {
+            this.resetUI();
+        }
+    }   
+
+    private resetUI() {
+        this.fsbPromotionInfoNode?.destroy();
+        this.fsbPromotionInfoNode = null;
+        this.fsbBannerNode?.destroy();
+        this.fsbBannerNode = null;
+        this.giftCodeNode?.destroy();
+        this.giftCodeNode = null;
+        this.redeemGiftCodePopupNode?.destroy();
+        this.redeemGiftCodePopupNode = null;
+        this.effectRedeemSuccessNode?.destroy();
+        this.effectRedeemSuccessNode = null;
+        this.effectUnboxGiftNode?.destroy();
+        this.effectUnboxGiftNode = null;
+        this.freeSpinMessageNode?.destroy();
+        this.freeSpinMessageNode = null;
+        this.turnOverRequiredNode?.destroy();
+        this.turnOverRequiredNode = null;
+    }
+
     @render(FSBPromotionUIStore, (s) => s.pendingUIEvent?.event === FreeSpinsPromotionEvents.HIDE_GIFT_CODE_ICON)
     onHideGiftCode(shouldHide: boolean) {
         if (!shouldHide) {

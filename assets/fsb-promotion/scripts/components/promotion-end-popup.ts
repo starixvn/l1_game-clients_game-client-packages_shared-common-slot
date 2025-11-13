@@ -69,11 +69,11 @@ export default class PromotionEndPopup extends ObserverComponent {
     private onCloseClicked() {
         this.node.getComponent(Dialog)?.hide();
         this.openTurnOverRequired();
-        this.handlePromotion();
+        this.handleNextPromotion();
     }
 
-    @handle(FSBPromotionHandlers, (handler) => handler.handlePromotion(null))
-    handlePromotion() {
+    @handle(FSBPromotionHandlers, (handler) => handler.handleNextPromotion())
+    handleNextPromotion() {
     }
 
     @handle(FSBPromotionUIHandler, (handler) => handler.openTurnOverRequired("end-promotion"))

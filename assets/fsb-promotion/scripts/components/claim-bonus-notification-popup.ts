@@ -35,11 +35,11 @@ export default class ClaimBonusNotificationPopup extends ObserverComponent {
         this.updateClaimedAmount();
         this.handleChangeUserBalance(true);
         this.closeClaimedBonusPopup();
-        this.handlePromotion();
+        this.handleNextPromotion();
     }
 
-    @handle(FSBPromotionHandlers, (handler) => handler.handlePromotion(null))
-    handlePromotion() {
+    @handle(FSBPromotionHandlers, (handler) => handler.handleNextPromotion())
+    handleNextPromotion() {
     }
 
     @handle(FSBPromotionUIHandler, (handler) => handler.updateStatusClaimedPopup(false))

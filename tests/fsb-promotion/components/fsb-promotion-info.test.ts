@@ -71,6 +71,9 @@ jest.mock("@sg/game-client-base", () => ({
                 systemType: "NORMAL"
             }))
         },
+        Player: {
+            MainPlayerStore: jest.fn()
+        },
         Shared: {
             IHandler: class {},
             IMultipleHandlers: class {},
@@ -111,6 +114,9 @@ jest.mock("@sg/game-client-base", () => ({
         SiteConfigs: jest.fn(() => ({
             systemType: "NORMAL"
         }))
+    },
+    Player: {
+        MainPlayerStore: jest.fn()
     },
     Shared: {
         IHandler: class {},

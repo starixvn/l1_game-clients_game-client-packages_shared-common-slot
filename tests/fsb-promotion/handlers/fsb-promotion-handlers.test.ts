@@ -10,6 +10,7 @@ import { GameServiceMessageSlot } from "../../../assets/game-message-slot";
 jest.mock("@sg/game-client-base", () => ({
     Connection: { ConnectionStore: jest.fn() },
     Notification: { NotificationStore: jest.fn() },
+    Player: { MainPlayerStore: jest.fn() },
     Shared: { IMultipleHandlers: jest.fn() },
 }));
 
@@ -116,6 +117,10 @@ describe("FSBPromotionHandlers", () => {
 
         mockFSBPromotionUIHandler = stub<FSBPromotionUIHandler>();
 
+        const mockMainPlayerStore = {
+            xMode: 1,
+        };
+
         // Create handlers and inject dependencies
         handlers = new FSBPromotionHandlers();
         (handlers as any).promotionStore = mockPromotionStore;
@@ -123,6 +128,7 @@ describe("FSBPromotionHandlers", () => {
         (handlers as any).fsbPromotionUIHandler = mockFSBPromotionUIHandler;
         (handlers as any).fsbPromotionUIStore = mockFSBPromotionUIStore;
         (handlers as any).notificationStore = mockNotificationStore;
+        (handlers as any).mainPlayerStore = mockMainPlayerStore;
     });
 
     describe("initialization", () => {

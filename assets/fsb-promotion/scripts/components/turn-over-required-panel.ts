@@ -1,5 +1,6 @@
 import { _decorator, Label, Node, ProgressBar } from "cc";
 import gc from "@sg/game-client-base";
+const { MainPlayerStore } = gc.Player;
 import DraggableItem from "db://shared-components/shared/common-components/draggable/draggable-item";
 import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
 import { FreeSpinsPromotionEvents, FSBPromotionUIStore, ITurnOverRequired } from "../stores/fsb-promotion-ui-store";
@@ -33,10 +34,16 @@ export default class TurnOverRequiredPanel extends ObserverComponent {
     private minRequiredTurnover = 0;
     private progressPercentage = 0;
     private endTime = 0;
+    private xMode = 1;
 
     onEnable() {
         this.schedule(this.updateTimer, 1);
         this.dragTurnOverRequired();
+    }
+
+    @render(MainPlayerStore, (store) => store.xMode)
+    setXMode(value: number) {
+        this.xMode = value;
     }
 
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent)
@@ -71,9 +78,9 @@ export default class TurnOverRequiredPanel extends ObserverComponent {
     }
 
     public updateBonusWallet(data: ITurnOverRequired) {
-        this.totalWinAmount = data?.win;
-        this.totalTurnover = data?.totalTO;
-        this.minRequiredTurnover = data?.minTO;
+        this.totalWinAmount = data?.win * this.xMode;
+        this.totalTurnover = data?.totalTO * this.xMode;
+        this.minRequiredTurnover = data?.minTO * this.xMode;
         this.progressPercentage = data?.progress;
         this.endTime = new Date(data?.expire).getTime();
 

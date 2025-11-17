@@ -1,4 +1,5 @@
 import gc from "@sg/game-client-base";
+const { MainPlayerStore } = gc.Player;
 import { _decorator, Label } from "cc";
 import DraggableItem from "db://shared-components/shared/common-components/draggable/draggable-item";
 import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
@@ -22,6 +23,7 @@ export class FSBPromotionInfo extends ObserverComponent {
     private readonly DEFAULT_LINES = 25;
 
     private totalWin = 0;
+    private xMode = 1;
 
     onEnable() {
         this.setupDraggable();
@@ -39,13 +41,18 @@ export class FSBPromotionInfo extends ObserverComponent {
 
     private onCollapseMenu() { }
 
+    @render(MainPlayerStore, (store) => store.xMode)
+    setXMode(value: number) {
+        this.xMode = value;
+    }
+
     @render(FSBPromotionStore, (store) => store.promotion)
     onFSBPromotionInfo(promotion: GameServiceMessageSlot.Promotion) {
         if (!promotion) {
             return;
         }
         const { coinValue, betLevel = 0, totalWin = 0, remainingBonusItems = 0 } = promotion;
-        this.totalWin = totalWin;
+        this.totalWin = totalWin * this.xMode;
         const totalBet = this.calculateTotalBet(coinValue, betLevel);
         this.updateUI({ totalWin, remainingBonusItems, totalBet });
     }
@@ -58,11 +65,11 @@ export class FSBPromotionInfo extends ObserverComponent {
     }
 
     private updateUI({ totalWin, remainingBonusItems, totalBet }: { totalWin?: number; remainingBonusItems?: number; totalBet?: number }) {
-        this.labelTotalWin.string = gc.FormatUtils.numberWithCommas(totalWin, 2, false);
+        this.labelTotalWin.string = gc.FormatUtils.numberWithCommas(totalWin * this.xMode, 2, false);
 
         this.labelFSB.string = remainingBonusItems.toString();
 
-        this.labelTotalBet.string = gc.FormatUtils.numberWithCommas(totalBet, 2, false);
+        this.labelTotalBet.string = gc.FormatUtils.numberWithCommas(totalBet * this.xMode, 2, false);
     }
 
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent)

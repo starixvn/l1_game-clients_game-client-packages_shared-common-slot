@@ -14,6 +14,7 @@ export class FSBPromotionHandlers implements gc.Shared.IMultipleHandlers {
     @inject(FSBPromotionUIHandler) protected readonly fsbPromotionUIHandler: FSBPromotionUIHandler;
     @inject(FSBPromotionUIStore) protected readonly fsbPromotionUIStore: FSBPromotionUIStore;
     @inject(gc.Notification.NotificationStore) protected readonly notificationStore: gc.Notification.NotificationStore;
+    @inject(gc.Player.MainPlayerStore) protected readonly mainPlayerStore: gc.Player.MainPlayerStore;
 
     handlePromotion(data: GameServiceMessageSlot.Promotion) {
         if (this.fsbPromotionUIStore.hasServerFinishPromotion || this.fsbPromotionUIStore.hasClaimedBonus) {
@@ -61,7 +62,7 @@ export class FSBPromotionHandlers implements gc.Shared.IMultipleHandlers {
 
     handleClaimedAmount(claimedAmount: number) {
         this.fsbPromotionUIStore.hasClaimedBonus = true;
-        this.promotionStore.claimedAmount = claimedAmount;
+        this.promotionStore.claimedAmount = Math.round(claimedAmount * this.mainPlayerStore.xMode * 100) / 100;
         this.fsbPromotionUIHandler.claimedBonusSuccess();
     }
 
@@ -72,6 +73,9 @@ export class FSBPromotionHandlers implements gc.Shared.IMultipleHandlers {
     handleFinishPromotion(data: GameServiceMessageSlot.FinishPromotion) {
         this.promotionStore.promotionId = this.promotionStore.promotion?.promotionId;
         this.promotionStore.reset();
+        if (data) {
+            data.totalWin = Math.round(data.totalWin * this.mainPlayerStore.xMode * 100) / 100;
+        }
         this.promotionStore.finishPromotion = data;
         this.fsbPromotionUIHandler.markFSBEndFromServer();
     }

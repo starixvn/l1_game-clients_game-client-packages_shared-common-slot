@@ -15,6 +15,7 @@ export class FSBPromotionStore {
     }
 
     claimedAmount = 0;
+    promotionId: string = "";
     promotion?: GameServiceMessageSlot.Promotion;
     nextPromotion?: GameServiceMessageSlot.Promotion;
     finishPromotion?: GameServiceMessageSlot.FinishPromotion;

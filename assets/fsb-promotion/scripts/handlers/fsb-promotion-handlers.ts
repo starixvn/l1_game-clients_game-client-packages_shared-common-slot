@@ -37,6 +37,10 @@ export class FSBPromotionHandlers implements gc.Shared.IMultipleHandlers {
     }
 
     handlePromotionTOProgress(data: GameServiceMessageSlot.PromotionTOProgress) {
+        if (!data?.promotionId) {
+            data.promotionId = this.promotionStore.promotionId;
+            this.promotionStore.promotionId = "";
+        }
         this.promotionStore.promotionTOProgress = data;
         this.fsbPromotionUIStore.toProgress = data;
         this.fsbPromotionUIHandler.openTurnOverRequired("in-game");
@@ -66,6 +70,7 @@ export class FSBPromotionHandlers implements gc.Shared.IMultipleHandlers {
     }
 
     handleFinishPromotion(data: GameServiceMessageSlot.FinishPromotion) {
+        this.promotionStore.promotionId = this.promotionStore.promotion?.promotionId;
         this.promotionStore.reset();
         this.promotionStore.finishPromotion = data;
         this.fsbPromotionUIHandler.markFSBEndFromServer();

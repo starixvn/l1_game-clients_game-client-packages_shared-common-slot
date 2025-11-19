@@ -196,6 +196,7 @@
             <button onclick="showDiagram('ui-flow')">🖥️ UI Handler Flow</button>
             <button onclick="showDiagram('state-machine')">⚙️ State Machine</button>
             <button onclick="showDiagram('cascading')">🎮 Cascading Integration</button>
+            <button onclick="showDiagram('classic')">🎰 Classic Integration</button>
             <button onclick="showDiagram('gift-code')">🎁 Gift Code Flow</button>
             <button onclick="showDiagram('promotion-dialog')">💬 Promotion Dialog</button>
             <button onclick="showDiagram('turnover-panel')">📊 TurnOver Panel</button>
@@ -473,6 +474,88 @@ sequenceDiagram
                         <li><strong>CascadingUIHandler</strong>: Handles freespins join game, sets resumedFSBPromotion</li>
                         <li><strong>CascadingUIStore</strong>: References FSBPromotionUIStore for state checks</li>
                         <li><strong>BetControlStore</strong>: FSB promotion overrides bet settings</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- CLASSIC SLOT INTEGRATION -->
+            <div id="classic" class="diagram-section">
+                <h2 class="diagram-title">🎰 Classic Slot Integration</h2>
+                <div class="diagram-description">
+                    <p>FSB integrates with Classic Slot module similarly to Cascading. SlotBetHandler checks FSB state and uses FSB bet settings. 
+                    Classic Slot has additional features like auto-spin continuation and Free Spin bonus interaction.</p>
+                </div>
+                
+                <div class="mermaid">
+sequenceDiagram
+    participant Player
+    participant BetHandler as SlotBetHandler
+    participant FSBUIStore as FSBPromotionUIStore
+    participant FSBStore as FSBPromotionStore
+    participant SettleHandler as SlotSettlementHandler
+    participant FSBUIHandler as FSBPromotionUIHandler
+    participant Server
+    
+    Player->>BetHandler: 1. Click Spin
+    BetHandler->>BetHandler: 2. callBet()
+    BetHandler->>FSBUIStore: 3. Check isFSBPromotionInProgress
+    
+    alt FSB Active
+        FSBUIStore-->>BetHandler: 4a. true
+        BetHandler->>FSBStore: 5a. Get betLevel
+        FSBStore-->>BetHandler: 6a. FSB Amount
+        BetHandler->>BetHandler: 7a. Use FSB betLevel + freeSpin=true
+    else Normal Bet
+        FSBUIStore-->>BetHandler: 4b. false
+        BetHandler->>BetHandler: 7b. Use stake + freeSpin=false
+    end
+    
+    BetHandler->>Server: 8. Send Bet Request
+    Server-->>SettleHandler: 9. Settlement Response
+    SettleHandler->>SettleHandler: 10. Process Settlement
+    
+    SettleHandler->>SettleHandler: 11. checkToSpinNextFSB()
+    SettleHandler->>FSBUIStore: 12. canSpinNextFSB?
+    
+    alt Can Continue
+        FSBUIStore-->>SettleHandler: 13a. true
+        SettleHandler->>FSBUIHandler: 14a. tryConsumeFSB()
+        FSBUIHandler->>FSBUIStore: 15a. Decrease count
+        FSBUIHandler->>FSBUIStore: 16a. Set consumed flag
+        FSBUIHandler-->>SettleHandler: 17a. Success
+        SettleHandler->>BetHandler: 18a. callBet() - Auto next FSB
+    else Cannot
+        SettleHandler->>SettleHandler: 13b. FSB finished
+    end
+                </div>
+                
+                <div class="info-box">
+                    <h3>🔗 Integration Points</h3>
+                    <ul>
+                        <li><strong>SlotBetHandler</strong>: Checks isFSBPromotionInProgress, uses FSB betLevel when active</li>
+                        <li><strong>SlotSettlementHandler</strong>: Auto-continues FSB spins via checkToSpinNextFSB()</li>
+                        <li><strong>SlotUIHandler</strong>: Observes FSB pendingUIEvent and syncs slot state to isSpinningFSB</li>
+                        <li><strong>BetControlStore</strong>: Bet controls disabled during FSB, balance check skipped</li>
+                    </ul>
+                </div>
+                
+                <div class="warning-box">
+                    <h3>⚠️ Key Differences from Cascading</h3>
+                    <ul>
+                        <li><strong>Auto-Spin Continuation</strong>: Classic Slot auto-continues FSB spins after settlement</li>
+                        <li><strong>Free Spin Feature</strong>: FSB can trigger Free Spin bonus rounds, FSB pauses during Free Spins</li>
+                        <li><strong>State Sync</strong>: SlotUIHandler syncs slot state to FSB via MobX reactions</li>
+                        <li><strong>No Manual Consume</strong>: FSB is consumed automatically by settlement handler</li>
+                    </ul>
+                </div>
+                
+                <div class="info-box">
+                    <h3>🎮 Classic Slot Specific Features</h3>
+                    <ul>
+                        <li><strong>Auto-Spin Integration</strong>: FSB works seamlessly with auto-spin, normal auto-spin counter pauses during FSB</li>
+                        <li><strong>Free Spin Priority</strong>: Free Spin bonus takes priority over FSB, FSB resumes after Free Spins complete</li>
+                        <li><strong>canSpinNextFSB</strong>: Computed property checks FSB active, has spins, not spinning, and not in Free Spin</li>
+                        <li><strong>State Synchronization</strong>: Real-time sync between SlotBoardStore.slotState and FSBPromotionUIStore.isSpinningFSB</li>
                     </ul>
                 </div>
             </div>
@@ -945,11 +1028,12 @@ sequenceDiagram
         
         <div class="footer">
             <p><strong>Portrait Mahjong Wins - FSB Promotion Flow Documentation</strong></p>
-            <p>Created: November 19, 2025 | Modules: shared-common-slot, shared-cascading-slot, shared-components</p>
+            <p>Created: November 19, 2025 | Modules: shared-common-slot, shared-cascading-slot, shared-classic-slot, shared-components</p>
             <p style="margin-top: 10px; font-size: 0.9em;">
                 📁 Files: 
                 <code>shared-common-slot/assets/fsb-promotion/</code> | 
-                <code>shared-cascading-slot/assets/handlers/</code>
+                <code>shared-cascading-slot/assets/handlers/</code> | 
+                <code>shared-classic-slot/assets/scripts/handlers/</code>
             </p>
         </div>
     </div>

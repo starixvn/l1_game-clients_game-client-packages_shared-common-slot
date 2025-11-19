@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FSB Promotion Flow - Interactive Diagram</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .nav {
+            background: #f8f9fa;
+            padding: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .nav button {
+            padding: 12px 24px;
+            border: none;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .nav button:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .nav button.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .diagram-section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .diagram-section.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .diagram-title {
+            font-size: 2em;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .diagram-description {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .mermaid {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .info-box {
+            background: #e7f3ff;
+            border: 2px solid #2196F3;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .info-box h3 {
+            color: #1976D2;
+            margin-bottom: 10px;
+        }
+        
+        .info-box ul {
+            margin-left: 20px;
+            line-height: 1.8;
+        }
+        
+        .warning-box {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .warning-box h3 {
+            color: #ff6f00;
+            margin-bottom: 10px;
+        }
+        
+        .footer {
+            background: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e9ecef;
+        }
+        
+        .legend {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .legend-color {
+            width: 30px;
+            height: 20px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎰 FSB Promotion Flow</h1>
+            <p>Interactive Diagram - Portrait Mahjong Wins</p>
+        </div>
+        
+        <div class="nav">
+            <button onclick="showDiagram('overview')" class="active">📊 Overview</button>
+            <button onclick="showDiagram('server-flow')">🔄 Server Messages</button>
+            <button onclick="showDiagram('ui-flow')">🖥️ UI Handler Flow</button>
+            <button onclick="showDiagram('state-machine')">⚙️ State Machine</button>
+            <button onclick="showDiagram('cascading')">🎮 Cascading Integration</button>
+            <button onclick="showDiagram('gift-code')">🎁 Gift Code Flow</button>
+            <button onclick="showDiagram('promotion-dialog')">💬 Promotion Dialog</button>
+            <button onclick="showDiagram('turnover-panel')">📊 TurnOver Panel</button>
+            <button onclick="showDiagram('fsb-dialog')">🎪 FSB Dialog</button>
+            <button onclick="showDiagram('claim-bonus')">🎉 Claim Bonus</button>
+            <button onclick="showDiagram('promotion-end')">🏁 Promotion End</button>
+        </div>
+        
+        <div class="content">
+            <!-- OVERVIEW -->
+            <div id="overview" class="diagram-section active">
+                <h2 class="diagram-title">📊 Architecture Overview</h2>
+                <div class="diagram-description">
+                    <p><strong>FSB (Free Spin Bonus) Promotion</strong> is a system for managing free spin promotion campaigns. 
+                    The architecture includes main layers: Server Events → Handlers → Stores → UI Components</p>
+                </div>
+                
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #e1f5ff;"></div>
+                        <span>Server/External</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #fff3cd;"></div>
+                        <span>Handlers</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #d4edda;"></div>
+                        <span>Stores</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #f8d7da;"></div>
+                        <span>UI Events</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #d1ecf1;"></div>
+                        <span>Components</span>
+                    </div>
+                </div>
+                
+                <div class="mermaid">
+graph TB
+    Server[Game Server] --> Handlers[FSB Promotion Handlers]
+    Handlers --> Store[FSB Promotion Store]
+    Handlers --> UIHandler[FSB Promotion UI Handler]
+    UIHandler --> UIStore[FSB Promotion UI Store]
+    UIStore --> UIEvents[UI Events Queue]
+    UIEvents --> Components[UI Components]
+    
+    CascadingSlot[Cascading Slot Module] --> UIHandler
+    CascadingSlot --> UIStore
+    
+    style Server fill:#e1f5ff
+    style Handlers fill:#fff3cd
+    style UIHandler fill:#fff3cd
+    style Store fill:#d4edda
+    style UIStore fill:#d4edda
+    style UIEvents fill:#f8d7da
+    style Components fill:#d1ecf1
+                </div>
+                
+                <div class="info-box">
+                    <h3>🔑 Key Components</h3>
+                    <ul>
+                        <li><strong>FSBPromotionHandlers</strong>: Handles 7 server events</li>
+                        <li><strong>FSBPromotionUIHandler</strong>: UI display logic and user interactions</li>
+                        <li><strong>FSBPromotionStore</strong>: Stores promotion data from server</li>
+                        <li><strong>FSBPromotionUIStore</strong>: Manages UI state and FSB state machine</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- SERVER FLOW -->
+            <div id="server-flow" class="diagram-section">
+                <h2 class="diagram-title">🔄 Server Messages Flow</h2>
+                <div class="diagram-description">
+                    <p>There are <strong>7 types of server events</strong> handled by FSBPromotionHandlers. Each event has its own flow and triggers corresponding actions.</p>
+                </div>
+                
+                <div class="mermaid">
+sequenceDiagram
+    participant Server as Game Server
+    participant Handler as FSBPromotionHandlers
+    participant Store as FSBPromotionStore
+    participant UIHandler as FSBPromotionUIHandler
+    participant UIStore as FSBPromotionUIStore
+    
+    Note over Server,UIStore: 1. PROMOTION EVENT
+    Server->>Handler: Promotion Message
+    Handler->>Handler: handlePromotion(data)
+    alt hasServerFinishPromotion OR hasClaimedBonus
+        Handler->>Store: nextPromotion = data
+    else
+        Handler->>Handler: updatePromotion(data)
+        Handler->>UIStore: reset()
+        Handler->>Store: promotion = data
+        Handler->>UIHandler: handlePromotionDisplay()
+    end
+    
+    Note over Server,UIStore: 2. FINISH PROMOTION
+    Server->>Handler: FinishPromotion Message
+    Handler->>Store: finishPromotion = data
+    Handler->>Store: reset()
+    Handler->>UIHandler: markFSBEndFromServer()
+    UIHandler->>UIStore: markServerConfirmedEnd()
+    
+    Note over Server,UIStore: 3. CLAIMED AMOUNT
+    Server->>Handler: ClaimedAmount Message
+    Handler->>UIStore: hasClaimedBonus = true
+    Handler->>Store: claimedAmount = amount
+    Handler->>UIHandler: claimedBonusSuccess()
+    UIHandler->>UIStore: addPendingUIEvent(CLAIMED_BONUS_SUCCESS)
+                </div>
+                
+                <div class="info-box">
+                    <h3>📨 7 Server Events</h3>
+                    <ul>
+                        <li><strong>Promotion</strong>: Send new promotion data</li>
+                        <li><strong>PromotionTOProgress</strong>: Update turnover progress</li>
+                        <li><strong>ClaimedAmount</strong>: Confirm claim bonus success</li>
+                        <li><strong>RedeemResult</strong>: Redeem gift code result</li>
+                        <li><strong>FinishPromotion</strong>: End promotion</li>
+                        <li><strong>RedemptionNotice</strong>: Redemption error notice</li>
+                        <li><strong>ClaimedBonusFailed</strong>: Error when claiming bonus</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- UI FLOW -->
+            <div id="ui-flow" class="diagram-section">
+                <h2 class="diagram-title">🖥️ UI Handler Display Flow & Component Architecture</h2>
+                <div class="diagram-description">
+                    <p>Complete flow showing interactions between Server Events, Handlers, Stores, and UI Components in FSB Promotion system.</p>
+                </div>
+                
+                <div class="mermaid">
+graph TD
+    S1[Server Events] --> H1[FSBPromotionHandlers]
+    H1 --> ST1[FSBPromotionStore]
+    H1 --> H2[FSBPromotionUIHandler]
+    H2 --> ST2[FSBPromotionUIStore]
+    ST2 --> M[FSBPromotionUIManager]
+    M --> C1[GiftCode]
+    M --> C2[RedeemGiftCodePopup]
+    M --> C3[FSBPromotionDialog]
+    M --> C4[FSBWebView]
+    M --> C5[FSBPromotionInfo]
+    M --> C6[PromotionEndPopup]
+    M --> C7[TurnOverRequiredPanel]
+    M --> C8[ClaimBonusNotification]
+    M --> C9[FSBBottomMessage]
+    M --> C10[EffectUnboxGift]
+    C2 --> H2
+    C8 --> H2
+    H2 --> S1
+                </div>
+                
+                <div class="info-box">
+                    <h3>📦 Components Mapping</h3>
+                    <ul>
+                        <li><strong>FSBPromotionUIManager</strong>: Main orchestrator, observes pendingUIEvent</li>
+                        <li><strong>GiftCode</strong>: Gift code input icon</li>
+                        <li><strong>RedeemGiftCodePopup</strong>: Gift code redemption dialog</li>
+                        <li><strong>FSBPromotionDialog</strong>: Main FSB banner/dialog</li>
+                        <li><strong>FSBWebView</strong>: WebView for promotion details</li>
+                        <li><strong>FSBPromotionInfo</strong>: Promotion info panel during gameplay</li>
+                        <li><strong>PromotionEndPopup</strong>: Popup when FSB ends</li>
+                        <li><strong>TurnOverRequiredPanel</strong>: TurnOver progress panel</li>
+                        <li><strong>ClaimBonusNotification</strong>: Claim bonus notification</li>
+                        <li><strong>FSBBottomMessage</strong>: Bottom bar message</li>
+                        <li><strong>EffectUnboxGift</strong>: Gift unboxing animation</li>
+                    </ul>
+                </div>
+                
+                <div class="warning-box">
+                    <h3>🔄 Control Flow</h3>
+                    <ol>
+                        <li><strong>Server</strong> sends events → <strong>FSBPromotionHandlers</strong></li>
+                        <li><strong>Handlers</strong> update → <strong>FSBPromotionStore</strong> (data)</li>
+                        <li><strong>Handlers</strong> call → <strong>FSBPromotionUIHandler</strong> (logic)</li>
+                        <li><strong>UIHandler</strong> checks state from → <strong>FSBPromotionUIStore</strong></li>
+                        <li><strong>UIHandler</strong> adds UI event → <strong>pendingUIEvent</strong> in UIStore</li>
+                        <li><strong>FSBPromotionUIManager</strong> observes → <strong>pendingUIEvent</strong> (MobX)</li>
+                        <li><strong>UIManager</strong> renders → appropriate <strong>Component</strong></li>
+                        <li><strong>Components</strong> user actions → back to <strong>UIHandler</strong></li>
+                        <li><strong>UIHandler</strong> sends client messages → <strong>Server</strong></li>
+                    </ol>
+                </div>
+            </div>
+            
+            <!-- STATE MACHINE -->
+            <div id="state-machine" class="diagram-section">
+                <h2 class="diagram-title">⚙️ FSB State Machine</h2>
+                <div class="diagram-description">
+                    <p>FSB has 5 main states: IDLE, READY, SPINNING, FINISHED, RESUMED. State is calculated dynamically based on flags in FSBPromotionUIStore.</p>
+                </div>
+                
+                <div class="mermaid">
+graph LR
+    Start([Start]) --> IDLE[IDLE]
+    IDLE -->|Receive| READY[READY]
+    READY -->|Consume| SPINNING[SPINNING]
+    SPINNING -->|Commit| READY
+    READY -->|Finish| FINISHED[FINISHED]
+    SPINNING -->|Finish| FINISHED
+    IDLE -->|Resume| RESUMED[RESUMED]
+    RESUMED --> SPINNING
+    RESUMED --> FINISHED
+    FINISHED -->|Reset| IDLE
+                </div>
+                
+                <div class="info-box">
+                    <h3>📊 State Conditions</h3>
+                    <ul>
+                        <li><strong>IDLE</strong>: No promotion or not initialized</li>
+                        <li><strong>READY</strong>: Has promotion, currentSpinCount available, not spinning</li>
+                        <li><strong>SPINNING</strong>: Currently in FSB spin (fsbConsumedThisRound = true)</li>
+                        <li><strong>FINISHED</strong>: Server confirmed end of promotion</li>
+                        <li><strong>RESUMED</strong>: Resuming FSB promotion from previous session</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- CASCADING INTEGRATION -->
+            <div id="cascading" class="diagram-section">
+                <h2 class="diagram-title">🎮 Cascading Slot Integration</h2>
+                <div class="diagram-description">
+                    <p>FSB integrates tightly with Cascading Slot module. SlotBetHandler checks FSB state to use FSB bet settings and consume FSB spins.</p>
+                </div>
+                
+                <div class="mermaid">
+sequenceDiagram
+    participant Player
+    participant BetHandler as SlotBetHandler
+    participant UIStore as FSBPromotionUIStore
+    participant UIHandler as FSBPromotionUIHandler
+    participant Store as FSBPromotionStore
+    participant Server
+    
+    Player->>BetHandler: Click Spin
+    BetHandler->>UIStore: Check FSB Active
+    UIStore-->>BetHandler: Return Status
+    
+    alt FSB Active
+        BetHandler->>Store: Get coinValue
+        Store-->>BetHandler: Return Value
+        BetHandler->>Store: Get betLevel
+        Store-->>BetHandler: Return Level
+        Note over BetHandler: Use FSB Settings
+        BetHandler->>UIHandler: tryConsumeFSB
+        UIHandler->>UIStore: Decrease Count
+        UIStore->>UIStore: Set Consumed Flag
+        UIStore-->>UIHandler: Success
+        UIHandler-->>BetHandler: FSB Consumed
+        Note over UIStore: Trigger Update Event
+    else Normal
+        Note over BetHandler: Use Normal Settings
+    end
+    
+    BetHandler->>Server: Send Request
+    Server-->>BetHandler: Return Result
+    BetHandler->>Player: Show Result
+    
+    alt Last Spin
+        UIHandler->>UIStore: commitFSB
+        UIStore->>UIStore: Clear Flag
+        Note over UIStore: FSB Committed
+    end
+                </div>
+                
+                <div class="info-box">
+                    <h3>🔗 Integration Points</h3>
+                    <ul>
+                        <li><strong>SlotBetHandler</strong>: Checks FSB state before each spin</li>
+                        <li><strong>CascadingUIHandler</strong>: Handles freespins join game, sets resumedFSBPromotion</li>
+                        <li><strong>CascadingUIStore</strong>: References FSBPromotionUIStore for state checks</li>
+                        <li><strong>BetControlStore</strong>: FSB promotion overrides bet settings</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- GIFT CODE FLOW -->
+            <div id="gift-code" class="diagram-section">
+                <h2 class="diagram-title">🎁 Gift Code Redemption Flow</h2>
+                <div class="diagram-description">
+                    <p>Complete flow for redeeming gift codes, from opening the popup to receiving redemption results.</p>
+                </div>
+                
+                <div class="mermaid">
+sequenceDiagram
+    participant User
+    participant GiftCode as GiftCode Component
+    participant Popup as RedeemGiftCodePopup
+    participant UIHandler as FSBPromotionUIHandler
+    participant UIStore as FSBPromotionUIStore
+    participant Handler as FSBPromotionHandlers
+    participant Server
+    
+    User->>GiftCode: 1. Click Gift Icon
+    GiftCode->>UIHandler: 2. openGiftCodePopup
+    UIHandler->>UIStore: 3. Add OPEN_GIFT_CODE Event
+    UIStore->>Popup: 4. Show Popup
+    
+    User->>Popup: 5. Enter Code
+    User->>Popup: 6. Click Redeem
+    Popup->>UIHandler: 7. handleRedeemGiftCode
+    UIHandler->>Server: 8. Send Redeem Request
+    
+    Server->>Handler: 9. RedeemResult Event
+    Handler->>UIStore: 10. Update Result
+    Handler->>UIHandler: 11. handleRedeemResult
+    
+    alt Success
+        UIHandler->>UIStore: 12a. Add REDEEM_SUCCESS Event
+        UIStore->>Popup: 13a. Show Success Message
+        UIHandler->>UIStore: 14a. Add SHOW_UNBOX_GIFT Event
+        UIStore->>Popup: 15a. Play Unbox Animation
+    else Error
+        UIHandler->>UIStore: 12b. Add REDEEM_ERROR Event
+        UIStore->>Popup: 13b. Show Error Message
+    end
+    
+    User->>Popup: 16. Click Close
+    Popup->>UIHandler: 17. closeGiftCodePopup
+    UIHandler->>UIStore: 18. Clear Event
+                </div>
+                
+                <div class="info-box">
+                    <h3>🔑 Key Components</h3>
+                    <ul>
+                        <li><strong>GiftCode</strong>: Gift icon button displayed in game UI</li>
+                        <li><strong>RedeemGiftCodePopup</strong>: Modal dialog for entering gift code</li>
+                        <li><strong>EffectUnboxGift</strong>: Animation effect when gift is successfully redeemed</li>
+                    </ul>
+                </div>
+                
+                <div class="warning-box">
+                    <h3>📝 UI Events</h3>
+                    <ul>
+                        <li><strong>OPEN_GIFT_CODE</strong>: Trigger to show gift code popup</li>
+                        <li><strong>REDEEM_SUCCESS</strong>: Show success message after redemption</li>
+                        <li><strong>REDEEM_ERROR</strong>: Show error message if redemption fails</li>
+                        <li><strong>SHOW_UNBOX_GIFT</strong>: Play gift unboxing animation</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- PROMOTION DIALOG FLOW -->
+            <div id="promotion-dialog" class="diagram-section">
+                <h2 class="diagram-title">💬 Promotion Dialog Flow</h2>
+                <div class="diagram-description">
+                    <p>Flow for displaying promotion banner and handling user interactions with promotion details.</p>
+                </div>
+                
+                <div class="mermaid">
+sequenceDiagram
+    participant Server
+    participant Handler as FSBPromotionHandlers
+    participant Store as FSBPromotionStore
+    participant UIHandler as FSBPromotionUIHandler
+    participant UIStore as FSBPromotionUIStore
+    participant Dialog as FSBPromotionDialog
+    participant WebView as FSBWebView
+    participant User
+    
+    Server->>Handler: 1. Promotion Event
+    Handler->>Store: 2. Update Promotion Data
+    Handler->>UIHandler: 3. handlePromotionDisplay
+    UIHandler->>UIStore: 4. Add SHOW_PROMOTION Event
+    UIStore->>Dialog: 5. Show Dialog Banner
+    
+    User->>Dialog: 6. Click Details Button
+    Dialog->>UIHandler: 7. openPromotionDetails
+    UIHandler->>UIStore: 8. Add OPEN_WEBVIEW Event
+    UIStore->>WebView: 9. Show WebView
+    WebView->>WebView: 10. Load Promotion URL
+    
+    User->>WebView: 11. Read Details
+    User->>WebView: 12. Click Close
+    WebView->>UIHandler: 13. closeWebView
+    UIHandler->>UIStore: 14. Clear Event
+    
+    User->>Dialog: 15. Click Accept
+    Dialog->>UIHandler: 16. acceptPromotion
+    UIHandler->>UIStore: 17. Mark Accepted
+    UIHandler->>UIStore: 18. Add HIDE_PROMOTION Event
+    UIStore->>Dialog: 19. Hide Dialog
+    
+    Note over UIStore: Transition to READY State
+                </div>
+                
+                <div class="info-box">
+                    <h3>🔑 Key Components</h3>
+                    <ul>
+                        <li><strong>FSBPromotionDialog</strong>: Main banner showing promotion information</li>
+                        <li><strong>FSBWebView</strong>: WebView component for detailed T&C and rules</li>
+                        <li><strong>FSBPromotionInfo</strong>: Info panel displayed during gameplay (spins remaining, progress)</li>
+                    </ul>
+                </div>
+                
+                <div class="warning-box">
+                    <h3>📝 UI Events</h3>
+                    <ul>
+                        <li><strong>SHOW_PROMOTION</strong>: Display promotion banner when received from server</li>
+                        <li><strong>OPEN_WEBVIEW</strong>: Open detailed promotion information in WebView</li>
+                        <li><strong>HIDE_PROMOTION</strong>: Hide banner after user accepts</li>
+                        <li><strong>UPDATE_FSB_COUNT</strong>: Update spin count display during gameplay</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- TURNOVER PANEL -->
+            <div id="turnover-panel" class="diagram-section">
+                <h2 class="diagram-title">📊 TurnOver Required Panel</h2>
+                <div class="diagram-description">
+                    <p>Detailed flow showing how TurnOver progress is tracked, displayed, and updated throughout FSB promotion lifecycle.</p>
+                </div>
+                
+                <div class="mermaid">
+sequenceDiagram
+    participant Server
+    participant Handler as FSBPromotionHandlers
+    participant Store as FSBPromotionStore
+    participant UIStore as FSBPromotionUIStore
+    participant TOPanel as TurnOverRequiredPanel
+    participant User
+    
+    Note over Server: FSB Promotion Active
+    
+    Server->>Handler: 1. Promotion Event with TurnOver
+    Handler->>Store: 2. Save promotion.turnoverRequired
+    Handler->>Store: 3. Save promotion.turnoverProgress
+    Handler->>UIStore: 4. Trigger Update
+    UIStore->>TOPanel: 5. Show Panel
+    TOPanel->>TOPanel: 6. Display Progress 0%
+    
+    loop During Gameplay
+        User->>Server: 7. Place Bet and Spin
+        Server->>Server: 8. Calculate TurnOver
+        Server->>Handler: 9. PromotionTOProgress Event
+        Handler->>Store: 10. Update turnoverProgress
+        Handler->>UIStore: 11. Add UPDATE_TO Event
+        UIStore->>TOPanel: 12. Update Progress Bar
+        TOPanel->>TOPanel: 13. Animate Progress
+        
+        alt Progress Updated
+            TOPanel->>TOPanel: 14. Show Current/Required
+            TOPanel->>TOPanel: 15. Update Percentage
+        end
+    end
+    
+    alt TurnOver Complete
+        Server->>Handler: 16. turnoverProgress >= required
+        Handler->>Store: 17. Mark Complete
+        Handler->>UIStore: 18. Update State
+        UIStore->>TOPanel: 19. Enable Claim Button
+        TOPanel->>TOPanel: 20. Highlight Button
+        TOPanel->>TOPanel: 21. Show Complete Animation
+        
+        User->>TOPanel: 22. Click Claim
+        Note over TOPanel: Trigger Claim Bonus Flow
+    else TurnOver Not Complete
+        TOPanel->>TOPanel: Disable Claim Button
+        TOPanel->>TOPanel: Show Remaining Amount
+    end
+                </div>
+                
+                <div class="info-box">
+                    <h3>🔑 Key Features</h3>
+                    <ul>
+                        <li><strong>Real-time Progress</strong>: Updates automatically after each spin</li>
+                        <li><strong>Progress Bar</strong>: Visual indicator showing completion percentage</li>
+                        <li><strong>Claim Button</strong>: Enabled only when TurnOver requirement is met</li>
+                        <li><strong>Current/Required Display</strong>: Shows exact amounts (e.g., 500/1000)</li>
+                    </ul>
+                </div>
+                
+                <div class="warning-box">
+                    <h3>📝 TurnOver Logic</h3>
+                    <ul>
+                        <li><strong>turnoverRequired</strong>: Total TurnOver needed to claim bonus (from promotion data)</li>
+                        <li><strong>turnoverProgress</strong>: Current TurnOver accumulated (updated by server)</li>
+                        <li>Server tracks TurnOver via <strong>PromotionTOProgress</strong> events</li>
+                        <li>Claim button enabled when: <code>turnoverProgress >= turnoverRequired</code></li>
+                        <li>Panel remains visible throughout FSB promotion lifecycle</li>
+                    </ul>
+                </div>
+                
+                <div class="info-box">
+                    <h3>🎨 UI States</h3>
+                    <ul>
+                        <li><strong>Initial</strong>: Progress at 0%, claim button disabled</li>
+                        <li><strong>In Progress</strong>: Progress bar animating, showing percentage</li>
+                        <li><strong>Complete</strong>: Progress at 100%, claim button enabled and highlighted</li>
+                        <li><strong>Claimed</strong>: Button disabled after successful claim</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- FSB DIALOG -->
+            <div id="fsb-dialog" class="diagram-section">
+                <h2 class="diagram-title">🎪 FSB Promotion Dialog</h2>
+                <div class="diagram-description">
+                    <p>Complete interaction flow for FSB Promotion Dialog - the main banner that displays promotion information and allows users to accept or view details.</p>
+                </div>
+                
+                <div class="mermaid">
+sequenceDiagram
+    participant Server
+    participant Handler as FSBPromotionHandlers
+    participant Store as FSBPromotionStore
+    participant UIHandler as FSBPromotionUIHandler
+    participant UIStore as FSBPromotionUIStore
+    participant Dialog as FSBPromotionDialog
+    participant WebView as FSBWebView
+    participant InfoPanel as FSBPromotionInfo
+    participant User
+    
+    Server->>Handler: 1. Promotion Event
+    Handler->>Store: 2. Save Promotion Data
+    Handler->>UIHandler: 3. handlePromotionDisplay
+    UIHandler->>UIStore: 4. Check State
+    
+    alt First Time Promotion
+        UIHandler->>UIStore: 5a. Add SHOW_PROMOTION Event
+        UIStore->>Dialog: 6a. Show Modal Dialog
+        Dialog->>Dialog: 7a. Display Banner
+        Dialog->>Dialog: 8a. Show Spin Count
+        Dialog->>Dialog: 9a. Show Promotion Details
+        
+        User->>Dialog: 10. Click Details
+        Dialog->>UIHandler: 11. openPromotionDetails
+        UIHandler->>UIStore: 12. Add OPEN_WEBVIEW Event
+        UIStore->>WebView: 13. Open WebView
+        WebView->>WebView: 14. Load Terms URL
+        User->>WebView: 15. Read T&C
+        User->>WebView: 16. Close WebView
+        
+        User->>Dialog: 17. Click Accept
+        Dialog->>UIHandler: 18. acceptPromotion
+        UIHandler->>UIStore: 19. Mark Accepted
+        UIHandler->>UIStore: 20. Add HIDE_PROMOTION Event
+        UIStore->>Dialog: 21. Hide Dialog
+        UIStore->>UIStore: 22. Transition to READY
+    else Resumed Promotion
+        UIHandler->>UIStore: 5b. resumedFSBPromotion = true
+        UIStore->>Dialog: 6b. Skip Dialog
+        Note over Dialog: Auto accept resumed promotion
+    end
+    
+    Note over InfoPanel: During Gameplay
+    UIStore->>InfoPanel: 23. Show Info Panel
+    InfoPanel->>InfoPanel: 24. Display Spin Count
+    InfoPanel->>InfoPanel: 25. Display Bet Settings
+    
+    loop Each Spin
+        UIStore->>InfoPanel: 26. Update Remaining Spins
+        InfoPanel->>InfoPanel: 27. Animate Count Change
+    end
+    
+    alt All Spins Used
+        UIStore->>InfoPanel: 28. Hide Panel
+        Note over Dialog: Show End Popup
+    end
+                </div>
+                
+                <div class="info-box">
+                    <h3>🔑 Dialog Components</h3>
+                    <ul>
+                        <li><strong>FSBPromotionDialog</strong>: Main modal banner (shown once at start)</li>
+                        <li><strong>FSBPromotionInfo</strong>: Persistent info panel during gameplay</li>
+                        <li><strong>FSBWebView</strong>: Terms & Conditions viewer</li>
+                        <li><strong>FSBBottomMessage</strong>: Bottom bar notification</li>
+                    </ul>
+                </div>
+                
+                <div class="warning-box">
+                    <h3>📝 Display Logic</h3>
+                    <ul>
+                        <li><strong>First Time</strong>: Show dialog, wait for user acceptance</li>
+                        <li><strong>Resumed</strong>: Skip dialog, auto-transition to READY state</li>
+                        <li><strong>Dialog Content</strong>: Promotion name, spin count, bet settings, details button</li>
+                        <li><strong>Info Panel</strong>: Always visible during FSB gameplay, shows remaining spins</li>
+                    </ul>
+                </div>
+                
+                <div class="info-box">
+                    <h3>🎨 Dialog States</h3>
+                    <ul>
+                        <li><strong>Hidden</strong>: Default state, not shown</li>
+                        <li><strong>Displayed</strong>: Modal shown, waiting for user action</li>
+                        <li><strong>Details Open</strong>: WebView overlay showing T&C</li>
+                        <li><strong>Accepted</strong>: Dialog dismissed, info panel visible during gameplay</li>
+                    </ul>
+                </div>
+                
+                <div class="warning-box">
+                    <h3>🔄 State Transitions</h3>
+                    <ul>
+                        <li><strong>IDLE → Dialog Show</strong>: When Promotion event received</li>
+                        <li><strong>Dialog Accept → READY</strong>: User accepts, can start spinning</li>
+                        <li><strong>READY → Info Panel</strong>: During FSB spins, show persistent info</li>
+                        <li><strong>FINISHED → Dialog Hide</strong>: Show end popup instead</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- CLAIM BONUS FLOW -->
+            <div id="claim-bonus" class="diagram-section">
+                <h2 class="diagram-title">🎉 Claim Bonus Flow</h2>
+                <div class="diagram-description">
+                    <p>Complete flow for claiming bonus after completing TurnOver requirements.</p>
+                </div>
+                
+                <div class="mermaid">
+sequenceDiagram
+    participant User
+    participant TOPanel as TurnOverRequiredPanel
+    participant UIHandler as FSBPromotionUIHandler
+    participant UIStore as FSBPromotionUIStore
+    participant Handler as FSBPromotionHandlers
+    participant Store as FSBPromotionStore
+    participant Server
+    participant Notification as ClaimBonusNotification
+    
+    Note over TOPanel: User completes spins
+    Server->>Handler: 1. Update TO Progress
+    Handler->>Store: 2. Update turnoverProgress
+    Handler->>UIHandler: 3. Update Display
+    UIHandler->>UIStore: 4. Add UPDATE_TO Event
+    UIStore->>TOPanel: 5. Update Progress Bar
+    
+    alt TurnOver Complete
+        UIStore->>TOPanel: 6a. Enable Claim Button
+        User->>TOPanel: 7a. Click Claim
+        TOPanel->>UIHandler: 8a. handleClaimBonus
+        UIHandler->>Server: 9a. Send Claim Request
+        
+        Server->>Handler: 10a. ClaimedAmount Event
+        Handler->>Store: 11a. Save Claimed Amount
+        Handler->>UIStore: 12a. Set hasClaimedBonus
+        Handler->>UIHandler: 13a. claimedBonusSuccess
+        UIHandler->>UIStore: 14a. Add CLAIMED_BONUS Event
+        UIStore->>Notification: 15a. Show Success Popup
+        
+        User->>Notification: 16a. Click OK
+        Notification->>UIHandler: 17a. Close Notification
+    else TurnOver Failed
+        Server->>Handler: 6b. ClaimedBonusFailed Event
+        Handler->>UIHandler: 7b. claimedBonusFailed
+        UIHandler->>UIStore: 8b. Add CLAIM_FAILED Event
+        UIStore->>Notification: 9b. Show Error Message
+    end
+                </div>
+                
+                <div class="info-box">
+                    <h3>🔑 Key Components</h3>
+                    <ul>
+                        <li><strong>TurnOverRequiredPanel</strong>: Progress panel showing TurnOver completion</li>
+                        <li><strong>ClaimBonusNotification</strong>: Success/error notification after claiming</li>
+                        <li><strong>FSBBottomMessage</strong>: Bottom bar showing current FSB status</li>
+                    </ul>
+                </div>
+                
+                <div class="warning-box">
+                    <h3>📝 Key Logic</h3>
+                    <ul>
+                        <li>TurnOver progress is tracked server-side via <strong>PromotionTOProgress</strong> events</li>
+                        <li>Claim button is only enabled when TurnOver requirement is met</li>
+                        <li><strong>hasClaimedBonus</strong> flag prevents multiple claims</li>
+                        <li>After claiming, user can still use remaining FSB spins</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- PROMOTION END FLOW -->
+            <div id="promotion-end" class="diagram-section">
+                <h2 class="diagram-title">🏁 Promotion End Flow</h2>
+                <div class="diagram-description">
+                    <p>Flow for handling promotion end, either when all spins are used or server force-ends the promotion.</p>
+                </div>
+                
+                <div class="mermaid">
+sequenceDiagram
+    participant Server
+    participant Handler as FSBPromotionHandlers
+    participant Store as FSBPromotionStore
+    participant UIHandler as FSBPromotionUIHandler
+    participant UIStore as FSBPromotionUIStore
+    participant Popup as PromotionEndPopup
+    participant User
+    
+    alt Server Force End
+        Server->>Handler: 1a. FinishPromotion Event
+        Handler->>Store: 2a. Save Finish Data
+        Handler->>Store: 3a. Reset Promotion
+        Handler->>UIHandler: 4a. markFSBEndFromServer
+        UIHandler->>UIStore: 5a. Mark Server Confirmed
+        UIStore->>UIStore: 6a. Transition to FINISHED
+    else All Spins Used
+        UIStore->>UIStore: 1b. currentSpinCount = 0
+        Note over UIStore: Auto transition to FINISHED
+    end
+    
+    UIStore->>Popup: 7. Show End Popup
+    
+    alt Has Claimed Bonus
+        Popup->>Popup: 8a. Show Success Summary
+        Popup->>Popup: 9a. Display Claimed Amount
+    else No Claim
+        Popup->>Popup: 8b. Show Spins Used
+        Popup->>Popup: 9b. No Bonus Message
+    end
+    
+    User->>Popup: 10. Click Close
+    Popup->>UIHandler: 11. closeEndPopup
+    UIHandler->>UIStore: 12. Reset State
+    UIStore->>UIStore: 13. Transition to IDLE
+    
+    alt Has Next Promotion
+        Handler->>Store: 14. Load Next Promotion
+        Handler->>UIHandler: 15. handlePromotionDisplay
+        Note over UIStore: Start New Cycle
+    end
+                </div>
+                
+                <div class="info-box">
+                    <h3>🔑 Key Components</h3>
+                    <ul>
+                        <li><strong>PromotionEndPopup</strong>: Final summary popup when FSB ends</li>
+                        <li><strong>FSBPromotionInfo</strong>: Hides when promotion ends</li>
+                        <li><strong>FSBBottomMessage</strong>: Clears message on end</li>
+                    </ul>
+                </div>
+                
+                <div class="warning-box">
+                    <h3>📝 End Conditions</h3>
+                    <ul>
+                        <li><strong>Server FinishPromotion</strong>: Server force-ends promotion (timeout, violation, etc.)</li>
+                        <li><strong>All Spins Used</strong>: currentSpinCount reaches 0</li>
+                        <li><strong>nextPromotion</strong>: If available, automatically starts after current ends</li>
+                        <li>State machine transitions: FINISHED → IDLE → READY (for next promotion)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>Portrait Mahjong Wins - FSB Promotion Flow Documentation</strong></p>
+            <p>Created: November 19, 2025 | Modules: shared-common-slot, shared-cascading-slot, shared-components</p>
+            <p style="margin-top: 10px; font-size: 0.9em;">
+                📁 Files: 
+                <code>shared-common-slot/assets/fsb-promotion/</code> | 
+                <code>shared-cascading-slot/assets/handlers/</code>
+            </p>
+        </div>
+    </div>
+    
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            themeVariables: {
+                primaryColor: '#667eea',
+                primaryTextColor: '#fff',
+                primaryBorderColor: '#5568d3',
+                lineColor: '#667eea',
+                secondaryColor: '#764ba2',
+                tertiaryColor: '#f8f9fa'
+            },
+            flowchart: {
+                curve: 'basis',
+                padding: 20
+            },
+            sequence: {
+                actorMargin: 50,
+                boxMargin: 10,
+                boxTextMargin: 5,
+                noteMargin: 10,
+                messageMargin: 35
+            }
+        });
+        
+        function showDiagram(id) {
+            // Hide all sections
+            const sections = document.querySelectorAll('.diagram-section');
+            sections.forEach(section => section.classList.remove('active'));
+            
+            // Remove active class from all buttons
+            const buttons = document.querySelectorAll('.nav button');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            // Show selected section
+            document.getElementById(id).classList.add('active');
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+            
+            // Scroll to top smoothly
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>

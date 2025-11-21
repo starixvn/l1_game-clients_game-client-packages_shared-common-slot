@@ -273,7 +273,7 @@ describe("FSBPromotionInfo", () => {
             };
 
             // Mock updateUI method to handle undefined values safely
-            const mockUpdateUI = jest.fn().mockImplementation(({ totalWin, remainingBonusItems, totalBet }) => {
+            const mockUpdateUI = jest.fn().mockImplementation(({ totalWin, remainingBonusItems, totalBet }: { totalWin?: number; remainingBonusItems?: number; totalBet?: number }) => {
                 mockLabelTotalWin.string = totalWin ? totalWin.toFixed(2) : "0.00";
                 mockLabelFSB.string = remainingBonusItems ? remainingBonusItems.toString() : "0";
                 mockLabelTotalBet.string = totalBet ? totalBet.toFixed(2) : "0.00";

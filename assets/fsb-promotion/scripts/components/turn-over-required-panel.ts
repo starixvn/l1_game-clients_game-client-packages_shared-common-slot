@@ -95,10 +95,10 @@ export default class TurnOverRequiredPanel extends ObserverComponent {
     }
 
     private updateProgressUI() {
-        this.labelTotalWin.string = gc.FormatUtils.numberWithCommas(this.totalWinAmount, 2, false);
+        this.labelTotalWin.string = gc.FormatUtils.numberWithCommas(this.totalWinAmount, 6);
 
-        const formattedTotalTO = gc.FormatUtils.numberWithCommas(this.totalTurnover, 2);
-        const formattedMinRequiredTO = gc.FormatUtils.numberWithCommas(this.minRequiredTurnover, 2);
+        const formattedTotalTO = gc.FormatUtils.numberWithCommas(this.totalTurnover, 6);
+        const formattedMinRequiredTO = gc.FormatUtils.numberWithCommas(this.minRequiredTurnover, 6);
         this.labelTotalTurnover.string = `${formattedTotalTO} / ${formattedMinRequiredTO}`;
 
         this.labelPercentage.string = `${this.progressPercentage}%`;

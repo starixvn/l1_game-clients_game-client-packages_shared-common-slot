@@ -62,7 +62,7 @@ export class FSBPromotionHandlers implements gc.Shared.IMultipleHandlers {
 
     handleClaimedAmount(claimedAmount: number) {
         this.fsbPromotionUIStore.hasClaimedBonus = true;
-        this.promotionStore.claimedAmount = Math.round(claimedAmount * this.mainPlayerStore.xMode * 100) / 100;
+        this.promotionStore.claimedAmount = gc.FormatUtils.formatXMode(claimedAmount, this.mainPlayerStore.xMode);
         this.fsbPromotionUIHandler.claimedBonusSuccess();
     }
 
@@ -74,7 +74,7 @@ export class FSBPromotionHandlers implements gc.Shared.IMultipleHandlers {
         this.promotionStore.promotionId = this.promotionStore.promotion?.promotionId;
         this.promotionStore.reset();
         if (data) {
-            data.totalWin = Math.round(data.totalWin * this.mainPlayerStore.xMode * 100) / 100;
+            data.totalWin = gc.FormatUtils.formatXMode(data.totalWin, this.mainPlayerStore.xMode);
         }
         this.promotionStore.finishPromotion = data;
         this.fsbPromotionUIHandler.markFSBEndFromServer();

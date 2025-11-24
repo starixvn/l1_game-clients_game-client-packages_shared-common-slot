@@ -259,9 +259,9 @@ describe("FSBPromotionInfo", () => {
             (component as any).updateUI(uiData);
 
             // Assert
-            expect(mockLabelTotalWin.string).toBe("1500.00");
+            expect(mockLabelTotalWin.string).toBe("1500.000000");
             expect(mockLabelFSB.string).toBe("5");
-            expect(mockLabelTotalBet.string).toBe("100.00");
+            expect(mockLabelTotalBet.string).toBe("100.000000");
         });
 
         it("should handle undefined values", () => {
@@ -522,9 +522,9 @@ describe("FSBPromotionInfo", () => {
             }
 
             // Assert
-            expect(mockLabelTotalWin.string).toBe("900.00");
+            expect(mockLabelTotalWin.string).toBe("900.000000");
             expect(mockLabelFSB.string).toBe("9");
-            expect(mockLabelTotalBet.string).toBe("90.00");
+            expect(mockLabelTotalBet.string).toBe("90.000000");
         });
     });
 });

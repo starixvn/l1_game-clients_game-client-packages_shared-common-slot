@@ -65,11 +65,11 @@ export class FSBPromotionInfo extends ObserverComponent {
     }
 
     private updateUI({ totalWin, remainingBonusItems, totalBet }: { totalWin?: number; remainingBonusItems?: number; totalBet?: number }) {
-        this.labelTotalWin.string = gc.FormatUtils.numberWithCommas(totalWin * this.xMode, 2, false);
+        this.labelTotalWin.string = gc.FormatUtils.numberWithCommas(totalWin * this.xMode, 6);
 
         this.labelFSB.string = remainingBonusItems.toString();
 
-        this.labelTotalBet.string = gc.FormatUtils.numberWithCommas(totalBet * this.xMode, 2, false);
+        this.labelTotalBet.string = gc.FormatUtils.numberWithCommas(totalBet * this.xMode, 6);
     }
 
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent)

@@ -23,6 +23,9 @@ export class FsbPromotionDialog extends ObserverComponent {
     @property(Node)
     background: Node = null;
 
+    @property(Node)
+    backgroundCloseButton: Node = null;
+
     private isFreeSpins = false;
     private activeDetailPromo = false;
 
@@ -71,6 +74,10 @@ export class FsbPromotionDialog extends ObserverComponent {
         if (this.closeButton) {
             this.closeButton.active = this.activeDetailPromo;
         }
+        if (this.backgroundCloseButton) {
+            this.backgroundCloseButton.active = this.activeDetailPromo;
+        }
+
         this.background.active = !isWebViewLoading;
         this.background.getComponent(DialogTransition)?.show(!isWebViewLoading);
     }

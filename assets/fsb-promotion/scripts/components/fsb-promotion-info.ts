@@ -1,5 +1,4 @@
 import gc from "@sg/game-client-base";
-const { MainPlayerStore } = gc.Player;
 import { _decorator, Label } from "cc";
 import DraggableItem from "db://shared-components/shared/common-components/draggable/draggable-item";
 import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
@@ -8,6 +7,7 @@ import { GameServiceMessageSlot } from "../../../game-message-slot";
 import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
 import { FSBPromotionStore } from "../stores/fsb-promotion-store";
 import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
+import { formatStringXMode, getXMode } from "../../../x-mode/scripts/utils/xMode-utils";
 
 const { render, handle } = Observer;
 const { ccclass, property } = _decorator;
@@ -23,7 +23,6 @@ export class FSBPromotionInfo extends ObserverComponent {
     private readonly DEFAULT_LINES = 25;
 
     private totalWin = 0;
-    private xMode = 1;
 
     onEnable() {
         this.setupDraggable();
@@ -41,18 +40,13 @@ export class FSBPromotionInfo extends ObserverComponent {
 
     private onCollapseMenu() { }
 
-    @render(MainPlayerStore, (store) => store.xMode)
-    setXMode(value: number) {
-        this.xMode = value;
-    }
-
     @render(FSBPromotionStore, (store) => store.promotion)
     onFSBPromotionInfo(promotion: GameServiceMessageSlot.Promotion) {
         if (!promotion) {
             return;
         }
         const { coinValue, betLevel = 0, totalWin = 0, remainingBonusItems = 0 } = promotion;
-        this.totalWin = totalWin * this.xMode;
+        this.totalWin = totalWin * getXMode();
         const totalBet = this.calculateTotalBet(coinValue, betLevel);
         this.updateUI({ totalWin, remainingBonusItems, totalBet });
     }
@@ -65,11 +59,11 @@ export class FSBPromotionInfo extends ObserverComponent {
     }
 
     private updateUI({ totalWin, remainingBonusItems, totalBet }: { totalWin?: number; remainingBonusItems?: number; totalBet?: number }) {
-        this.labelTotalWin.string = gc.FormatUtils.numberWithCommas(totalWin * this.xMode, 6);
+        this.labelTotalWin.string = formatStringXMode(totalWin * getXMode());
 
         this.labelFSB.string = remainingBonusItems.toString();
 
-        this.labelTotalBet.string = gc.FormatUtils.numberWithCommas(totalBet * this.xMode, 6);
+        this.labelTotalBet.string = formatStringXMode(totalBet * getXMode());
     }
 
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent)

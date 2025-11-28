@@ -1,6 +1,5 @@
 import { _decorator, Label, Node, ProgressBar } from "cc";
 import gc from "@sg/game-client-base";
-const { MainPlayerStore } = gc.Player;
 import DraggableItem from "db://shared-components/shared/common-components/draggable/draggable-item";
 import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
 import { FreeSpinsPromotionEvents, FSBPromotionUIStore, ITurnOverRequired } from "../stores/fsb-promotion-ui-store";
@@ -9,6 +8,7 @@ import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
 import { GameServiceMessageSlot } from "../../../game-message-slot";
 import SimpleClaimButton from "./simple-claim-button";
 import Observer from "observer";
+import { formatStringXMode, getXMode } from "../../../x-mode/scripts/utils/xMode-utils";
 const { ccclass, property } = _decorator;
 const { handle, render } = Observer;
 
@@ -34,16 +34,10 @@ export default class TurnOverRequiredPanel extends ObserverComponent {
     private minRequiredTurnover = 0;
     private progressPercentage = 0;
     private endTime = 0;
-    private xMode = 1;
 
     onEnable() {
         this.schedule(this.updateTimer, 1);
         this.dragTurnOverRequired();
-    }
-
-    @render(MainPlayerStore, (store) => store.xMode)
-    setXMode(value: number) {
-        this.xMode = value;
     }
 
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent)
@@ -78,9 +72,10 @@ export default class TurnOverRequiredPanel extends ObserverComponent {
     }
 
     public updateBonusWallet(data: ITurnOverRequired) {
-        this.totalWinAmount = data?.win * this.xMode;
-        this.totalTurnover = data?.totalTO * this.xMode;
-        this.minRequiredTurnover = data?.minTO * this.xMode;
+        const xMode = getXMode();
+        this.totalWinAmount = data?.win * xMode;
+        this.totalTurnover = data?.totalTO * xMode;
+        this.minRequiredTurnover = data?.minTO * xMode;
         this.progressPercentage = data?.progress;
         this.endTime = new Date(data?.expire).getTime();
 
@@ -95,10 +90,10 @@ export default class TurnOverRequiredPanel extends ObserverComponent {
     }
 
     private updateProgressUI() {
-        this.labelTotalWin.string = gc.FormatUtils.numberWithCommas(this.totalWinAmount, 6);
+        this.labelTotalWin.string = formatStringXMode(this.totalWinAmount);
 
-        const formattedTotalTO = gc.FormatUtils.numberWithCommas(this.totalTurnover, 6);
-        const formattedMinRequiredTO = gc.FormatUtils.numberWithCommas(this.minRequiredTurnover, 6);
+        const formattedTotalTO = formatStringXMode(this.totalTurnover);
+        const formattedMinRequiredTO = formatStringXMode(this.minRequiredTurnover);
         this.labelTotalTurnover.string = `${formattedTotalTO} / ${formattedMinRequiredTO}`;
 
         this.labelPercentage.string = `${this.progressPercentage}%`;

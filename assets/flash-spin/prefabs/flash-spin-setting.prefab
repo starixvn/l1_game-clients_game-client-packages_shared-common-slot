@@ -643,7 +643,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "number-of-spins-content",
+    "_name": "number-container",
     "_objFlags": 0,
     "__editorExtras__": {},
     "_parent": {
@@ -667,8 +667,8 @@
     },
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": 10.677,
-      "y": -24.558,
+      "x": 0,
+      "y": -20,
       "z": 0
     },
     "_lrot": {
@@ -708,7 +708,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 720,
+      "width": -53,
       "height": 0
     },
     "_anchorPoint": {
@@ -755,7 +755,7 @@
       "__id__": 35
     },
     "_resizeMode": 1,
-    "_layoutType": 3,
+    "_layoutType": 1,
     "_cellSize": {
       "__type__": "cc.Size",
       "width": 40,
@@ -766,8 +766,8 @@
     "_paddingRight": 0,
     "_paddingTop": 0,
     "_paddingBottom": 0,
-    "_spacingX": 50,
-    "_spacingY": 25,
+    "_spacingX": 53,
+    "_spacingY": 23,
     "_verticalDirection": 1,
     "_horizontalDirection": 0,
     "_constraint": 0,
@@ -3323,6 +3323,13 @@
     "stopOnProfitSliderCtrl": null,
     "stopOnLossSliderCtrl": null,
     "betSliderCtrl": null,
+    "numberItemPrefab": {
+      "__uuid__": "eeb27513-9e6e-41f5-b7ed-12897f3b358b",
+      "__expectedType__": "cc.Prefab"
+    },
+    "numberContainer": {
+      "__id__": 29
+    },
     "_id": ""
   },
   {

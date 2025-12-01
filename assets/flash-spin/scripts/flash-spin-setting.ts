@@ -1,4 +1,5 @@
-import { _decorator, Slider } from 'cc';
+import { _decorator, instantiate, Node, Prefab, Slider } from 'cc';
+import HyperSpinRoundNumber from 'db://shared-cascading-slot/components/hyper-spin/hyper-spin-round-number';
 import { HyperSpinHandler } from 'db://shared-cascading-slot/handlers/hyper-spin-handler';
 import { BetControlStore } from 'db://shared-cascading-slot/stores/bet-control-store';
 import { HyperSpinStore } from 'db://shared-cascading-slot/stores/hyper-spin-store';
@@ -17,6 +18,47 @@ export class FlashSpinSetting extends ObserverComponent {
 
     @property(SliderControl)
     betSliderCtrl: SliderControl = null;
+
+    @property(Prefab)
+    numberItemPrefab: Prefab = null;
+
+    @property(Node)
+    numberContainer: Node = null;
+
+    @render(HyperSpinStore, (store) => {
+        return {
+            roundsList: store.roundsList,
+            selectedRoundOnPopup: store.selectedRoundOnPopup
+        }
+    })
+    initContentRounds(data: { roundsList: number[]; selectedRoundOnPopup: number }) {
+        const { roundsList, selectedRoundOnPopup } = data;
+
+        this.numberContainer.destroyAllChildren();
+
+        roundsList.forEach((round) => {
+            const node = instantiate(this.numberItemPrefab);
+            const roundNumber = node.getComponent(HyperSpinRoundNumber);
+            if (roundNumber) {
+                roundNumber.setValue(round);
+            }
+            this.numberContainer.addChild(node);
+        });
+
+        this.renderSelectedRounds(selectedRoundOnPopup);
+    }
+
+    @render(HyperSpinStore, (store) => store.selectedRoundOnPopup)
+    renderSelectedRounds(noOfRounds: number) {
+        this.numberContainer.children.forEach((child) => {
+            const roundNumber = child.getComponent(HyperSpinRoundNumber);
+            if (!roundNumber) {
+                return;
+            }
+            const selectedBg = roundNumber.value === noOfRounds;
+            roundNumber.setSelectedRound(selectedBg);
+        });
+    }
 
     @render(HyperSpinStore, store => store.stopOnProfitSliderProgress)
     private renderStopOnProfitSliderProgress(progress: number) {

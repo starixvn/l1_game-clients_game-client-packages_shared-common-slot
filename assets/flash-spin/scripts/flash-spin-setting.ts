@@ -3,6 +3,7 @@ import HyperSpinRoundNumber from 'db://shared-cascading-slot/components/hyper-sp
 import { HyperSpinHandler } from 'db://shared-cascading-slot/handlers/hyper-spin-handler';
 import { BetControlStore } from 'db://shared-cascading-slot/stores/bet-control-store';
 import { HyperSpinStore } from 'db://shared-cascading-slot/stores/hyper-spin-store';
+import { AudioUtils } from 'db://shared-components/game/audios/utils';
 import { ObserverComponent } from 'db://shared-components/shared/common-components/observer-component/scripts/observer-component';
 import Observer from "observer";
 import { SliderControl } from './slider-control';
@@ -24,6 +25,9 @@ export class FlashSpinSetting extends ObserverComponent {
 
     @property(Node)
     numberContainer: Node = null;
+
+    @property(Node)
+    stopOnFeatureNode: Node = null;
 
     @render(HyperSpinStore, (store) => {
         return {
@@ -173,6 +177,20 @@ export class FlashSpinSetting extends ObserverComponent {
     @handle(HyperSpinHandler, (handle, progress: number) => handle.setTotalBetFromSlider(progress))
     private handleTotalBetSliderChange(progress: number) {
         return progress;
+    }
+
+    @handle(HyperSpinHandler, (handle) => handle.toggleStopOnFeature())
+    onClickStopOnFeature() {
+        AudioUtils.playClick();
+    }
+
+    @render(HyperSpinStore, (store) => store.stopOnFeature)
+    updateStopOnFeatureButton(stopOnFeature: boolean) {
+        const state = stopOnFeature ? "on" : "off";
+        const childNames = ["on", "off"];
+        childNames.forEach((childName) => {
+            this.stopOnFeatureNode.getChildByName(childName).active = childName === state;
+        });
     }
 }
 

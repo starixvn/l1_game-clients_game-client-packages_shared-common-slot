@@ -339,7 +339,7 @@
       }
     ],
     "_interactable": true,
-    "_transition": 0,
+    "_transition": 3,
     "_normalColor": {
       "__type__": "cc.Color",
       "r": 255,
@@ -373,7 +373,7 @@
     "_pressedSprite": null,
     "_disabledSprite": null,
     "_duration": 0.1,
-    "_zoomScale": 1.2,
+    "_zoomScale": 1.1,
     "_target": null,
     "_id": ""
   },
@@ -538,7 +538,7 @@
     },
     "_lpos": {
       "__type__": "cc.Vec3",
-      "x": 0,
+      "x": -2.524,
       "y": 616.761,
       "z": 0
     },
@@ -15004,13 +15004,6 @@
     "__prefab": {
       "__id__": 668
     },
-    "prfNoOfRound": {
-      "__uuid__": "b548484a-693a-4f2c-9934-bb64d0e24c73",
-      "__expectedType__": "cc.Prefab"
-    },
-    "numberOfSpinsContent": {
-      "__id__": 145
-    },
     "hyperSpinRoundsLabel": {
       "__id__": 542
     },
@@ -15034,12 +15027,6 @@
     },
     "sprIconPause": {
       "__id__": 520
-    },
-    "sprIconStopOnFeatureOff": {
-      "__id__": 351
-    },
-    "sprIconStopOnFeatureOn": {
-      "__id__": 357
     },
     "sprIconSettingsOff": {
       "__id__": 450
@@ -15065,6 +15052,7 @@
       "__id__": 0
     },
     "fileId": "e5n5/oljxBmJhYBuPDrWeA",
+    "instance": null,
     "targetOverrides": null,
     "nestedPrefabInstanceRoots": [
       {

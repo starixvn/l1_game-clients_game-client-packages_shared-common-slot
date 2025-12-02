@@ -38,6 +38,25 @@ jest.mock("@sg/game-client-base", () => ({
             },
         },
     },
+    UserSettings: {
+        UserSettingStore: jest.fn().mockImplementation(() => ({
+            sfxVolume: 1,
+            bgmVolume: 1,
+            sfxEnable: true,
+            musicEnable: true,
+        })),
+        UserSettingHandlers: class {
+            handle() {}
+        },
+    },
+    App: {
+        AppHandlers: {
+            UserGesturePage: class {
+                handleTouchScreen() {}
+            },
+        },
+    },
+    BrowserDomUtils: {},
 }));
 
 // Mock các dependencies cần thiết - follow shared-cascading-slot pattern
@@ -74,6 +93,11 @@ jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store",
     },
 }));
 jest.mock("../../../assets/game-message-slot");
+jest.mock("db://shared-components/shared/common-components/dialogs/dialog", () => ({
+    Dialog: class Dialog {
+        hide() {}
+    },
+}));
 
 // ========== Test Data ==========
 

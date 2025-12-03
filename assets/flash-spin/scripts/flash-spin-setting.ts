@@ -1,8 +1,8 @@
 import { _decorator, instantiate, Node, Prefab, Slider } from 'cc';
-import HyperSpinRoundNumber from 'db://shared-cascading-slot/components/hyper-spin/hyper-spin-round-number';
-import { HyperSpinHandler } from 'db://shared-cascading-slot/handlers/hyper-spin-handler';
-import { BetControlStore } from 'db://shared-cascading-slot/stores/bet-control-store';
-import { HyperSpinStore } from 'db://shared-cascading-slot/stores/hyper-spin-store';
+import { FlashSpinHandler } from 'db://shared-cascading-slot/flash-spin/handlers/flash-spin-handler';
+import { FlashSpinStore } from 'dbdb://shared-common-slot/flash-spin/scripts/handlers/flash-spin-handler
+import { BetControlStore } from db://shared-common-slot/flash-spin/scripts/handlers/flash-spin-store
+import HyperSpinRoundNumber from 'db://shared-common-slot/flash-spin/scripts/components/hyper-spin-round-number';
 import { AudioUtils } from 'db://shared-components/game/audios/utils';
 import { ObserverComponent } from 'db://shared-components/shared/common-components/observer-component/scripts/observer-component';
 import Observer from "observer";
@@ -29,7 +29,7 @@ export class FlashSpinSetting extends ObserverComponent {
     @property(Node)
     stopOnFeatureNode: Node = null;
 
-    @render(HyperSpinStore, (store) => {
+    @render(FlashSpinStore, (store) => {
         return {
             roundsList: store.roundsList,
             selectedRoundOnPopup: store.selectedRoundOnPopup
@@ -52,7 +52,7 @@ export class FlashSpinSetting extends ObserverComponent {
         this.renderSelectedRounds(selectedRoundOnPopup);
     }
 
-    @render(HyperSpinStore, (store) => store.selectedRoundOnPopup)
+    @render(FlashSpinStore, (store) => store.selectedRoundOnPopup)
     renderSelectedRounds(noOfRounds: number) {
         this.numberContainer.children.forEach((child) => {
             const roundNumber = child.getComponent(HyperSpinRoundNumber);
@@ -64,32 +64,32 @@ export class FlashSpinSetting extends ObserverComponent {
         });
     }
 
-    @render(HyperSpinStore, store => store.stopOnProfitSliderProgress)
+    @render(FlashSpinStore, store => store.stopOnProfitSliderProgress)
     private renderStopOnProfitSliderProgress(progress: number) {
         this.stopOnProfitSliderCtrl.setSliderProgress(progress);
     }
 
-    @render(HyperSpinStore, store => store.stopOnLossSliderProgress)
+    @render(FlashSpinStore, store => store.stopOnLossSliderProgress)
     private renderStopOnLossSliderProgress(progress: number) {
         this.stopOnLossSliderCtrl.setSliderProgress(progress);
     }
 
-    @render(HyperSpinStore, store => store.formattedStopOnProfit)
+    @render(FlashSpinStore, store => store.formattedStopOnProfit)
     renderFormattedStopOnProfit(formattedStopOnProfit: string) {
         this.stopOnProfitSliderCtrl.setValue(formattedStopOnProfit);
     }
 
-    @render(HyperSpinStore, store => store.formattedStopOnLoss)
+    @render(FlashSpinStore, store => store.formattedStopOnLoss)
     renderFormattedStopOnLoss(formattedStopOnLoss: string) {
         this.stopOnLossSliderCtrl.setValue(formattedStopOnLoss);
     }
 
-    @render(HyperSpinStore, store => store.interactableStopOnProfit)
+    @render(FlashSpinStore, store => store.interactableStopOnProfit)
     renderInteractableStopOnProfit(interactable: { increase: boolean; decrease: boolean }) {
         this.stopOnProfitSliderCtrl.setInteractable(interactable);
     }
 
-    @render(HyperSpinStore, store => store.interactableStopOnLoss)
+    @render(FlashSpinStore, store => store.interactableStopOnLoss)
     renderInteractableStopOnLoss(interactable: { increase: boolean; decrease: boolean }) {
         this.stopOnLossSliderCtrl.setInteractable(interactable);
     }
@@ -104,7 +104,7 @@ export class FlashSpinSetting extends ObserverComponent {
         this.betSliderCtrl.setSliderProgress(progress);
     }
 
-    @render(HyperSpinStore, store => store.interactableTotalBet)
+    @render(FlashSpinStore, store => store.interactableTotalBet)
     renderInteractableTotalBet(interactable: { increase: boolean; decrease: boolean }) {
         this.betSliderCtrl.setInteractable(interactable);
     }
@@ -149,42 +149,42 @@ export class FlashSpinSetting extends ObserverComponent {
         super.onLoad();
     }
 
-    @handle(HyperSpinHandler, (handle, value: boolean) => handle.changeTotalBet(value))
+    @handle(FlashSpinHandler, (handle, value: boolean) => handle.changeTotalBet(value))
     changeTotalBet(value: boolean) {
         return value;
     }
 
-    @handle(HyperSpinHandler, (handle, value: boolean) => handle.changeStopOnProfit(value))
+    @handle(FlashSpinHandler, (handle, value: boolean) => handle.changeStopOnProfit(value))
     changeStopOnProfit(value: boolean) {
         return value;
     }
 
-    @handle(HyperSpinHandler, (handle, value: boolean) => handle.changeStopOnLoss(value))
+    @handle(FlashSpinHandler, (handle, value: boolean) => handle.changeStopOnLoss(value))
     changeStopOnLoss(value: boolean) {
         return value;
     }
 
-    @handle(HyperSpinHandler, (handle, progress: number) => handle.setStopOnProfitFromSlider(progress))
+    @handle(FlashSpinHandler, (handle, progress: number) => handle.setStopOnProfitFromSlider(progress))
     private handleStopOnProfitSliderChange(progress: number) {
         return progress;
     }
 
-    @handle(HyperSpinHandler, (handle, progress: number) => handle.setStopOnLossFromSlider(progress))
+    @handle(FlashSpinHandler, (handle, progress: number) => handle.setStopOnLossFromSlider(progress))
     private handleStopOnLossSliderChange(progress: number) {
         return progress;
     }
 
-    @handle(HyperSpinHandler, (handle, progress: number) => handle.setTotalBetFromSlider(progress))
+    @handle(FlashSpinHandler, (handle, progress: number) => handle.setTotalBetFromSlider(progress))
     private handleTotalBetSliderChange(progress: number) {
         return progress;
     }
 
-    @handle(HyperSpinHandler, (handle) => handle.toggleStopOnFeature())
+    @handle(FlashSpinHandler, (handle) => handle.toggleStopOnFeature())
     onClickStopOnFeature() {
         AudioUtils.playClick();
     }
 
-    @render(HyperSpinStore, (store) => store.stopOnFeature)
+    @render(FlashSpinStore, (store) => store.stopOnFeature)
     updateStopOnFeatureButton(stopOnFeature: boolean) {
         const state = stopOnFeature ? "on" : "off";
         const childNames = ["on", "off"];

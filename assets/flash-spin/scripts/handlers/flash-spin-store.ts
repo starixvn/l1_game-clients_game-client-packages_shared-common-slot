@@ -1,13 +1,13 @@
 import gc from "@sg/game-client-base";
+import { CascadingSlotState } from "db://shared-cascading-slot/cascading-slot-state";
+import { AutoPlayStore } from "db://shared-cascading-slot/stores/auto-play-store";
+import { BetControlStore } from "db://shared-cascading-slot/stores/bet-control-store";
+import { CascadingSlotConfigsStore } from "db://shared-cascading-slot/stores/cascading-slot-configs-store";
+import { CascadingUIStore } from "db://shared-cascading-slot/stores/cascading-ui-store";
 import { FSBPromotionStore } from "db://shared-common-slot/fsb-promotion/scripts/stores/fsb-promotion-store";
 import { FSBPromotionUIStore } from "db://shared-common-slot/fsb-promotion/scripts/stores/fsb-promotion-ui-store";
 import inversify from "inversify";
 import mobx from "mobx";
-import { CascadingSlotState } from "../../../../../shared-cascading-slot/assets/cascading-slot-state";
-import { AutoPlayStore } from "../../../../../shared-cascading-slot/assets/stores/auto-play-store";
-import { BetControlStore } from "../../../../../shared-cascading-slot/assets/stores/bet-control-store";
-import { CascadingSlotConfigsStore } from "../../../../../shared-cascading-slot/assets/stores/cascading-slot-configs-store";
-import { CascadingUIStore } from "../../../../../shared-cascading-slot/assets/stores/cascading-ui-store";
 const { injectable, inject } = inversify;
 const { FormatUtils } = gc;
 

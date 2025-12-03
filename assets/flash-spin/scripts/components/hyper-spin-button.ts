@@ -2,8 +2,8 @@ import { _decorator, Node } from "cc";
 import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
 import Observer from "observer";
 
+import { CascadingUIStore } from "db://shared-cascading-slot/stores/cascading-ui-store";
 import { AudioUtils } from "db://shared-components/game/audios/utils";
-import { CascadingUIStore } from "../../../../../shared-cascading-slot/assets/stores/cascading-ui-store";
 import { FlashSpinHandler } from "../handlers/flash-spin-handler";
 
 const { ccclass, property } = _decorator;

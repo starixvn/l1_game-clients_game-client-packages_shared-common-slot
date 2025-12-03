@@ -1,13 +1,13 @@
 import gc from "@sg/game-client-base";
 import inversify from "inversify";
 
-import { CascadingSlotState } from "../../../../../shared-cascading-slot/assets/cascading-slot-state";
-import { DialogName, SlotNotification } from "../../../../../shared-cascading-slot/assets/cascading-slot-utils";
-import { BetControlHandlers } from "../../../../../shared-cascading-slot/assets/handlers/bet-control-handlers";
-import { CascadingUIHandler } from "../../../../../shared-cascading-slot/assets/handlers/cascading-ui-handler";
-import { SlotBetHandler } from "../../../../../shared-cascading-slot/assets/handlers/slot-bet-handler";
-import { BetControlStore } from "../../../../../shared-cascading-slot/assets/stores/bet-control-store";
-import { CascadingUIStore } from "../../../../../shared-cascading-slot/assets/stores/cascading-ui-store";
+import { CascadingSlotState } from "db://shared-cascading-slot/cascading-slot-state";
+import { DialogName, SlotNotification } from "db://shared-cascading-slot/cascading-slot-utils";
+import { BetControlHandlers } from "db://shared-cascading-slot/handlers/bet-control-handlers";
+import { CascadingUIHandler } from "db://shared-cascading-slot/handlers/cascading-ui-handler";
+import { SlotBetHandler } from "db://shared-cascading-slot/handlers/slot-bet-handler";
+import { BetControlStore } from "db://shared-cascading-slot/stores/bet-control-store";
+import { CascadingUIStore } from "db://shared-cascading-slot/stores/cascading-ui-store";
 import { FlashSpinStore } from "./flash-spin-store";
 
 const { injectable, inject } = inversify;

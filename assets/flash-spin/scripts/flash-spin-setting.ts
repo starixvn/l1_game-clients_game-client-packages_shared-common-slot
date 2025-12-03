@@ -1,11 +1,12 @@
+import gc from '@sg/game-client-base';
 import { _decorator, instantiate, Node, Prefab, Slider } from 'cc';
-import { FlashSpinHandler } from 'db://shared-cascading-slot/flash-spin/handlers/flash-spin-handler';
-import { FlashSpinStore } from 'dbdb://shared-common-slot/flash-spin/scripts/handlers/flash-spin-handler
-import { BetControlStore } from db://shared-common-slot/flash-spin/scripts/handlers/flash-spin-store
+import { BetControlStore } from 'db://shared-cascading-slot/stores/bet-control-store';
 import HyperSpinRoundNumber from 'db://shared-common-slot/flash-spin/scripts/components/hyper-spin-round-number';
 import { AudioUtils } from 'db://shared-components/game/audios/utils';
 import { ObserverComponent } from 'db://shared-components/shared/common-components/observer-component/scripts/observer-component';
 import Observer from "observer";
+import { FlashSpinHandler } from './handlers/flash-spin-handler';
+import { FlashSpinStore } from './handlers/flash-spin-store';
 import { SliderControl } from './slider-control';
 const { ccclass, property } = _decorator;
 const { observer, render, handle } = Observer;
@@ -94,12 +95,12 @@ export class FlashSpinSetting extends ObserverComponent {
         this.stopOnLossSliderCtrl.setInteractable(interactable);
     }
 
-    @render(BetControlStore, store => store.formattedTotalBet)
-    renderFormattedTotalBet(formattedTotalBet: string) {
-        this.betSliderCtrl.setValue(formattedTotalBet);
+    @render(BetControlStore, store => store.totalBet)
+    renderFormattedTotalBet(totalBet: number) {
+        this.betSliderCtrl.setValue(gc.FormatUtils.numberWithCommas(totalBet, 2, true));
     }
 
-    @render(BetControlStore, store => store.totalBetSliderProgress)
+    @render(FlashSpinStore, store => store.totalBetSliderProgress)
     renderTotalBetSliderProgress(progress: number) {
         this.betSliderCtrl.setSliderProgress(progress);
     }

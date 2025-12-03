@@ -93,6 +93,14 @@ export class HyperSpinBetRecords extends ObserverComponent {
         // this.hyperSpinRecordBodyContentNode.addChild(node);
     }
 
+    @render(FlashSpinStore, (store) => store.singleSpinData)
+    private renderSingleSpinRecord(spin: HyperSpinSingleSpinData) {
+        if (!spin) {
+            return;
+        }
+        this.renderSpinRecord(spin);
+    }
+
     @render(FlashSpinStore, (store) => store.spinBatchData)
     private renderHyperSpinRecords(data: HyperSpinBatchData) {
         if (!data) {

@@ -15,5 +15,5 @@ export const formatStringXMode = (value: number) => {
 };
 
 export const formatNumberXMode = (value: number) => {
-    return gc.FormatUtils.formatXMode(value, xMode);
+    return parseFloat((value * xMode).toFixed(6));
 };

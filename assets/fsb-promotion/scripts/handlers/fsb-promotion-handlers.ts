@@ -4,6 +4,7 @@ import { GameServiceMessageSlot } from "../../../game-message-slot";
 import { FSBPromotionStore, RedeemStatus } from "../stores/fsb-promotion-store";
 import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
 import { FSBPromotionUIHandler } from "./fsb-promotion-ui-handler";
+import { formatNumberXMode } from "db://shared-common-slot/x-mode/scripts/utils/xMode-utils";
 
 const { injectable, inject } = inversify;
 
@@ -14,7 +15,6 @@ export class FSBPromotionHandlers implements gc.Shared.IMultipleHandlers {
     @inject(FSBPromotionUIHandler) protected readonly fsbPromotionUIHandler: FSBPromotionUIHandler;
     @inject(FSBPromotionUIStore) protected readonly fsbPromotionUIStore: FSBPromotionUIStore;
     @inject(gc.Notification.NotificationStore) protected readonly notificationStore: gc.Notification.NotificationStore;
-    @inject(gc.Player.MainPlayerStore) protected readonly mainPlayerStore: gc.Player.MainPlayerStore;
 
     handlePromotion(data: GameServiceMessageSlot.Promotion) {
         if (this.fsbPromotionUIStore.hasServerFinishPromotion || this.fsbPromotionUIStore.hasClaimedBonus) {
@@ -62,7 +62,7 @@ export class FSBPromotionHandlers implements gc.Shared.IMultipleHandlers {
 
     handleClaimedAmount(claimedAmount: number) {
         this.fsbPromotionUIStore.hasClaimedBonus = true;
-        this.promotionStore.claimedAmount = gc.FormatUtils.formatXMode(claimedAmount, this.mainPlayerStore.xMode);
+        this.promotionStore.claimedAmount = formatNumberXMode(claimedAmount);
         this.fsbPromotionUIHandler.claimedBonusSuccess();
     }
 
@@ -74,7 +74,7 @@ export class FSBPromotionHandlers implements gc.Shared.IMultipleHandlers {
         this.promotionStore.promotionId = this.promotionStore.promotion?.promotionId;
         this.promotionStore.reset();
         if (data) {
-            data.totalWin = gc.FormatUtils.formatXMode(data.totalWin, this.mainPlayerStore.xMode);
+            data.totalWin = formatNumberXMode(data.totalWin);
         }
         this.promotionStore.finishPromotion = data;
         this.fsbPromotionUIHandler.markFSBEndFromServer();

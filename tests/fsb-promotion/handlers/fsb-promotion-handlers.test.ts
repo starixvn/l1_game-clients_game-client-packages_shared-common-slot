@@ -12,9 +12,6 @@ jest.mock("@sg/game-client-base", () => ({
     Notification: { NotificationStore: jest.fn() },
     Player: { MainPlayerStore: jest.fn() },
     Shared: { IMultipleHandlers: jest.fn() },
-    FormatUtils: {
-        formatXMode: jest.fn((value: number, xMode: number) => value * xMode),
-    },
 }));
 
 jest.mock("../../../assets/fsb-promotion/scripts/handlers/fsb-promotion-ui-handler", () => {

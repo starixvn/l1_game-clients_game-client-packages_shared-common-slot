@@ -11,7 +11,7 @@ export const setXMode = (value: number) => {
 };
 
 export const formatStringXMode = (value: number) => {
-    return gc.FormatUtils.numberWithCommas(value, 6);
+    return gc.FormatUtils.numberWithCommas(value * xMode, 6);
 };
 
 export const formatNumberXMode = (value: number) => {

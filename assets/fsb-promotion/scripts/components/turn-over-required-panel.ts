@@ -8,7 +8,7 @@ import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
 import { GameServiceMessageSlot } from "../../../game-message-slot";
 import SimpleClaimButton from "./simple-claim-button";
 import Observer from "observer";
-import { formatStringXMode, getXMode } from "../../../x-mode/scripts/utils/xMode-utils";
+import { formatStringXMode } from "../../../x-mode/scripts/utils/xMode-utils";
 const { ccclass, property } = _decorator;
 const { handle, render } = Observer;
 
@@ -72,10 +72,9 @@ export default class TurnOverRequiredPanel extends ObserverComponent {
     }
 
     public updateBonusWallet(data: ITurnOverRequired) {
-        const xMode = getXMode();
-        this.totalWinAmount = data?.win * xMode;
-        this.totalTurnover = data?.totalTO * xMode;
-        this.minRequiredTurnover = data?.minTO * xMode;
+        this.totalWinAmount = data?.win;
+        this.totalTurnover = data?.totalTO;
+        this.minRequiredTurnover = data?.minTO;
         this.progressPercentage = data?.progress;
         this.endTime = new Date(data?.expire).getTime();
 

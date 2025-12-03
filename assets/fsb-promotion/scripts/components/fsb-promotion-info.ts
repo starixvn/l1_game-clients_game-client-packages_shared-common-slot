@@ -7,7 +7,7 @@ import { GameServiceMessageSlot } from "../../../game-message-slot";
 import { FSBPromotionUIHandler } from "../handlers/fsb-promotion-ui-handler";
 import { FSBPromotionStore } from "../stores/fsb-promotion-store";
 import { FreeSpinsPromotionEvents, FSBPromotionUIStore } from "../stores/fsb-promotion-ui-store";
-import { formatStringXMode, getXMode } from "../../../x-mode/scripts/utils/xMode-utils";
+import { formatStringXMode } from "../../../x-mode/scripts/utils/xMode-utils";
 
 const { render, handle } = Observer;
 const { ccclass, property } = _decorator;
@@ -46,7 +46,7 @@ export class FSBPromotionInfo extends ObserverComponent {
             return;
         }
         const { coinValue, betLevel = 0, totalWin = 0, remainingBonusItems = 0 } = promotion;
-        this.totalWin = totalWin * getXMode();
+        this.totalWin = totalWin;
         const totalBet = this.calculateTotalBet(coinValue, betLevel);
         this.updateUI({ totalWin, remainingBonusItems, totalBet });
     }
@@ -59,11 +59,11 @@ export class FSBPromotionInfo extends ObserverComponent {
     }
 
     private updateUI({ totalWin, remainingBonusItems, totalBet }: { totalWin?: number; remainingBonusItems?: number; totalBet?: number }) {
-        this.labelTotalWin.string = formatStringXMode(totalWin * getXMode());
+        this.labelTotalWin.string = formatStringXMode(totalWin);
 
         this.labelFSB.string = remainingBonusItems.toString();
 
-        this.labelTotalBet.string = formatStringXMode(totalBet * getXMode());
+        this.labelTotalBet.string = formatStringXMode(totalBet);
     }
 
     @render(FSBPromotionUIStore, (store) => store.pendingUIEvent)

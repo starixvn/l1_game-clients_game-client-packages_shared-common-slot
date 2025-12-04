@@ -84,6 +84,7 @@ export default class HyperSpinRecordBodyItem extends Component {
             this.lblTotalWin.string = gc.FormatUtils.numberWithCommas(spinData.totalWin, 2);
         }
 
+        this.showFinalBalanceLabels(false);
         this.balanceFinalLabels.forEach(label => {
             label.string = gc.FormatUtils.numberWithCommas(spinData.balanceAfter, 2);
         });
@@ -101,6 +102,8 @@ export default class HyperSpinRecordBodyItem extends Component {
         if (spinData.detailRecords && spinData.detailRecords.length > 0) {
             this.registerTouchExpand();
             this.initDetailRecords(spinData.detailRecords);
+        } else {
+            this.showFinalBalanceLabels(true);
         }
     }
 
@@ -130,8 +133,15 @@ export default class HyperSpinRecordBodyItem extends Component {
             this.nodeDetailRecordContent.addChild(node);
             this.updateHeightContent();
         };
+        this.showFinalBalanceLabels(true);
         this.animating = false;
         this.scheduleOnce(() => this.toggleExpanded(), 3);
+    }
+
+    showFinalBalanceLabels(show: boolean) {
+        this.balanceFinalLabels.forEach(label => {
+            label.node.active = show;
+        });
     }
 
     private updateHeightContent() {

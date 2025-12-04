@@ -1,156 +1,162 @@
 import gc from "@sg/game-client-base";
-import { _decorator, Label, Node, Sprite, SpriteAtlas, UITransform } from "cc";
-import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
-import { WinTag } from "../handlers/flash-spin-store";
+import { _decorator, Component, instantiate, Label, Layout, Node, Widget } from "cc";
+import { AudioUtils } from "db://shared-components/game/audios/utils";
+import { AnimationUtils, ComponentUtils } from "db://shared-components/shared/utils";
+import { DetailRecord, HyperSpinSingleSpinData } from "../handlers/flash-spin-store";
+import FlashSpinDetailItem from "./flash-spin-detail-item";
+import FlashSpinMultiplierView from "./flash-spin-multiplier-view";
 const { ccclass, property } = _decorator;
 
 @ccclass
-export default class HyperSpinRecordBodyItem extends ObserverComponent {
-    @property(Label)
-    lblSpinValue: Label = null;
+export default class HyperSpinRecordBodyItem extends Component {
+    @property({ type: Label })
+    spinIdLabels: Label[] = [];
 
     @property(Label)
-    lblWinValue: Label = null;
+    lblBalanceBefore: Label = null;
 
     @property(Label)
-    lblBalance: Label = null;
+    balanceFinalLabels: Label[] = [];
 
     @property(Label)
-    lblMultiplierValue: Label = null;
+    lblTotalWin: Label = null;
+
+    @property(FlashSpinMultiplierView)
+    multiplierView: FlashSpinMultiplierView = null;
 
     @property(Node)
-    winningBgNode: Node = null;
+    nodeBgWinning: Node = null;
 
     @property(Node)
-    cascadeArrowIcon: Node = null;
+    nodeBgCurrent: Node = null;
 
     @property(Node)
-    cascadeRecordBgNode: Node = null; // Background for cascade records
+    nodeFreespinMarker: Node = null;
 
-    // WinTag sprite - single sprite node with dynamic spriteFrame from atlas
-    @property(Sprite)
-    winTagSprite: Sprite = null;
+    @property(Node)
+    sampleDetailRecord: Node = null;
 
-    @property(SpriteAtlas)
-    winTagAtlas: SpriteAtlas = null;
+    @property(Node)
+    nodeDetailRecordContent: Node = null;
 
-    /**
-     * Set the spin record data
-     * Follows the same pattern as HyperSpinRoundNumber.setValue
-     */
-    setSpinData(spinData: {
-        spinId: string | number;
-        spinWinAmount: number;
-        spinBalance: number;
-        spinWinMultiplier: number;
-        isCascadeRecord?: boolean;
-        winTag?: WinTag;
-    }) {
+    @property({ type: Node })
+    detailNodes: Node[] = [];
 
-        // Check if this is a cascade record
-        const isCascadeRecord = spinData.isCascadeRecord === true;
+    @property(Node)
+    summaryNode: Node = null;
 
-        // 2.1: handle spinId display - show arrow icon for cascade records
-        if (this.lblSpinValue) {
-            if (isCascadeRecord) {
-                // For cascade records, show the step identifier (e.g., "↳ 1")
-                this.lblSpinValue.node.active = true;
-                this.lblSpinValue.string = spinData.spinId.toString();
-            } else {
-                // For regular records, show the spin ID
-                this.lblSpinValue.node.active = true;
-                this.lblSpinValue.string = spinData.spinId.toString();
-            }
-        }
+    spinId = 0;
 
-        // Show/hide cascade arrow icon (for down arrow icon)
-        if (this.cascadeArrowIcon) {
-            this.cascadeArrowIcon.active = false; // Not used in new structure
-        }
+    expanded = false;
+    rowHeight = 0;
+    animating = false;
 
-        // Show/hide cascade record background
-        if (this.cascadeRecordBgNode) {
-            this.cascadeRecordBgNode.active = isCascadeRecord;
-        }
-
-        // 2.2: assign spin.spinWinAmount to lbl-win-value
-        if (this.lblWinValue) {
-            this.lblWinValue.string = gc.FormatUtils.numberWithCommas(spinData.spinWinAmount, 2, false);
-        }
-
-        // 2.3: assign spin.spinBalance to lbl-balance
-        if (this.lblBalance) {
-            this.lblBalance.string = gc.FormatUtils.numberWithCommas(spinData.spinBalance, 2, false);
-        }
-
-        // 2.4: assign spin.spinWinMultiplier to lbl-multiplier-value
-        if (this.lblMultiplierValue) {
-            this.lblMultiplierValue.string = spinData.spinWinMultiplier;
-        }
-
-        // 2.5: activate winningBgNode for winning records (including cascade records as children of winning records)
-        if (this.winningBgNode) {
-            this.winningBgNode.active = spinData.spinWinAmount > 0;
-        }
-
-        // 2.6: activate WinTag sprite based on winTag value
-        this.activateWinTagSprite(spinData.winTag);
+    onLoad() {
+        this.rowHeight = ComponentUtils.getTransform(this.node).height;
+        this.sampleDetailRecord.active = false;
+        this.updateExpandVisibility();
     }
 
-    /**
-     * Set the WinTag sprite dynamically using SpriteAtlas
-     * Solution 1: Using SpriteAtlas with getSpriteFrame()
-     */
-    private activateWinTagSprite(winTag: WinTag) {
-        if (!this.winTagSprite || !this.winTagAtlas) {
-            return;
+    setSpinData(spinData: HyperSpinSingleSpinData) {
+        this.spinId = spinData.spinId;
+
+        this.spinIdLabels.forEach(label => {
+            label.node.active = true;
+            label.string = spinData.spinId.toString();
+        });
+        this.nodeFreespinMarker.active = spinData.isFreeSpin;
+
+        if (this.lblTotalWin) {
+            this.lblTotalWin.string = gc.FormatUtils.numberWithCommas(spinData.totalWin, 2);
         }
 
-        // If no winTag, hide the sprite
-        if (winTag === null || winTag === undefined) {
-            this.winTagSprite.node.active = false;
-            return;
+        this.balanceFinalLabels.forEach(label => {
+            label.string = gc.FormatUtils.numberWithCommas(spinData.balanceAfter, 2);
+        });
+
+        if (this.lblBalanceBefore) {
+            this.lblBalanceBefore.string = gc.FormatUtils.numberWithCommas(spinData.balanceBefore, 2);
         }
 
-        // Map WinTag to sprite frame name
-        const spriteFrameName = `multiplier-${winTag.toLowerCase()}-tag`;
-        const spriteFrame = this.winTagAtlas.getSpriteFrame(spriteFrameName);
+        if (this.nodeBgWinning) {
+            this.nodeBgWinning.active = spinData.totalWin > 0;
+        }
 
-        if (spriteFrame) {
-            this.winTagSprite.spriteFrame = spriteFrame;
-            this.winTagSprite.node.active = true;
+        this.multiplierView.setMultiplier(spinData.totalMultiplier, spinData.winLevel);
 
-            // Set sprite width to cover the multiplier label width
-            this.setWinTagSpriteWidthToMatchMultiplierLabel();
-        } else {
-            this.winTagSprite.node.active = false;
+        if (spinData.detailRecords && spinData.detailRecords.length > 0) {
+            this.registerTouchExpand();
+            this.initDetailRecords(spinData.detailRecords);
         }
     }
 
-    /**
-     * Set the winTagSprite width to match the lblMultiplierValue width
-     * This ensures the sprite covers the entire multiplier text area
-     */
-    private setWinTagSpriteWidthToMatchMultiplierLabel() {
-        if (!this.winTagSprite || !this.lblMultiplierValue) {
+    onDestroy() {
+        this.unregisterTouchExpand();
+    }
+
+    registerTouchExpand() {
+        this.node.on(Node.EventType.TOUCH_END, this.onClickExpand, this);
+    }
+
+    unregisterTouchExpand() {
+        this.node.off(Node.EventType.TOUCH_END, this.onClickExpand, this);
+    }
+
+    async initDetailRecords(detailRecords: DetailRecord[]) {
+        this.expanded = true;
+        this.updateExpandVisibility();
+
+        this.animating = true;
+        for (const [index, record] of detailRecords.entries()) {
+            index > 0 && await AnimationUtils.delayTime(0.5);
+            const node = instantiate(this.sampleDetailRecord);
+            node.active = true;
+            const detailItem = node.getComponent(FlashSpinDetailItem);
+            detailItem.setData(record);
+            detailItem.showArrow(index > 0 && index < detailRecords.length - 1);
+            this.nodeDetailRecordContent.addChild(node);
+            this.updateHeightContent();
+        };
+        this.animating = false;
+        this.scheduleOnce(() => this.toggleExpanded(), 3);
+    }
+
+    private updateHeightContent() {
+        const height = this.nodeDetailRecordContent.active ? this.getDetailContentHeight() : this.rowHeight;
+        ComponentUtils.setNodeTransform(this.node, { height });
+        this.node.getComponentsInChildren(Widget).forEach(widget => {
+            widget.updateAlignment();
+        });
+    }
+
+    private getDetailContentHeight() {
+        const layout = this.nodeDetailRecordContent.getComponent(Layout);
+        layout.updateLayout();
+        const transform = ComponentUtils.getTransform(this.nodeDetailRecordContent);
+        const height = transform.height;
+        return height;
+    }
+
+    onClickExpand() {
+        if (this.animating) {
             return;
         }
+        this.unscheduleAllCallbacks();
+        AudioUtils.playClick();
+        this.toggleExpanded();
+    }
 
-        // Get UITransform components
-        const spriteTransform = this.winTagSprite.node.getComponent(UITransform);
-        const labelTransform = this.lblMultiplierValue.node.getComponent(UITransform);
+    private toggleExpanded() {
+        this.expanded = !this.expanded;
+        this.updateExpandVisibility();
+        this.updateHeightContent();
+    }
 
-        if (spriteTransform && labelTransform) {
-            // Set sprite width to match label width
-            spriteTransform.width = labelTransform.width + 20;
-
-            // Optionally, you can also center the sprite horizontally on the label
-            // by setting the sprite's x position to match the label's x position
-            this.winTagSprite.node.setPosition(
-                this.lblMultiplierValue.node.position.x,
-                this.winTagSprite.node.position.y,
-                this.winTagSprite.node.position.z
-            );
-        }
+    private updateExpandVisibility() {
+        this.nodeDetailRecordContent.active = this.expanded;
+        this.summaryNode.active = !this.expanded;
+        this.detailNodes.forEach(node => {
+            node.active = this.expanded;
+        });
     }
 }

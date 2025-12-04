@@ -257,7 +257,6 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
         if (this.isCancelled) {
             return;
         }
-        console.log("flash spin trigger bet ---");
         this.hyperSpinStore.triggerPlaceBet = {};
     }
 
@@ -394,9 +393,7 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
     }
 
     checkSpinNextRound() {
-        console.log("flash spin check spin next round ---");
         if (!this.isHyperSpinValidForNextRound()) {
-            console.log("flash spin is not valid for next round ---");
             return;
         }
 
@@ -405,13 +402,11 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
         }
 
         if (this.hyperSpinStore.roundsHyperSpin === 0) {
-            console.log("flash spin complete hyper spin ---");
             this.completeHyperSpin();
             return;
         }
 
         if (this.shouldStopHyperSpin()) {
-            console.log("flash spin stop hyper spin ---");
             this.stopHyperSpin();
             return;
         }

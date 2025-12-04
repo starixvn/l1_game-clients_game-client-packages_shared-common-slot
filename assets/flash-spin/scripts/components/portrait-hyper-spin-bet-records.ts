@@ -37,6 +37,8 @@ export class HyperSpinBetRecords extends ObserverComponent {
     @property(Node)
     endBalanceNode: Node = null;
 
+    currentRecordItem: HyperSpinRecordBodyItem = null;
+
     private initHyperSpinRecords(spins: HyperSpinBatchData['spins']) {
         if (!spins || spins.length === 0) {
             return;
@@ -54,22 +56,20 @@ export class HyperSpinBetRecords extends ObserverComponent {
     }
 
     private renderSpinRecord(spin: HyperSpinSingleSpinData) {
+        if (!this.currentRecordItem || this.currentRecordItem.spinId !== spin.spinId) {
+            this.currentRecordItem = this.createNewRecordItem();
+        }
+        const item = this.currentRecordItem;
+        if (item) {
+            item.setSpinData(spin);
+        }
+    }
+
+    private createNewRecordItem() {
         const node = instantiate(this.prfHyperSpinRecordBodyItem);
         const recordBodyItem = node.getComponent(HyperSpinRecordBodyItem);
-
-        if (recordBodyItem) {
-            const spinData = {
-                spinId: spin.spinId,
-                spinWinAmount: spin.totalWin || 0,
-                spinBalance: spin.balanceBefore || 0,
-                spinWinMultiplier: spin.totalMultiplier || 0,
-                isCascadeRecord: false // Main spin records are not cascade records
-            };
-
-            recordBodyItem.setSpinData(spinData);
-        }
-
         this.hyperSpinRecordBodyContentNode.addChild(node);
+        return recordBodyItem;
     }
 
     private renderCascadeRecord(parentSpinId: string | number, cascadeRecord: DetailRecord) {

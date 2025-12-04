@@ -87,10 +87,10 @@ export class FSBPromotionHandlers implements gc.Shared.IMultipleHandlers {
             this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.EXPIRE_CLAIM_BONUS, errorCode);
         }
         if (errorCode === "SB3030") {
-            this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.CANCEL_PROMOTION, errorCode);
             this.promotionStore.reset();
             this.fsbPromotionUIStore.reset();
             this.fsbPromotionUIStore.resetFinishPromotion();
+            this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.CANCEL_PROMOTION, errorCode);
         }
         else {
             this.fsbPromotionUIStore.addPendingUIEvent(FreeSpinsPromotionEvents.SHOW_NOTICE_ERROR, errorCode);

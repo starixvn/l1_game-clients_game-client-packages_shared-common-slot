@@ -1,16 +1,17 @@
 import gc from "@sg/game-client-base";
-import { _decorator, Component, instantiate, Label, Layout, Node, Widget } from "cc";
+import { _decorator, Component, instantiate, Label, Layout, Node, UIRenderer, Widget } from "cc";
 import { AudioUtils } from "db://shared-components/game/audios/utils";
 import { AnimationUtils, ComponentUtils } from "db://shared-components/shared/utils";
 import { DetailRecord, HyperSpinSingleSpinData } from "../handlers/flash-spin-store";
 import FlashSpinDetailItem from "./flash-spin-detail-item";
+import FlashSpinId from "./flash-spin-id";
 import FlashSpinMultiplierView from "./flash-spin-multiplier-view";
 const { ccclass, property } = _decorator;
 
 @ccclass
 export default class HyperSpinRecordBodyItem extends Component {
-    @property({ type: Label })
-    spinIdLabels: Label[] = [];
+    @property(FlashSpinId)
+    spinIdView: FlashSpinId = null;
 
     @property(Label)
     lblBalanceBefore: Label = null;
@@ -57,13 +58,26 @@ export default class HyperSpinRecordBodyItem extends Component {
         this.updateExpandVisibility();
     }
 
+    setCurrentActive(active: boolean) {
+        this.nodeBgCurrent.active = active;
+        const color = active ? "#000000" : "#FFFFFF";
+        this.spinIdView.setColor(color);
+        [
+            this.lblBalanceBefore, ...this.balanceFinalLabels, this.lblTotalWin,
+            ... this.nodeDetailRecordContent.getComponentsInChildren(UIRenderer),
+            ... this.multiplierView.getComponentsInChildren(UIRenderer),
+        ].forEach(renderer => {
+            ComponentUtils.setNodeColor(renderer.node, color);
+        });
+    }
+
     setSpinData(spinData: HyperSpinSingleSpinData) {
         this.spinId = spinData.spinId;
 
-        this.spinIdLabels.forEach(label => {
-            label.node.active = true;
-            label.string = spinData.spinId.toString();
-        });
+        this.spinIdView.setId(spinData.spinId);
+        this.spinIdView.setWin(spinData.totalWin > 0);
+        this.spinIdView.setRow(spinData.detailRecords?.length ?? 0);
+        this.spinIdView.setExpand(true);
         this.nodeFreespinMarker.active = spinData.isFreeSpin;
 
         if (this.lblTotalWin) {
@@ -113,7 +127,6 @@ export default class HyperSpinRecordBodyItem extends Component {
             node.active = true;
             const detailItem = node.getComponent(FlashSpinDetailItem);
             detailItem.setData(record);
-            detailItem.showArrow(index > 0 && index < detailRecords.length - 1);
             this.nodeDetailRecordContent.addChild(node);
             this.updateHeightContent();
         };
@@ -148,6 +161,7 @@ export default class HyperSpinRecordBodyItem extends Component {
 
     private toggleExpanded() {
         this.expanded = !this.expanded;
+        this.spinIdView.setExpand(this.expanded);
         this.updateExpandVisibility();
         this.updateHeightContent();
     }

@@ -19,9 +19,10 @@ export type WinTag = "Bronze" | "Silver" | "Gold" | "Amethyst" | null;
 
 // Individual cascade step within a winning spin
 export interface DetailRecord {
-    winAmount: number; // Win amount for this step
-    multiplier: number; // Multiplier for this step
+    winAmount: number;
+    multiplier: number;
     winLevel: number;
+    bonusMultiplier?: number;
 }
 
 // Single spin data within a hyper-spin batch

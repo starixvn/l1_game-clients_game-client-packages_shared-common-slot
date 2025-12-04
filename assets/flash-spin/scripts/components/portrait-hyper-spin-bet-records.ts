@@ -57,7 +57,9 @@ export class HyperSpinBetRecords extends ObserverComponent {
 
     private renderSpinRecord(spin: HyperSpinSingleSpinData) {
         if (!this.currentRecordItem || this.currentRecordItem.spinId !== spin.spinId) {
+            this.currentRecordItem?.setCurrentActive(false);
             this.currentRecordItem = this.createNewRecordItem();
+            this.currentRecordItem.setCurrentActive(true);
         }
         const item = this.currentRecordItem;
         if (item) {

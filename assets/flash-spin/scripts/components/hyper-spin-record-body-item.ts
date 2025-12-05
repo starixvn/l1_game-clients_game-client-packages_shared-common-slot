@@ -2,6 +2,7 @@ import gc from "@sg/game-client-base";
 import { _decorator, Component, instantiate, Label, Layout, Node, UIRenderer, Widget } from "cc";
 import { AudioUtils } from "db://shared-components/game/audios/utils";
 import { AnimationUtils, ComponentUtils } from "db://shared-components/shared/utils";
+import { STEP_DURATION } from "../flash-spin-definitions";
 import { DetailRecord, HyperSpinSingleSpinData } from "../handlers/flash-spin-store";
 import FlashSpinDetailItem from "./flash-spin-detail-item";
 import FlashSpinId from "./flash-spin-id";
@@ -97,7 +98,7 @@ export default class HyperSpinRecordBodyItem extends Component {
             this.nodeBgWinning.active = spinData.totalWin > 0;
         }
 
-        this.multiplierView.setMultiplier(spinData.totalMultiplier, spinData.winLevel);
+        this.multiplierView.setInfo(spinData.totalMultiplier, spinData.winLevel);
 
         if (spinData.detailRecords && spinData.detailRecords.length > 0) {
             this.registerTouchExpand();
@@ -125,7 +126,7 @@ export default class HyperSpinRecordBodyItem extends Component {
 
         this.animating = true;
         for (const [index, record] of detailRecords.entries()) {
-            index > 0 && await AnimationUtils.delayTime(0.5);
+            index > 0 && await AnimationUtils.delayTime(STEP_DURATION);
             const node = instantiate(this.sampleDetailRecord);
             node.active = true;
             const detailItem = node.getComponent(FlashSpinDetailItem);
@@ -133,9 +134,23 @@ export default class HyperSpinRecordBodyItem extends Component {
             this.nodeDetailRecordContent.addChild(node);
             this.updateHeightContent();
         };
+
+        this.applyBonusMultiplier();
         this.showFinalBalanceLabels(true);
+        await AnimationUtils.delayTime(STEP_DURATION);
+        this.toggleExpanded();
+        await AnimationUtils.delayTime(STEP_DURATION);
         this.animating = false;
-        this.scheduleOnce(() => this.toggleExpanded(), 3);
+    }
+
+    private applyBonusMultiplier() {
+        this.nodeDetailRecordContent.children.forEach(child => {
+            if (!child.active) {
+                return;
+            }
+            const detailItem = child.getComponent(FlashSpinDetailItem);
+            detailItem.applyBonusMultiplier();
+        });
     }
 
     showFinalBalanceLabels(show: boolean) {

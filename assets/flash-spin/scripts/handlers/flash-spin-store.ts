@@ -23,6 +23,7 @@ export interface DetailRecord {
     multiplier: number;
     winLevel: number;
     bonusMultiplier?: number;
+    bonusWinLevel?: number;
 }
 
 // Single spin data within a hyper-spin batch
@@ -612,7 +613,7 @@ export class FlashSpinStore {
 
     calculateMultiplier(winAmount: number, stake: number): { multiplier: number, winLevel: number } {
         const multiplier = stake > 0 ? winAmount / stake : 0;
-        const winLevel = this.winLevelConfig.findIndex(level => multiplier < level);
+        const winLevel = this.winLevelConfig.findIndex(level => multiplier >= level);
         return { multiplier, winLevel };
     }
 

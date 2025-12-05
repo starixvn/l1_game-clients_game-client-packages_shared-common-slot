@@ -9,14 +9,18 @@ export default class FlashSpinMultiplierView extends Component {
     @property(Sprite)
     spriteBg: Sprite = null;
 
-    setMultiplier(multiplier: number, winLevel: number) {
+    setInfo(multiplier: number, winLevel: number) {
+        this.setMultiplier(multiplier);
+        this.setWinLevel(winLevel);
+    }
+
+    setMultiplier(multiplier: number) {
         if (this.lblMultiplier) {
             this.lblMultiplier.string = `${gc.FormatUtils.numberWithCommas(multiplier, 2)}x`;
         }
-        this.activateWinTagSprite(winLevel);
     }
 
-    private activateWinTagSprite(winLevel: number) {
+    setWinLevel(winLevel: number) {
         if (!this.spriteBg) {
             return;
         }
@@ -27,7 +31,7 @@ export default class FlashSpinMultiplierView extends Component {
         }
 
         const dict = ["bronze", "silver", "gold", "amethyst"];
-        const spriteFrameName = `multiplier-${dict[winLevel]}-tag`;
+        const spriteFrameName = `multiplier-${dict[winLevel]}`;
         const spriteFrame = this.spriteBg.spriteAtlas.getSpriteFrame(spriteFrameName);
 
         if (spriteFrame) {

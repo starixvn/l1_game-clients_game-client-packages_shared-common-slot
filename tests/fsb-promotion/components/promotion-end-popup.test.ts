@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach, jest } from "@jest/globals";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { GameServiceMessageSlot } from "../../../assets/game-message-slot";
 
 // ========== Mocks ==========
@@ -38,6 +38,10 @@ jest.mock("@sg/game-client-base", () => ({
             },
         },
     },
+    UserSettings: {
+        UserSettingStore: {
+        },
+    },
 }));
 
 // Mock các dependencies cần thiết - follow shared-cascading-slot pattern
@@ -75,13 +79,19 @@ jest.mock("../../../assets/fsb-promotion/scripts/stores/fsb-promotion-ui-store",
 }));
 jest.mock("../../../assets/game-message-slot");
 
+jest.mock("db://shared-components/game/audios/utils", () => ({
+    AudioUtils: {
+        stopStoppableSFX: jest.fn(),
+        playStoppableSFX: jest.fn(),
+    },
+}));
 // ========== Test Data ==========
 
 const createFinishPromotionData = (totalWin: number, endPromotion = false) =>
-    ({
-        totalWin,
-        endPromotion,
-    } as GameServiceMessageSlot.FinishPromotion);
+({
+    totalWin,
+    endPromotion,
+} as GameServiceMessageSlot.FinishPromotion);
 
 // Import after mocks are set up
 import gc from "@sg/game-client-base";
@@ -178,7 +188,7 @@ describe("PromotionEndPopup", () => {
             promotionEndPopup.labelTitle = { string: "" } as any;
             promotionEndPopup.labelMainMessage = { string: "" } as any;
             promotionEndPopup.labelSubMessage = { string: "" } as any;
-            
+
             // Mock currentSpinCount
             promotionEndPopup["currentSpinCount"] = 0;
 
@@ -404,10 +414,10 @@ describe("PromotionEndPopup", () => {
             const keys =
                 messageType === "win_all_used"
                     ? [
-                          "FreeSpinBonus.FSB_notification_para1a",
-                          "FreeSpinBonus.FSB_end_notification",
-                          "FreeSpinBonus.FSB_end_notification_message",
-                      ]
+                        "FreeSpinBonus.FSB_notification_para1a",
+                        "FreeSpinBonus.FSB_end_notification",
+                        "FreeSpinBonus.FSB_end_notification_message",
+                    ]
                     : [];
 
             // Assert
@@ -423,10 +433,10 @@ describe("PromotionEndPopup", () => {
             const keys =
                 messageType === "win_with_remaining"
                     ? [
-                          "FreeSpinBonus.FSB_end_notification_unusedFS",
-                          "FreeSpinBonus.FSB_end_notification_unusedFS_message",
-                          "FreeSpinBonus.FSB_end_notification_unusedFS_message1",
-                      ]
+                        "FreeSpinBonus.FSB_end_notification_unusedFS",
+                        "FreeSpinBonus.FSB_end_notification_unusedFS_message",
+                        "FreeSpinBonus.FSB_end_notification_unusedFS_message1",
+                    ]
                     : [];
 
             // Assert

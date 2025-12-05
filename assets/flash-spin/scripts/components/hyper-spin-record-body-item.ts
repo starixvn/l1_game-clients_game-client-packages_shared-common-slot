@@ -1,5 +1,5 @@
 import gc from "@sg/game-client-base";
-import { _decorator, Component, instantiate, Label, Layout, Node, UIRenderer, Widget } from "cc";
+import { _decorator, Component, instantiate, Label, Layout, Node, Widget } from "cc";
 import { AudioUtils } from "db://shared-components/game/audios/utils";
 import { AnimationUtils, ComponentUtils } from "db://shared-components/shared/utils";
 import { STEP_DURATION } from "../flash-spin-definitions";
@@ -65,8 +65,8 @@ export default class HyperSpinRecordBodyItem extends Component {
         this.spinIdView.setColor(color);
         [
             this.lblBalanceBefore, ...this.balanceFinalLabels, this.lblTotalWin,
-            ... this.nodeDetailRecordContent.getComponentsInChildren(UIRenderer),
-            ... this.multiplierView.getComponentsInChildren(UIRenderer),
+            ... this.nodeDetailRecordContent.getComponentsInChildren(Label),
+            ... this.multiplierView.getComponentsInChildren(Label),
         ].forEach(renderer => {
             ComponentUtils.setNodeColor(renderer.node, color);
         });

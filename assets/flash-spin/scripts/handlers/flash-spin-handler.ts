@@ -200,11 +200,6 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
             return;
         }
 
-        // if (!this.isValidHyperSpinBet()) {
-        //     this.handleHyperSpinError();
-        //     return;
-        // }
-
         this.hyperSpinStore.roundsHyperSpin = this.hyperSpinStore.selectedRoundOnPopup;
         this.startHyperSpinWithCurrentSettings();
     }
@@ -221,9 +216,7 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
 
         const isNotActive = !this.hyperSpinStore.isActiveHyperSpin;
 
-        const isValid = hasEnoughMoney && hasValidRounds && isValidGameState && isNotActive;
-
-        return isValid;
+        return hasEnoughMoney && hasValidRounds && isValidGameState && isNotActive;
     }
 
     private handleHyperSpinError() {

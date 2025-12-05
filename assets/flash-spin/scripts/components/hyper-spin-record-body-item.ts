@@ -171,8 +171,7 @@ export default class HyperSpinRecordBodyItem extends Component {
         const layout = this.nodeDetailRecordContent.getComponent(Layout);
         layout.updateLayout();
         const transform = ComponentUtils.getTransform(this.nodeDetailRecordContent);
-        const height = transform.height;
-        return height;
+        return transform.height;
     }
 
     onClickExpand() {

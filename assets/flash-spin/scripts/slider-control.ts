@@ -13,7 +13,7 @@ export class SliderControl extends Component {
 
     private btnIncrease: Button = null;
     private btnDecrease: Button = null;
-    private progress: number = 0;
+    private progress = 0;
 
     listener = {
         onClickIncrease: () => { },

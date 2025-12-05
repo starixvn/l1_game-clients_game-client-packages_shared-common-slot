@@ -616,43 +616,6 @@ export class FlashSpinStore {
     }
 
     completeCascadeTracking() {
-        // if (!this._singleSpinData) {
-        //     return null;
-        // }
-
-        // const cascadeData = this._singleSpinData;
-        // const multiplier = cascadeData.stake > 0 ? cascadeData.accumulatedWin / cascadeData.stake : 0;
-
-        // // Determine win tag based on accumulated cascade results
-        // const winTag = this.determineWinTag(
-        //     cascadeData.accumulatedWin,
-        //     cascadeData.stake,
-        //     cascadeData.hasBigWin,
-        //     cascadeData.hasMegaWin,
-        //     cascadeData.hasSuperWin,
-        //     cascadeData.hasReachMaxWin
-        // );
-
-        // // Get current balance for the final spin record
-        // const currentBalance = this.cascadingUIStore?.userBalance ?? 0;
-
-        // // Update the main spin record with final cascade data
-        // const mainSpinRecord = cascadeData.mainSpinRecord!;
-        // mainSpinRecord.totalWin = cascadeData.accumulatedWin;
-        // mainSpinRecord.totalMultiplier = multiplier;
-        // mainSpinRecord.winTag = winTag;
-        // mainSpinRecord.balanceBefore = currentBalance;
-
-        // // Only include cascadeRecords if there were actual cascade steps
-        // if (cascadeData.detailRecords.length > 0) {
-        //     mainSpinRecord.cascadeRecords = [...cascadeData.detailRecords];
-        // }
-
-        // // Clear cascade tracking
-        // this._singleSpinData = null;
-
-
-        // return mainSpinRecord;
     }
 
     isCascadeTrackingActive(): boolean {

@@ -75,24 +75,6 @@ export class HyperSpinBetRecords extends ObserverComponent {
     }
 
     private renderCascadeRecord(parentSpinId: string | number, cascadeRecord: DetailRecord) {
-        // const node = instantiate(this.prfHyperSpinRecordBodyItem);
-        // const recordBodyItem = node.getComponent(HyperSpinRecordBodyItem);
-
-        // if (recordBodyItem) {
-        //     // For cascade records, show step number and cascade win data
-        //     const spinData = {
-        //         spinId: `↳ ${cascadeRecord.step}`, // Arrow + step number
-        //         spinWinAmount: cascadeRecord.winAmountFormatted,
-        //         spinWinAmountRaw: cascadeRecord.winAmount,
-        //         spinBalance: "-", // No balance change for cascade steps
-        //         spinWinMultiplier: cascadeRecord.multiplierFormatted,
-        //         isCascadeRecord: true // Mark as cascade record for special styling
-        //     };
-
-        //     recordBodyItem.setSpinData(spinData);
-        // }
-
-        // this.hyperSpinRecordBodyContentNode.addChild(node);
     }
 
     @render(FlashSpinStore, (store) => store.singleSpinData)

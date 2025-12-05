@@ -73,87 +73,85 @@ export class FlashSpinStore {
 
 
     constructor() {
-
         mobx.makeAutoObservable(this);
-
-
-        // Clamp stop conditions when total bet changes
-        mobx.reaction(
-            () => this.betControlStore?.totalBet,
-            () => {
-                if (!this.betControlStore || !this.cascadingUIStore || !this.configStore) {
-                    return;
-                }
-
-                const maxWinPerRound = this.configStore.gameConfigs?.maxWinPerRound ?? 0;
-                const currentMaxStopOnProfit = this.maxStopOnProfit;
-                const currentMaxStopOnLoss = this.maxStopOnLoss;
-
-                // Clamp stop on profit/loss to new max values
-                if (maxWinPerRound > 0 && currentMaxStopOnProfit > 0 && this.stopOnProfit > currentMaxStopOnProfit) {
-                    this.setStopOnProfit(currentMaxStopOnProfit);
-                }
-                if (this.cascadingUIStore.userBalance > 0 && currentMaxStopOnLoss > 0 && this.stopOnLoss > currentMaxStopOnLoss) {
-                    this.setStopOnLoss(currentMaxStopOnLoss);
-                }
-            }
-        );
-        // Clamp stop on loss when user balance changes
-        mobx.reaction(
-            () => this.cascadingUIStore?.userBalance,
-            () => {
-                if (!this.cascadingUIStore) {
-                    return;
-                }
-
-                const currentMaxStopOnLoss = this.maxStopOnLoss;
-
-                if (this.cascadingUIStore.userBalance > 0 && currentMaxStopOnLoss > 0) {
-                    // Clamp if exceeds new max
-                    if (this.stopOnLoss > currentMaxStopOnLoss) {
-                        this.setStopOnLoss(currentMaxStopOnLoss);
-                    }
-                    // Adjust if max decreased and stopOnLoss was at old max
-                    else if (this._previousMaxStopOnLoss > 0 && currentMaxStopOnLoss < this._previousMaxStopOnLoss) {
-                        const threshold = this._previousMaxStopOnLoss * 0.99;
-                        if (this.stopOnLoss >= threshold) {
-                            this.setStopOnLoss(currentMaxStopOnLoss);
-                        }
-                    }
-                    this._previousMaxStopOnLoss = currentMaxStopOnLoss;
-                }
-            }
-        );
-        // Clamp stop on profit when total bet changes
-        mobx.reaction(
-            () => this.betControlStore?.totalBet,
-            () => {
-                if (!this.betControlStore || !this.configStore) {
-                    return;
-                }
-
-                const maxWinPerRound = this.configStore.gameConfigs?.maxWinPerRound ?? 0;
-                const currentMaxStopOnProfit = this.maxStopOnProfit;
-
-                if (maxWinPerRound > 0 && currentMaxStopOnProfit > 0) {
-                    // Clamp if exceeds new max
-                    if (this.stopOnProfit > currentMaxStopOnProfit) {
-                        this.setStopOnProfit(currentMaxStopOnProfit);
-                    }
-                    // Adjust if max decreased and stopOnProfit was at old max
-                    else if (this._previousMaxStopOnProfit > 0 && currentMaxStopOnProfit < this._previousMaxStopOnProfit) {
-                        const threshold = this._previousMaxStopOnProfit * 0.99;
-                        if (this.stopOnProfit >= threshold) {
-                            this.setStopOnProfit(currentMaxStopOnProfit);
-                        }
-                    }
-                    this._previousMaxStopOnProfit = currentMaxStopOnProfit;
-                }
-            }
-        );
 
         // Initialize previous max values after stores are ready
         setTimeout(() => {
+            // Clamp stop conditions when total bet changes
+            mobx.reaction(
+                () => this.betControlStore?.totalBet,
+                () => {
+                    if (!this.betControlStore || !this.cascadingUIStore || !this.configStore) {
+                        return;
+                    }
+
+                    const maxWinPerRound = this.configStore.gameConfigs?.maxWinPerRound ?? 0;
+                    const currentMaxStopOnProfit = this.maxStopOnProfit;
+                    const currentMaxStopOnLoss = this.maxStopOnLoss;
+
+                    // Clamp stop on profit/loss to new max values
+                    if (maxWinPerRound > 0 && currentMaxStopOnProfit > 0 && this.stopOnProfit > currentMaxStopOnProfit) {
+                        this.setStopOnProfit(currentMaxStopOnProfit);
+                    }
+                    if (this.cascadingUIStore.userBalance > 0 && currentMaxStopOnLoss > 0 && this.stopOnLoss > currentMaxStopOnLoss) {
+                        this.setStopOnLoss(currentMaxStopOnLoss);
+                    }
+                }
+            );
+            // Clamp stop on loss when user balance changes
+            mobx.reaction(
+                () => this.cascadingUIStore?.userBalance,
+                () => {
+                    if (!this.cascadingUIStore) {
+                        return;
+                    }
+
+                    const currentMaxStopOnLoss = this.maxStopOnLoss;
+
+                    if (this.cascadingUIStore.userBalance > 0 && currentMaxStopOnLoss > 0) {
+                        // Clamp if exceeds new max
+                        if (this.stopOnLoss > currentMaxStopOnLoss) {
+                            this.setStopOnLoss(currentMaxStopOnLoss);
+                        }
+                        // Adjust if max decreased and stopOnLoss was at old max
+                        else if (this._previousMaxStopOnLoss > 0 && currentMaxStopOnLoss < this._previousMaxStopOnLoss) {
+                            const threshold = this._previousMaxStopOnLoss * 0.99;
+                            if (this.stopOnLoss >= threshold) {
+                                this.setStopOnLoss(currentMaxStopOnLoss);
+                            }
+                        }
+                        this._previousMaxStopOnLoss = currentMaxStopOnLoss;
+                    }
+                }
+            );
+            // Clamp stop on profit when total bet changes
+            mobx.reaction(
+                () => this.betControlStore?.totalBet,
+                () => {
+                    if (!this.betControlStore || !this.configStore) {
+                        return;
+                    }
+
+                    const maxWinPerRound = this.configStore.gameConfigs?.maxWinPerRound ?? 0;
+                    const currentMaxStopOnProfit = this.maxStopOnProfit;
+
+                    if (maxWinPerRound > 0 && currentMaxStopOnProfit > 0) {
+                        // Clamp if exceeds new max
+                        if (this.stopOnProfit > currentMaxStopOnProfit) {
+                            this.setStopOnProfit(currentMaxStopOnProfit);
+                        }
+                        // Adjust if max decreased and stopOnProfit was at old max
+                        else if (this._previousMaxStopOnProfit > 0 && currentMaxStopOnProfit < this._previousMaxStopOnProfit) {
+                            const threshold = this._previousMaxStopOnProfit * 0.99;
+                            if (this.stopOnProfit >= threshold) {
+                                this.setStopOnProfit(currentMaxStopOnProfit);
+                            }
+                        }
+                        this._previousMaxStopOnProfit = currentMaxStopOnProfit;
+                    }
+                }
+            );
+
             if (!this.configStore || !this.cascadingUIStore) {
                 return;
             }
@@ -183,7 +181,7 @@ export class FlashSpinStore {
     selectedRoundOnPopup = this.roundsList[2]; // Default to 100
     roundsHyperSpin = 0;
     isActiveHyperSpin = false;
-    winLevelConfig = [6, 20, 30];
+    winLevelConfig = [2, 5, 10];
 
     get isTurnOnHyperSpin() {
         return this.isOpenHyperSpinPopup || this.isActiveHyperSpin;

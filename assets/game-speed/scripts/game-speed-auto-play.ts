@@ -1,5 +1,5 @@
 import gc from "@sg/game-client-base";
-import { _decorator, Button, Color, Node, Sprite } from "cc";
+import { _decorator, Button, Node } from "cc";
 import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
 import Observer from "observer";
 import { GameSpeedHandlers } from "./game-speed-handlers";
@@ -48,8 +48,8 @@ export class GameSpeedAutoPlay extends ObserverComponent {
             return;
         }
         this.nodeSpeedList.forEach((node, index) => {
-            const sprIcon = node.getComponent(Sprite);
-            sprIcon.color = index === targetIndex ? new Color().fromHEX("548FF8") : new Color().fromHEX("807E7E");
+            const activeNode = node.getChildByName("active");
+            activeNode.active = index === targetIndex;
         });
     }
 }

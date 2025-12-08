@@ -1,23 +1,18 @@
 import gc from "@sg/game-client-base";
 import inversify from "inversify";
 
-import { CascadingSlotState } from "db://shared-cascading-slot/cascading-slot-state";
-import { DialogName, SlotNotification } from "db://shared-cascading-slot/cascading-slot-utils";
-import { BetControlHandlers } from "db://shared-cascading-slot/handlers/bet-control-handlers";
-import { CascadingUIHandler } from "db://shared-cascading-slot/handlers/cascading-ui-handler";
-import { SlotBetHandler } from "db://shared-cascading-slot/handlers/slot-bet-handler";
-import { BetControlStore } from "db://shared-cascading-slot/stores/bet-control-store";
-import { CascadingUIStore } from "db://shared-cascading-slot/stores/cascading-ui-store";
-import { FlashSpinStore, SettlementInfo } from "./flash-spin-store";
+import { DialogName, FlashSpinEvent, SettlementInfo } from "../flash-spin-definitions";
+import { FlashSpinStore } from "./flash-spin-store";
 
 const { injectable, inject } = inversify;
 
 @injectable()
 export class FlashSpinHandler implements gc.Shared.IHandler<number> {
+    @inject(FlashSpinStore) protected readonly flashSpinStore: FlashSpinStore;
+    @inject(gc.Notices.NoticeStore) private readonly noticeStore: gc.Notices.NoticeStore;
+
     private hyperSpinBatchStartTime = 0;
     private hyperSpinBatchEndTime = 0;
-
-
     private checkNextRoundTimeout: number | null = null;
     private isCancelled = false;
 
@@ -25,33 +20,29 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
         return this.isCancelled;
     }
 
-    @inject(FlashSpinStore) protected readonly hyperSpinStore: FlashSpinStore;
-    @inject(CascadingUIHandler) protected readonly uiHandler: CascadingUIHandler;
-    @inject(CascadingUIStore) protected readonly cascadingUiStore: CascadingUIStore;
-    @inject(BetControlStore) protected readonly betManager: BetControlStore;
-    @inject(BetControlHandlers) protected readonly betControlHandlers: BetControlHandlers;
-    @inject(SlotBetHandler) protected readonly slotBetHandler: SlotBetHandler;
-    @inject(gc.Notices.NoticeStore) private readonly noticeStore: gc.Notices.NoticeStore;
-
     handle() { }
 
     clickHyperSpin() {
-        (this.uiHandler as any).triggerOpenDialog(DialogName.HYPER_SPIN);
+        this.triggerOpenDialog(DialogName.HYPER_SPIN);
         this.showHyperSpinBetControl();
     }
 
+    triggerOpenDialog(name: string) {
+        this.flashSpinStore.event = { action: "openDialog", name }
+    }
+
     openHyperSpinPopup() {
-        this.hyperSpinStore.isOpenHyperSpinPopup = true;
-        this.hyperSpinStore.selectedRoundOnPopup = this.hyperSpinStore.roundsList[2];
+        this.flashSpinStore.isOpenHyperSpinPopup = true;
+        this.flashSpinStore.selectedRoundOnPopup = this.flashSpinStore.roundsList[2];
     }
 
     updateHyperSpinRounds(rounds: number) {
-        this.hyperSpinStore.selectedRoundOnPopup = rounds;
+        this.flashSpinStore.selectedRoundOnPopup = rounds;
     }
 
     changeHyperSpinRounds(increase: boolean) {
-        const currentRounds = this.hyperSpinStore.selectedRoundOnPopup;
-        const roundsList = this.hyperSpinStore.roundsList;
+        const currentRounds = this.flashSpinStore.selectedRoundOnPopup;
+        const roundsList = this.flashSpinStore.roundsList;
         const currentIndex = roundsList.indexOf(currentRounds);
 
         if (increase && currentIndex < roundsList.length - 1) {
@@ -62,85 +53,54 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
     }
 
     confirmHyperSpinRoundsAndStart() {
-        this.hyperSpinStore.roundsHyperSpin = this.hyperSpinStore.selectedRoundOnPopup;
-        this.hyperSpinStore.isOpenHyperSpinPopup = false;
+        this.flashSpinStore.roundsHyperSpin = this.flashSpinStore.selectedRoundOnPopup;
+        this.flashSpinStore.isOpenHyperSpinPopup = false;
 
         this.startHyperSpinWithRounds();
     }
 
     private startHyperSpinWithRounds() {
-        this.hyperSpinStore.setHyperSpinActive(true);
+        this.flashSpinStore.setHyperSpinActive(true);
     }
 
     showHyperSpinBetControl() {
-        this.hyperSpinStore.isOpenHyperSpinBetControlPopup = true;
+        this.flashSpinStore.isOpenHyperSpinBetControlPopup = true;
 
-        if (this.hyperSpinStore.selectedRoundOnPopup === 0) {
-            this.hyperSpinStore.selectedRoundOnPopup = this.hyperSpinStore.roundsList[2];
+        if (this.flashSpinStore.selectedRoundOnPopup === 0) {
+            this.flashSpinStore.selectedRoundOnPopup = this.flashSpinStore.roundsList[2];
         }
 
-        if (this.isCancelled && !this.hyperSpinStore.isActiveHyperSpin) {
+        if (this.isCancelled && !this.flashSpinStore.isActiveHyperSpin) {
             this.isCancelled = false;
         }
 
-        if (this.hyperSpinStore.spinBatchData?.summary.hyperSpinStatus === "Cancel") {
-            this.hyperSpinStore.clearBatchData();
+        if (this.flashSpinStore.spinBatchData?.summary.hyperSpinStatus === "Cancel") {
+            this.flashSpinStore.clearBatchData();
         }
 
-        if (!this.hyperSpinStore.isActiveHyperSpin) {
-            this.hyperSpinStore.setHyperSpinActive(false);
+        if (!this.flashSpinStore.isActiveHyperSpin) {
+            this.flashSpinStore.setHyperSpinActive(false);
         }
     }
 
     closeHyperSpinBetControl() {
-        this.hyperSpinStore.isOpenHyperSpinBetControlPopup = false;
+        this.flashSpinStore.isOpenHyperSpinBetControlPopup = false;
 
-        if (this.hyperSpinStore.isActiveHyperSpin) {
+        if (this.flashSpinStore.isActiveHyperSpin) {
             this.cancelHyperSpin();
         }
     }
 
     changeTotalBet(increase: boolean) {
-        this.betControlHandlers.changeTotalBet(increase);
+        this.flashSpinStore.event = { action: FlashSpinEvent.CHANGE_TOTAL_BET, increase };
     }
 
-    setTotalBetFromSlider(sliderProgress: number) {
-        if (typeof sliderProgress !== "number" || isNaN(sliderProgress)) {
-            return;
-        }
-
-        const totalBetUnique = this.betManager.totalBetUnique;
-        if (!totalBetUnique || totalBetUnique.length === 0) {
-            return;
-        }
-
-        const clampedProgress = Math.max(0, Math.min(1, sliderProgress));
-        const betValues = totalBetUnique.map(item => +Object.keys(item)[0]);
-        const minBet = Math.min(...betValues);
-        const maxBet = Math.max(...betValues);
-
-        const targetBetValue = minBet + (maxBet - minBet) * clampedProgress;
-
-        let closestIndex = 0;
-        let minDiff = Math.abs(betValues[0] - targetBetValue);
-
-        for (let i = 1; i < betValues.length; i++) {
-            const diff = Math.abs(betValues[i] - targetBetValue);
-            if (diff < minDiff) {
-                minDiff = diff;
-                closestIndex = i;
-            }
-        }
-
-        const clampedIndex = Math.max(0, Math.min(totalBetUnique.length - 1, closestIndex));
-        const betControlStore = this.betManager as any as BetControlStore;
-        if (betControlStore.currentTotalBetIndex !== clampedIndex) {
-            betControlStore.currentTotalBetIndex = clampedIndex;
-        }
+    setTotalBetFromSlider(progress: number) {
+        this.flashSpinStore.event = { action: FlashSpinEvent.CHANGE_TOTAL_BET_SLIDER, progress };
     }
 
     changeStopOnProfit(increase: boolean) {
-        this.hyperSpinStore.changeStopOnProfit(increase);
+        this.flashSpinStore.changeStopOnProfit(increase);
     }
 
     setStopOnProfitFromSlider(sliderProgress: number) {
@@ -148,16 +108,16 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
             return;
         }
 
-        const min = this.hyperSpinStore.minStopOnProfit;
-        const max = this.hyperSpinStore.maxStopOnProfit;
+        const min = this.flashSpinStore.minStopOnProfit;
+        const max = this.flashSpinStore.maxStopOnProfit;
         const clampedProgress = Math.max(0, Math.min(1, sliderProgress));
         const value = min + (max - min) * clampedProgress;
 
-        this.hyperSpinStore.setStopOnProfit(value);
+        this.flashSpinStore.setStopOnProfit(value);
     }
 
     changeStopOnLoss(increase: boolean) {
-        this.hyperSpinStore.changeStopOnLoss(increase);
+        this.flashSpinStore.changeStopOnLoss(increase);
     }
 
     setStopOnLossFromSlider(sliderProgress: number) {
@@ -165,71 +125,43 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
             return;
         }
 
-        const min = this.hyperSpinStore.minStopOnLoss;
-        const max = this.hyperSpinStore.maxStopOnLoss;
+        const min = this.flashSpinStore.minStopOnLoss;
+        const max = this.flashSpinStore.maxStopOnLoss;
         const clampedProgress = Math.max(0, Math.min(1, sliderProgress));
         const value = min + (max - min) * clampedProgress;
 
-        this.hyperSpinStore.setStopOnLoss(value);
+        this.flashSpinStore.setStopOnLoss(value);
     }
 
     toggleStopOnFeature() {
-        this.hyperSpinStore.stopOnFeature = !this.hyperSpinStore.stopOnFeature;
+        this.flashSpinStore.stopOnFeature = !this.flashSpinStore.stopOnFeature;
     }
 
     toggleSettings() {
-        if (this.hyperSpinStore.spinBatchData?.summary.hyperSpinStatus === "Playing") {
+        if (this.flashSpinStore.spinBatchData?.summary.hyperSpinStatus === "Playing") {
             return;
         }
 
-        this.hyperSpinStore.isSettingsOpen = !this.hyperSpinStore.isSettingsOpen;
+        this.flashSpinStore.isSettingsOpen = !this.flashSpinStore.isSettingsOpen;
     }
 
     closeHyperSpinPopup() {
-        this.hyperSpinStore.isOpenHyperSpinPopup = false;
+        this.flashSpinStore.isOpenHyperSpinPopup = false;
         this.cancelHyperSpin();
     }
 
     onClickPlayButton() {
-        const isPaused = this.hyperSpinStore.spinBatchData?.summary.hyperSpinStatus === "Paused";
+        const isPaused = this.flashSpinStore.spinBatchData?.summary.hyperSpinStatus === "Paused";
 
-        if (this.hyperSpinStore.isActiveHyperSpin) {
+        if (this.flashSpinStore.isActiveHyperSpin) {
             if (isPaused) {
                 this.resumeHyperSpinBatch();
             }
             return;
         }
 
-        this.hyperSpinStore.roundsHyperSpin = this.hyperSpinStore.selectedRoundOnPopup;
+        this.flashSpinStore.roundsHyperSpin = this.flashSpinStore.selectedRoundOnPopup;
         this.startHyperSpinWithCurrentSettings();
-    }
-
-    private isValidHyperSpinBet(): boolean {
-        const hasEnoughMoney = this.betManager.totalBet <= this.cascadingUiStore.userBalance;
-        const hasValidRounds = this.hyperSpinStore.selectedRoundOnPopup > 0;
-
-        const isValidGameState = !this.cascadingUiStore.isPlacingBet &&
-            (this.cascadingUiStore.cascadingState !== CascadingSlotState.SPINNING ||
-                !this.hyperSpinStore.spinBatchData ||
-                this.hyperSpinStore.spinBatchData?.summary.hyperSpinStatus === "Ready" ||
-                this.hyperSpinStore.spinBatchData?.summary.hyperSpinStatus === "Cancel");
-
-        const isNotActive = !this.hyperSpinStore.isActiveHyperSpin;
-
-        return hasEnoughMoney && hasValidRounds && isValidGameState && isNotActive;
-    }
-
-    private handleHyperSpinError() {
-        const hasEnoughMoney = this.betManager.totalBet <= this.cascadingUiStore.userBalance;
-        if (!hasEnoughMoney) {
-            this.showNotEnoughMoneyForHyperSpin();
-        }
-        (this.uiHandler as any).resetBottomMessageState();
-    }
-
-    private showNotEnoughMoneyForHyperSpin() {
-        const message = `Not enough balance for Hyper-Spin. Required: ${this.betManager.totalBet}, Available: ${this.cascadingUiStore.userBalance}`;
-        this.noticeStore.addWarning(message);
     }
 
     private startHyperSpinWithCurrentSettings() {
@@ -237,12 +169,11 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
 
         this.hyperSpinBatchStartTime = Date.now();
 
-        this.hyperSpinStore.setHyperSpinActive(true);
-        this.hyperSpinStore.startHyperSpinBatch();
+        this.flashSpinStore.setHyperSpinActive(true);
+        this.flashSpinStore.startHyperSpinBatch();
 
-        this.hyperSpinStore.startHyperSpinSessionTracking();
+        this.flashSpinStore.startHyperSpinSessionTracking();
 
-        (this.cascadingUiStore as any).bottomMessageState = "HYPER_SPIN";
         this.placeHyperSpinBet();
     }
 
@@ -250,28 +181,28 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
         if (this.isCancelled) {
             return;
         }
-        this.hyperSpinStore.triggerPlaceBet = {};
+        this.flashSpinStore.event = { action: FlashSpinEvent.PLACE_BET };
     }
 
 
     private getStopReason(): string {
         const reasons = [];
 
-        if (this.hyperSpinStore.stopOnProfit > 0) {
+        if (this.flashSpinStore.stopOnProfit > 0) {
             const currentProfit = this.calculateCurrentProfit();
-            if (currentProfit >= this.hyperSpinStore.stopOnProfit) {
-                reasons.push(`Profit reached: ${currentProfit} >= ${this.hyperSpinStore.stopOnProfit}`);
+            if (currentProfit >= this.flashSpinStore.stopOnProfit) {
+                reasons.push(`Profit reached: ${currentProfit} >= ${this.flashSpinStore.stopOnProfit}`);
             }
         }
 
-        if (this.hyperSpinStore.stopOnLoss > 0) {
+        if (this.flashSpinStore.stopOnLoss > 0) {
             const currentLoss = this.calculateCurrentLoss();
-            if (currentLoss >= this.hyperSpinStore.stopOnLoss) {
-                reasons.push(`Loss reached: ${currentLoss} >= ${this.hyperSpinStore.stopOnLoss}`);
+            if (currentLoss >= this.flashSpinStore.stopOnLoss) {
+                reasons.push(`Loss reached: ${currentLoss} >= ${this.flashSpinStore.stopOnLoss}`);
             }
         }
 
-        if (this.hyperSpinStore.roundsHyperSpin <= 0) {
+        if (this.flashSpinStore.roundsHyperSpin <= 0) {
             reasons.push("All rounds completed");
         }
 
@@ -282,25 +213,25 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
         const currentProfit = this.calculateCurrentProfit();
         const currentLoss = this.calculateCurrentLoss();
 
-        const roundsExhausted = this.hyperSpinStore.roundsHyperSpin <= 0;
+        const roundsExhausted = this.flashSpinStore.roundsHyperSpin <= 0;
         if (roundsExhausted) {
             return true;
         }
 
-        if (this.hyperSpinStore.stopOnFeature && this.cascadingUiStore.freeSpinsTotal > 0) {
+        if (this.flashSpinStore.stopOnFeature && this.flashSpinStore.freeSpinsTotal > 0) {
             return true;
         }
 
-        if (this.hyperSpinStore.stopOnProfit > 0) {
-            const profitConditionMet = currentProfit >= this.hyperSpinStore.stopOnProfit;
+        if (this.flashSpinStore.stopOnProfit > 0) {
+            const profitConditionMet = currentProfit >= this.flashSpinStore.stopOnProfit;
 
             if (profitConditionMet) {
                 return true;
             }
         }
 
-        if (this.hyperSpinStore.stopOnLoss > 0) {
-            const lossConditionMet = currentLoss >= this.hyperSpinStore.stopOnLoss;
+        if (this.flashSpinStore.stopOnLoss > 0) {
+            const lossConditionMet = currentLoss >= this.flashSpinStore.stopOnLoss;
 
             if (lossConditionMet) {
                 return true;
@@ -311,17 +242,17 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
     }
 
     private calculateCurrentProfit(): number {
-        this.hyperSpinStore.updateHyperSpinProfitLoss();
-        return this.hyperSpinStore.getCurrentHyperSpinProfit();
+        this.flashSpinStore.updateHyperSpinProfitLoss();
+        return this.flashSpinStore.getCurrentHyperSpinProfit();
     }
 
     private calculateCurrentLoss(): number {
-        this.hyperSpinStore.updateHyperSpinProfitLoss();
-        return this.hyperSpinStore.getCurrentHyperSpinLoss();
+        this.flashSpinStore.updateHyperSpinProfitLoss();
+        return this.flashSpinStore.getCurrentHyperSpinLoss();
     }
 
     public stopHyperSpin() {
-        const isRoundsExhausted = this.hyperSpinStore.roundsHyperSpin <= 0;
+        const isRoundsExhausted = this.flashSpinStore.roundsHyperSpin <= 0;
 
         if (!isRoundsExhausted) {
             const batchAge = Date.now() - this.hyperSpinBatchStartTime;
@@ -334,13 +265,12 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
 
         this.hyperSpinBatchEndTime = Date.now();
 
-        this.hyperSpinStore.setHyperSpinActive(false);
-        this.hyperSpinStore.stopHyperSpinSessionTracking();
-        this.hyperSpinStore.completeHyperSpinBatch();
+        this.flashSpinStore.setHyperSpinActive(false);
+        this.flashSpinStore.stopHyperSpinSessionTracking();
+        this.flashSpinStore.completeHyperSpinBatch();
 
-        this.hyperSpinStore.isOpenHyperSpinPopup = false;
+        this.flashSpinStore.isOpenHyperSpinPopup = false;
 
-        (this.cascadingUiStore as any).bottomMessageState = SlotNotification.SETTLED;
         this.hyperSpinBatchStartTime = 0;
         this.hyperSpinBatchEndTime = 0;
 
@@ -352,12 +282,11 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
 
         this.hyperSpinBatchEndTime = Date.now();
 
-        this.hyperSpinStore.setHyperSpinActive(false);
-        this.hyperSpinStore.stopHyperSpinSessionTracking();
-        this.hyperSpinStore.completeHyperSpinBatch();
+        this.flashSpinStore.setHyperSpinActive(false);
+        this.flashSpinStore.stopHyperSpinSessionTracking();
+        this.flashSpinStore.completeHyperSpinBatch();
 
-        this.hyperSpinStore.roundsHyperSpin = 0;
-        (this.cascadingUiStore as any).bottomMessageState = SlotNotification.SETTLED;
+        this.flashSpinStore.roundsHyperSpin = 0;
         this.hyperSpinBatchStartTime = 0;
         this.hyperSpinBatchEndTime = 0;
 
@@ -373,7 +302,7 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
     }
 
     pauseHyperSpinBatch() {
-        this.hyperSpinStore.pauseHyperSpinBatch();
+        this.flashSpinStore.pauseHyperSpinBatch();
     }
 
     resumeHyperSpinBatch() {
@@ -381,7 +310,7 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
             return;
         }
 
-        this.hyperSpinStore.resumeHyperSpinBatch();
+        this.flashSpinStore.resumeHyperSpinBatch();
         this.checkSpinNextRound();
     }
 
@@ -394,7 +323,7 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
             return;
         }
 
-        if (this.hyperSpinStore.roundsHyperSpin === 0) {
+        if (this.flashSpinStore.roundsHyperSpin === 0) {
             this.completeHyperSpin();
             return;
         }
@@ -412,7 +341,7 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
             return false;
         }
 
-        if (!this.hyperSpinStore.isActiveHyperSpin) {
+        if (!this.flashSpinStore.isActiveHyperSpin) {
             return false;
         }
 
@@ -420,14 +349,14 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
     }
 
     private isPaused(): boolean {
-        return this.hyperSpinStore.spinBatchData?.summary.hyperSpinStatus === "Paused";
+        return this.flashSpinStore.spinBatchData?.summary.hyperSpinStatus === "Paused";
     }
 
     private handleBatchInterruption() {
 
 
-        if (this.hyperSpinStore.spinBatchData) {
-            this.hyperSpinStore.spinBatchData.summary.hyperSpinStatus = "Interrupted";
+        if (this.flashSpinStore.spinBatchData) {
+            this.flashSpinStore.spinBatchData.summary.hyperSpinStatus = "Interrupted";
         }
 
         this.showBatchInterruptionMessage();
@@ -438,16 +367,12 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
         if (this.noticeStore) {
             this.noticeStore.addWarning(message);
         }
-
-        if (this.cascadingUiStore) {
-            (this.cascadingUiStore as any).bottomMessageState = "HYPER_SPIN_INTERRUPTED";
-        }
     }
 
     hasInterruptedBatch() {
-        return !!(this.hyperSpinStore.spinBatchData &&
-            this.hyperSpinStore.spinBatchData.summary.hyperSpinStatus === "Interrupted" &&
-            this.hyperSpinStore.roundsHyperSpin > 0);
+        return !!(this.flashSpinStore.spinBatchData &&
+            this.flashSpinStore.spinBatchData.summary.hyperSpinStatus === "Interrupted" &&
+            this.flashSpinStore.roundsHyperSpin > 0);
     }
 
     getInterruptedBatchInfo() {
@@ -455,14 +380,14 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
             return null;
         }
 
-        const batchData = this.hyperSpinStore.spinBatchData;
-        const totalRounds = this.hyperSpinStore.roundsList[this.hyperSpinStore.roundsList.indexOf(this.hyperSpinStore.selectedRoundOnPopup)] || this.hyperSpinStore.selectedRoundOnPopup;
-        const completedRounds = totalRounds - this.hyperSpinStore.roundsHyperSpin;
+        const batchData = this.flashSpinStore.spinBatchData;
+        const totalRounds = this.flashSpinStore.roundsList[this.flashSpinStore.roundsList.indexOf(this.flashSpinStore.selectedRoundOnPopup)] || this.flashSpinStore.selectedRoundOnPopup;
+        const completedRounds = totalRounds - this.flashSpinStore.roundsHyperSpin;
 
         return {
             totalRounds,
             completedRounds,
-            roundsRemaining: this.hyperSpinStore.roundsHyperSpin,
+            roundsRemaining: this.flashSpinStore.roundsHyperSpin,
             totalBet: batchData.summary.totalBet,
             totalWin: batchData.summary.totalWin,
             currentProfit: this.calculateCurrentProfit(),
@@ -479,14 +404,14 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
             this.hyperSpinBatchEndTime = Date.now();
         }
 
-        this.hyperSpinStore.setHyperSpinActive(false);
+        this.flashSpinStore.setHyperSpinActive(false);
 
         this.updateHyperSpinRounds(0);
 
-        if (this.hyperSpinStore.spinBatchData) {
-            this.hyperSpinStore.spinBatchData.summary.hyperSpinStatus = "Cancel";
+        if (this.flashSpinStore.spinBatchData) {
+            this.flashSpinStore.spinBatchData.summary.hyperSpinStatus = "Cancel";
         } else {
-            this.hyperSpinStore.clearBatchData();
+            this.flashSpinStore.clearBatchData();
         }
 
         this.hyperSpinBatchStartTime = 0;
@@ -506,6 +431,6 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
     }
 
     updateSettlementSingleSpin(info: SettlementInfo) {
-        this.hyperSpinStore.updateSettlementSingleSpin(info);
+        this.flashSpinStore.updateSettlementSingleSpin(info);
     }
 }

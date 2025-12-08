@@ -3,7 +3,6 @@ import { _decorator, Button, Label, Node, Slider, Sprite } from "cc";
 import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
 import Observer from "observer";
 
-import { CascadingUIStore } from "db://shared-cascading-slot/stores/cascading-ui-store";
 import { FlashSpinHandler } from "../handlers/flash-spin-handler";
 import { FlashSpinStore } from "../handlers/flash-spin-store";
 
@@ -142,8 +141,8 @@ export class HyperSpinBetControl extends ObserverComponent {
     }
 
     @render(FlashSpinStore, (store) => store.spinBatchData?.summary?.totalWin)
-    private updateTotalWinningsLabels(totalWin: string) {
-        const displayValue = totalWin || "0.00";
+    private updateTotalWinningsLabels(totalWin: number) {
+        const displayValue = totalWin > 0 ? gc.FormatUtils.numberWithCommas(totalWin, 2) : "0.00";
 
         if (this.totalWinningsLabel) {
             this.totalWinningsLabel.string = displayValue;
@@ -154,9 +153,9 @@ export class HyperSpinBetControl extends ObserverComponent {
         }
     }
 
-    @render(CascadingUIStore, (store) => ({ balance: store.userBalance, changedBalance: store.changeUserBalance }))
-    private renderBalance(data: { balance: number; changedBalance: boolean }) {
-        if (!data || !data.changedBalance) {
+    @render(FlashSpinStore, (store) => ({ balance: store.userBalance }))
+    private renderBalance(data: { balance: number }) {
+        if (!data) {
             return;
         }
 

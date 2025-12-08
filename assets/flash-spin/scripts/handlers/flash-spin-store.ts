@@ -1,77 +1,12 @@
 import gc from "@sg/game-client-base";
-import { CascadingSlotState } from "db://shared-cascading-slot/cascading-slot-state";
-import { AutoPlayStore } from "db://shared-cascading-slot/stores/auto-play-store";
-import { BetControlStore } from "db://shared-cascading-slot/stores/bet-control-store";
-import { CascadingSlotConfigsStore } from "db://shared-cascading-slot/stores/cascading-slot-configs-store";
-import { CascadingUIStore } from "db://shared-cascading-slot/stores/cascading-ui-store";
-import { FSBPromotionStore } from "db://shared-common-slot/fsb-promotion/scripts/stores/fsb-promotion-store";
-import { FSBPromotionUIStore } from "db://shared-common-slot/fsb-promotion/scripts/stores/fsb-promotion-ui-store";
 import inversify from "inversify";
 import mobx from "mobx";
+import { HyperSpinBatchData, HyperSpinSingleSpinData, SettlementInfo, WinTag } from "../flash-spin-definitions";
 const { injectable, inject } = inversify;
 const { FormatUtils } = gc;
 
-// Hyper-spin status types
-export type HyperSpinStatus = "Ready" | "Playing" | "Paused" | "Interrupted" | "Cancel";
-
-// Win tag types for multipliers
-export type WinTag = "Bronze" | "Silver" | "Gold" | "Amethyst" | null;
-
-// Individual cascade step within a winning spin
-export interface DetailRecord {
-    winAmount: number;
-    multiplier: number;
-    winLevel: number;
-    bonusMultiplier?: number;
-    bonusWinLevel?: number;
-}
-
-// Single spin data within a hyper-spin batch
-export interface HyperSpinSingleSpinData {
-    spinId: number;
-    isFreeSpin: boolean;
-    balanceBefore: number;
-    bet: number;
-
-    totalWin?: number;
-    totalMultiplier?: number;
-    winLevel?: number;
-    balanceAfter?: number;
-    detailRecords?: DetailRecord[];
-}
-
-// Hyper-spin batch summary data
-export interface HyperSpinBatchSummary {
-    totalBet: string; // Formatted total bet amount
-    totalBetRaw: number; // Raw total bet for calculations
-    hyperSpinStatus: HyperSpinStatus; // Current batch status
-    totalWin: number;
-    startingBalance: number;
-    endBalance: number;
-}
-
-// Complete hyper-spin batch data
-export interface HyperSpinBatchData {
-    summary: HyperSpinBatchSummary; // Batch summary info
-    spins: HyperSpinSingleSpinData[]; // Array of individual spin data
-}
-
-export interface SettlementInfo {
-    totalWin: number;
-    balanceAfter: number;
-    detailRecords?: DetailRecord[];
-}
-
 @injectable()
 export class FlashSpinStore {
-    @inject(CascadingUIStore) protected readonly cascadingUIStore: CascadingUIStore;
-    @inject(AutoPlayStore) protected readonly autoPlayStore: AutoPlayStore;
-    @inject(FSBPromotionUIStore) protected readonly fsbPromotionUIStore: FSBPromotionUIStore;
-    @inject(FSBPromotionStore) protected readonly fsbPromotionStore: FSBPromotionStore;
-    @inject(CascadingSlotConfigsStore) protected readonly configStore: CascadingSlotConfigsStore;
-    @inject(BetControlStore) protected readonly betControlStore: BetControlStore;
-
-
     constructor() {
         mobx.makeAutoObservable(this);
 
@@ -79,13 +14,9 @@ export class FlashSpinStore {
         setTimeout(() => {
             // Clamp stop conditions when total bet changes
             mobx.reaction(
-                () => this.betControlStore?.totalBet,
+                () => this.totalBet,
                 () => {
-                    if (!this.betControlStore || !this.cascadingUIStore || !this.configStore) {
-                        return;
-                    }
-
-                    const maxWinPerRound = this.configStore.gameConfigs?.maxWinPerRound ?? 0;
+                    const maxWinPerRound = this.maxWinPerRound ?? 0;
                     const currentMaxStopOnProfit = this.maxStopOnProfit;
                     const currentMaxStopOnLoss = this.maxStopOnLoss;
 
@@ -93,22 +24,17 @@ export class FlashSpinStore {
                     if (maxWinPerRound > 0 && currentMaxStopOnProfit > 0 && this.stopOnProfit > currentMaxStopOnProfit) {
                         this.setStopOnProfit(currentMaxStopOnProfit);
                     }
-                    if (this.cascadingUIStore.userBalance > 0 && currentMaxStopOnLoss > 0 && this.stopOnLoss > currentMaxStopOnLoss) {
+                    if (this.userBalance > 0 && currentMaxStopOnLoss > 0 && this.stopOnLoss > currentMaxStopOnLoss) {
                         this.setStopOnLoss(currentMaxStopOnLoss);
                     }
                 }
             );
             // Clamp stop on loss when user balance changes
             mobx.reaction(
-                () => this.cascadingUIStore?.userBalance,
-                () => {
-                    if (!this.cascadingUIStore) {
-                        return;
-                    }
-
+                () => this.userBalance,
+                (userBalance) => {
                     const currentMaxStopOnLoss = this.maxStopOnLoss;
-
-                    if (this.cascadingUIStore.userBalance > 0 && currentMaxStopOnLoss > 0) {
+                    if (userBalance > 0 && currentMaxStopOnLoss > 0) {
                         // Clamp if exceeds new max
                         if (this.stopOnLoss > currentMaxStopOnLoss) {
                             this.setStopOnLoss(currentMaxStopOnLoss);
@@ -126,13 +52,9 @@ export class FlashSpinStore {
             );
             // Clamp stop on profit when total bet changes
             mobx.reaction(
-                () => this.betControlStore?.totalBet,
+                () => this.totalBet,
                 () => {
-                    if (!this.betControlStore || !this.configStore) {
-                        return;
-                    }
-
-                    const maxWinPerRound = this.configStore.gameConfigs?.maxWinPerRound ?? 0;
+                    const maxWinPerRound = this.maxWinPerRound ?? 0;
                     const currentMaxStopOnProfit = this.maxStopOnProfit;
 
                     if (maxWinPerRound > 0 && currentMaxStopOnProfit > 0) {
@@ -152,18 +74,14 @@ export class FlashSpinStore {
                 }
             );
 
-            if (!this.configStore || !this.cascadingUIStore) {
-                return;
-            }
-
-            const maxWinPerRound = this.configStore.gameConfigs?.maxWinPerRound ?? 0;
+            const maxWinPerRound = this.maxWinPerRound ?? 0;
             if (maxWinPerRound > 0) {
                 const currentMaxStopOnProfit = this.maxStopOnProfit;
                 if (currentMaxStopOnProfit > 0) {
                     this._previousMaxStopOnProfit = currentMaxStopOnProfit;
                 }
             }
-            if (this.cascadingUIStore.userBalance > 0) {
+            if (this.userBalance > 0) {
                 const currentMaxStopOnLoss = this.maxStopOnLoss;
                 if (currentMaxStopOnLoss > 0) {
                     this._previousMaxStopOnLoss = currentMaxStopOnLoss;
@@ -172,7 +90,7 @@ export class FlashSpinStore {
         }, 0);
     }
 
-    triggerPlaceBet: any = null;
+    event: any = null;
 
     // UI state
     isOpenHyperSpinBetControlPopup = false;
@@ -203,60 +121,22 @@ export class FlashSpinStore {
     private _hyperSpinCurrentProfit = 0;
     private _hyperSpinCurrentLoss = 0;
 
+    public totalBet = 0;
+    public totalBetSliderProgress = 0;
+    public userBalance = 0;
+    public freeSpinsTotal = 0;
+    public maxWinPerRound = 0;
+    public disabledChangeBet = false;
+    public disabledHyperSpin = false;
+    public interactableTotalBet = { increase: true, decrease: true };
+
     get hyperSpinInitialBalance(): number {
         return this._hyperSpinInitialBalance;
     }
 
-
-    get totalBet() {
-        return this.betControlStore?.totalBet ?? 0;
-    }
-
-    currentTotalBetIndex = 0;
-
-    get disabledChangeBet() {
-        return this.cascadingUIStore?.isFreeSpins || this.cascadingUIStore?.disabledOpenInputBet || false;
-    }
-
-
-    get interactableTotalBet() {
-        if (this.disabledChangeBet) {
-            return {
-                increase: false,
-                decrease: false,
-            };
-        }
-        // Use BetControlStore's totalBetUnique array
-        const totalBetUnique = this.betControlStore.totalBetUnique;
-        return {
-            increase: this.currentTotalBetIndex < totalBetUnique.length - 1,
-            decrease: this.currentTotalBetIndex > 0,
-        };
-    }
-
-    syncCurrentTotalBetIndex(totalBet: number) {
-        // Use BetControlStore's totalBetUnique array
-        // Check if stores are initialized
-        if (!this.betControlStore) {
-            return;
-        }
-
-        this.currentTotalBetIndex = this.betControlStore.totalBetUnique.findIndex((detail) => +Object.keys(detail)[0] === totalBet);
-    }
-
-
-    get isCollapseMenuInGame() {
-        return (
-            (this.cascadingUIStore?.cascadingState === CascadingSlotState.SPINNING) ||
-            (this.autoPlayStore?.isOpenAutoplayPopup) ||
-            this.isOpenHyperSpinPopup
-        );
-    }
-
-
     get maxStopOnProfit() {
-        const maxWinPerRound = this.configStore?.gameConfigs?.maxWinPerRound ?? 0;
-        const currentTotalBet = this.betControlStore?.totalBet ?? 0;
+        const maxWinPerRound = this.maxWinPerRound
+        const currentTotalBet = this.totalBet
         return currentTotalBet * maxWinPerRound;
     }
 
@@ -265,7 +145,7 @@ export class FlashSpinStore {
     }
 
     get stopOnProfitStep() {
-        return this.betControlStore?.totalBet ?? 0;
+        return this.totalBet;
     }
 
     changeStopOnProfit(increase: boolean) {
@@ -275,7 +155,6 @@ export class FlashSpinStore {
     }
 
     setStopOnProfit(value: number) {
-
         // Validate value to prevent NaN
         if (typeof value !== "number" || isNaN(value)) {
             return;
@@ -289,11 +168,10 @@ export class FlashSpinStore {
         const clampedValue = Math.max(min, Math.min(max, roundedValue));
 
         this.stopOnProfit = clampedValue;
-
     }
 
     get maxStopOnLoss() {
-        return this.cascadingUIStore?.userBalance ?? 0;
+        return this.userBalance;
     }
 
     get minStopOnLoss() {
@@ -301,7 +179,7 @@ export class FlashSpinStore {
     }
 
     get stopOnLossStep() {
-        return this.betControlStore?.totalBet ?? 0;
+        return this.totalBet;
     }
 
     changeStopOnLoss(increase: boolean) {
@@ -342,10 +220,6 @@ export class FlashSpinStore {
         return max > min ? Math.max(0, Math.min(1, (this.stopOnProfit - min) / (max - min))) : 0;
     }
 
-    get formattedStopOnProfit(): string {
-        return FormatUtils.numberWithCommas(this.stopOnProfit, 2, true);
-    }
-
     // Computed properties for UI state - Stop On Loss
     get interactableStopOnLoss(): { increase: boolean; decrease: boolean } {
         return {
@@ -360,12 +234,8 @@ export class FlashSpinStore {
         return max > min ? Math.max(0, Math.min(1, (this.stopOnLoss - min) / (max - min))) : 0;
     }
 
-    get formattedStopOnLoss(): string {
-        return FormatUtils.numberWithCommas(this.stopOnLoss, 2, true);
-    }
-
     startHyperSpinSessionTracking() {
-        this._hyperSpinInitialBalance = this.cascadingUIStore.userBalance;
+        this._hyperSpinInitialBalance = this.userBalance;
         this._hyperSpinCurrentProfit = 0;
         this._hyperSpinCurrentLoss = 0;
     }
@@ -377,11 +247,11 @@ export class FlashSpinStore {
     }
 
     updateHyperSpinProfitLoss() {
-        if (this._hyperSpinInitialBalance === 0 || !this.cascadingUIStore) {
+        if (this._hyperSpinInitialBalance === 0) {
             return;
         }
 
-        const currentBalance = this.cascadingUIStore.userBalance;
+        const currentBalance = this.userBalance;
         const balanceChange = currentBalance - this._hyperSpinInitialBalance;
 
         if (balanceChange > 0) {
@@ -411,15 +281,6 @@ export class FlashSpinStore {
         if (active) {
             this.isSettingsOpen = false;
         }
-
-        // Update UI store flag
-        if (this.cascadingUIStore) {
-            this.cascadingUIStore.isHyperSpinActive = active;
-        }
-    }
-
-    get isHyperSpinActive(): boolean {
-        return this.isActiveHyperSpin;
     }
 
 
@@ -441,12 +302,11 @@ export class FlashSpinStore {
     }
 
     initializeHyperSpinBatch() {
-        const startingBalanceRaw = this.cascadingUIStore?.userBalance ?? 0;
+        const startingBalanceRaw = this.userBalance;
 
         this._spinBatchData = {
             summary: {
-                totalBet: this.formatNumber(0, 2),
-                totalBetRaw: 0,
+                totalBet: 0,
                 hyperSpinStatus: "Ready",
                 totalWin: 0,
                 startingBalance: startingBalanceRaw,
@@ -484,7 +344,7 @@ export class FlashSpinStore {
         if (this._spinBatchData) {
             this._spinBatchData.summary.hyperSpinStatus = "Ready";
 
-            const endBalanceRaw = this.cascadingUIStore?.userBalance ?? 0;
+            const endBalanceRaw = this.userBalance ?? 0;
             this._spinBatchData.summary.endBalance = endBalanceRaw;
         }
     }
@@ -495,11 +355,7 @@ export class FlashSpinStore {
             this._spinBatchData.spins.push(spinData);
 
             // Update totals
-            this._spinBatchData.summary.totalBetRaw += spinData.bet;
-            this._spinBatchData.summary.totalBet = this.formatNumber(
-                this._spinBatchData.summary.totalBetRaw, 2
-            );
-
+            this._spinBatchData.summary.totalBet += spinData.bet;
             this._spinBatchData.summary.totalWin += spinData.totalWin;
         }
     }

@@ -1,7 +1,7 @@
 import gc from "@sg/game-client-base";
 import { _decorator, Component, Label } from "cc";
 import { AnimationUtils } from "db://shared-components/shared/utils/utils";
-import { DetailRecord } from "../handlers/flash-spin-store";
+import { DetailRecord } from "../flash-spin-definitions";
 import FlashSpinMultiplierView from "./flash-spin-multiplier-view";
 const { ccclass, property } = _decorator;
 @ccclass

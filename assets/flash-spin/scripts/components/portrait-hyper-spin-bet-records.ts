@@ -3,8 +3,8 @@ import { _decorator, instantiate, Label, Node, Prefab } from "cc";
 import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
 import Observer from "observer";
 
-import { CascadingUIStore } from "db://shared-cascading-slot/stores/cascading-ui-store";
-import { DetailRecord, FlashSpinStore, HyperSpinBatchData, HyperSpinSingleSpinData } from "../handlers/flash-spin-store";
+import { DetailRecord, HyperSpinBatchData, HyperSpinSingleSpinData } from "../flash-spin-definitions";
+import { FlashSpinStore } from "../handlers/flash-spin-store";
 import HyperSpinRecordBodyItem from "./hyper-spin-record-body-item";
 
 const { ccclass, menu, property } = _decorator;
@@ -101,37 +101,35 @@ export class HyperSpinBetRecords extends ObserverComponent {
 
 
     @render(FlashSpinStore, (store) => store.spinBatchData?.summary?.totalWin)
-    private updateHyperTotalWinValue(totalWin: string) {
+    private updateHyperTotalWinValue(totalWin: number) {
         if (this.hyperTotalWinValue) {
-            const displayValue = totalWin || "0.00";
-
+            const displayValue = totalWin > 0 ? gc.FormatUtils.numberWithCommas(totalWin, 2) : "0.00";
             this.hyperTotalWinValue.string = displayValue;
         }
     }
 
 
     @render(FlashSpinStore, (store) => store.spinBatchData?.summary?.totalBet)
-    private updateLblTotalBetValue(totalBet: string) {
+    private updateLblTotalBetValue(totalBet: number) {
         if (this.lblTotalBetValue) {
-            const displayValue = totalBet || "0.00";
-
+            const displayValue = totalBet > 0 ? gc.FormatUtils.numberWithCommas(totalBet, 2) : "0.00";
             this.lblTotalBetValue.string = displayValue;
         }
     }
 
     @render(FlashSpinStore, (store) => ({
         batchStartingBalance: store.spinBatchData?.summary?.startingBalance,
-        hasBatchData: !!store.spinBatchData
+        hasBatchData: !!store.spinBatchData,
+        userBalance: store.userBalance
     }))
-    private updateStartingBalanceLabel(data: { batchStartingBalance: string; hasBatchData: boolean }) {
+    private updateStartingBalanceLabel(data: { batchStartingBalance: string; hasBatchData: boolean, userBalance: number }) {
         if (this.startingBalanceLabel) {
             let displayValue: string;
 
             if (data.hasBatchData && data.batchStartingBalance) {
                 displayValue = data.batchStartingBalance;
             } else {
-                const container = (this as any).container;
-                const currentBalance = container?.get(CascadingUIStore)?.userBalance ?? 0;
+                const currentBalance = data.userBalance ?? 0;
                 displayValue = gc.FormatUtils.numberWithCommas(currentBalance, 2, true);
             }
 
@@ -142,17 +140,17 @@ export class HyperSpinBetRecords extends ObserverComponent {
     @render(FlashSpinStore, (store) => ({
         batchEndBalance: store.spinBatchData?.summary?.endBalance,
         hasBatchData: !!store.spinBatchData,
-        batchStatus: store.spinBatchData?.summary?.hyperSpinStatus
+        batchStatus: store.spinBatchData?.summary?.hyperSpinStatus,
+        userBalance: store.userBalance
     }))
-    private updateEndBalanceLabel(data: { batchEndBalance: string; hasBatchData: boolean; batchStatus: string }) {
+    private updateEndBalanceLabel(data: { batchEndBalance: string; hasBatchData: boolean; batchStatus: string, userBalance: number }) {
         if (this.endBalanceLabel) {
             let displayValue: string;
 
             if (data.hasBatchData && data.batchStatus === "Ready" && data.batchEndBalance && data.batchEndBalance !== "0.00") {
                 displayValue = data.batchEndBalance;
             } else {
-                const container = (this as any).container;
-                const currentBalance = container?.get(CascadingUIStore)?.userBalance ?? 0;
+                const currentBalance = data.userBalance ?? 0;
                 displayValue = gc.FormatUtils.numberWithCommas(currentBalance, 2, true);
             }
 

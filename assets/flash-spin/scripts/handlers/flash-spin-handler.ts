@@ -11,8 +11,8 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
     @inject(FlashSpinStore) protected readonly flashSpinStore: FlashSpinStore;
     @inject(gc.Notices.NoticeStore) private readonly noticeStore: gc.Notices.NoticeStore;
 
-    private hyperSpinBatchStartTime = 0;
-    private hyperSpinBatchEndTime = 0;
+    private batchStartTime = 0;
+    private batchEndTime = 0;
     private checkNextRoundTimeout: number | null = null;
     private isCancelled = false;
 
@@ -23,7 +23,7 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
     handle() { }
 
     clickHyperSpin() {
-        this.triggerOpenDialog(DialogName.HYPER_SPIN);
+        this.triggerOpenDialog(DialogName.FLASH_SPIN);
         this.showHyperSpinBetControl();
     }
 
@@ -53,18 +53,18 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
     }
 
     confirmHyperSpinRoundsAndStart() {
-        this.flashSpinStore.roundsHyperSpin = this.flashSpinStore.selectedRoundOnPopup;
+        this.flashSpinStore.remainingRound = this.flashSpinStore.selectedRoundOnPopup;
         this.flashSpinStore.isOpenHyperSpinPopup = false;
 
         this.startHyperSpinWithRounds();
     }
 
     private startHyperSpinWithRounds() {
-        this.flashSpinStore.setHyperSpinActive(true);
+        this.flashSpinStore.setFlashSpinActive(true);
     }
 
     showHyperSpinBetControl() {
-        this.flashSpinStore.isOpenHyperSpinBetControlPopup = true;
+        this.flashSpinStore.isOpenBetControlPopup = true;
 
         if (this.flashSpinStore.selectedRoundOnPopup === 0) {
             this.flashSpinStore.selectedRoundOnPopup = this.flashSpinStore.roundsList[2];
@@ -74,17 +74,17 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
             this.isCancelled = false;
         }
 
-        if (this.flashSpinStore.spinBatchData?.summary.hyperSpinStatus === "Cancel") {
+        if (this.flashSpinStore.spinBatchData?.summary.status === "Cancel") {
             this.flashSpinStore.clearBatchData();
         }
 
         if (!this.flashSpinStore.isActiveFlashSpin) {
-            this.flashSpinStore.setHyperSpinActive(false);
+            this.flashSpinStore.setFlashSpinActive(false);
         }
     }
 
     closeHyperSpinBetControl() {
-        this.flashSpinStore.isOpenHyperSpinBetControlPopup = false;
+        this.flashSpinStore.isOpenBetControlPopup = false;
 
         if (this.flashSpinStore.isActiveFlashSpin) {
             this.cancelHyperSpin();
@@ -138,7 +138,7 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
     }
 
     toggleSettings() {
-        if (this.flashSpinStore.spinBatchData?.summary.hyperSpinStatus === "Playing") {
+        if (this.flashSpinStore.spinBatchData?.summary.status === "Playing") {
             return;
         }
 
@@ -151,7 +151,7 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
     }
 
     onClickPlayButton() {
-        const isPaused = this.flashSpinStore.spinBatchData?.summary.hyperSpinStatus === "Paused";
+        const isPaused = this.flashSpinStore.spinBatchData?.summary.status === "Paused";
 
         if (this.flashSpinStore.isActiveFlashSpin) {
             if (isPaused) {
@@ -160,19 +160,19 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
             return;
         }
 
-        this.flashSpinStore.roundsHyperSpin = this.flashSpinStore.selectedRoundOnPopup;
+        this.flashSpinStore.remainingRound = this.flashSpinStore.selectedRoundOnPopup;
         this.startHyperSpinWithCurrentSettings();
     }
 
     private startHyperSpinWithCurrentSettings() {
         this.isCancelled = false;
 
-        this.hyperSpinBatchStartTime = Date.now();
+        this.batchStartTime = Date.now();
 
-        this.flashSpinStore.setHyperSpinActive(true);
-        this.flashSpinStore.startHyperSpinBatch();
+        this.flashSpinStore.setFlashSpinActive(true);
+        this.flashSpinStore.startBatch();
 
-        this.flashSpinStore.startHyperSpinSessionTracking();
+        this.flashSpinStore.startSessionTracking();
 
         this.placeHyperSpinBet();
     }
@@ -202,7 +202,7 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
             }
         }
 
-        if (this.flashSpinStore.roundsHyperSpin <= 0) {
+        if (this.flashSpinStore.remainingRound <= 0) {
             reasons.push("All rounds completed");
         }
 
@@ -213,7 +213,7 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
         const currentProfit = this.calculateCurrentProfit();
         const currentLoss = this.calculateCurrentLoss();
 
-        const roundsExhausted = this.flashSpinStore.roundsHyperSpin <= 0;
+        const roundsExhausted = this.flashSpinStore.remainingRound <= 0;
         if (roundsExhausted) {
             return true;
         }
@@ -242,37 +242,37 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
     }
 
     private calculateCurrentProfit(): number {
-        this.flashSpinStore.updateHyperSpinProfitLoss();
-        return this.flashSpinStore.getCurrentHyperSpinProfit();
+        this.flashSpinStore.updateProfitLoss();
+        return this.flashSpinStore.getCurrentProfit();
     }
 
     private calculateCurrentLoss(): number {
-        this.flashSpinStore.updateHyperSpinProfitLoss();
-        return this.flashSpinStore.getCurrentHyperSpinLoss();
+        this.flashSpinStore.updateProfitLoss();
+        return this.flashSpinStore.getCurrentLoss();
     }
 
     public stopHyperSpin() {
-        const isRoundsExhausted = this.flashSpinStore.roundsHyperSpin <= 0;
+        const isRoundsExhausted = this.flashSpinStore.remainingRound <= 0;
 
         if (!isRoundsExhausted) {
-            const batchAge = Date.now() - this.hyperSpinBatchStartTime;
-            if (batchAge < 1000 && this.hyperSpinBatchStartTime > 0) {
+            const batchAge = Date.now() - this.batchStartTime;
+            if (batchAge < 1000 && this.batchStartTime > 0) {
                 return;
             }
         }
 
         this.clearAllPendingTimeouts();
 
-        this.hyperSpinBatchEndTime = Date.now();
+        this.batchEndTime = Date.now();
 
-        this.flashSpinStore.setHyperSpinActive(false);
-        this.flashSpinStore.stopHyperSpinSessionTracking();
-        this.flashSpinStore.completeHyperSpinBatch();
+        this.flashSpinStore.setFlashSpinActive(false);
+        this.flashSpinStore.stopSessionTracking();
+        this.flashSpinStore.completeBatch();
 
         this.flashSpinStore.isOpenHyperSpinPopup = false;
 
-        this.hyperSpinBatchStartTime = 0;
-        this.hyperSpinBatchEndTime = 0;
+        this.batchStartTime = 0;
+        this.batchEndTime = 0;
 
         this.showHyperSpinStoppedMessage();
     }
@@ -280,15 +280,15 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
     private completeHyperSpin() {
         this.clearAllPendingTimeouts();
 
-        this.hyperSpinBatchEndTime = Date.now();
+        this.batchEndTime = Date.now();
 
-        this.flashSpinStore.setHyperSpinActive(false);
-        this.flashSpinStore.stopHyperSpinSessionTracking();
-        this.flashSpinStore.completeHyperSpinBatch();
+        this.flashSpinStore.setFlashSpinActive(false);
+        this.flashSpinStore.stopSessionTracking();
+        this.flashSpinStore.completeBatch();
 
-        this.flashSpinStore.roundsHyperSpin = 0;
-        this.hyperSpinBatchStartTime = 0;
-        this.hyperSpinBatchEndTime = 0;
+        this.flashSpinStore.remainingRound = 0;
+        this.batchStartTime = 0;
+        this.batchEndTime = 0;
 
         this.showHyperSpinCompletedMessage();
     }
@@ -302,7 +302,7 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
     }
 
     pauseHyperSpinBatch() {
-        this.flashSpinStore.pauseHyperSpinBatch();
+        this.flashSpinStore.pauseBatch();
     }
 
     resumeHyperSpinBatch() {
@@ -310,7 +310,7 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
             return;
         }
 
-        this.flashSpinStore.resumeHyperSpinBatch();
+        this.flashSpinStore.resumeBatch();
         this.checkSpinNextRound();
     }
 
@@ -323,7 +323,7 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
             return;
         }
 
-        if (this.flashSpinStore.roundsHyperSpin === 0) {
+        if (this.flashSpinStore.remainingRound === 0) {
             this.completeHyperSpin();
             return;
         }
@@ -349,14 +349,14 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
     }
 
     private isPaused(): boolean {
-        return this.flashSpinStore.spinBatchData?.summary.hyperSpinStatus === "Paused";
+        return this.flashSpinStore.spinBatchData?.summary.status === "Paused";
     }
 
     private handleBatchInterruption() {
 
 
         if (this.flashSpinStore.spinBatchData) {
-            this.flashSpinStore.spinBatchData.summary.hyperSpinStatus = "Interrupted";
+            this.flashSpinStore.spinBatchData.summary.status = "Interrupted";
         }
 
         this.showBatchInterruptionMessage();
@@ -371,8 +371,8 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
 
     hasInterruptedBatch() {
         return !!(this.flashSpinStore.spinBatchData &&
-            this.flashSpinStore.spinBatchData.summary.hyperSpinStatus === "Interrupted" &&
-            this.flashSpinStore.roundsHyperSpin > 0);
+            this.flashSpinStore.spinBatchData.summary.status === "Interrupted" &&
+            this.flashSpinStore.remainingRound > 0);
     }
 
     getInterruptedBatchInfo() {
@@ -382,12 +382,12 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
 
         const batchData = this.flashSpinStore.spinBatchData;
         const totalRounds = this.flashSpinStore.roundsList[this.flashSpinStore.roundsList.indexOf(this.flashSpinStore.selectedRoundOnPopup)] || this.flashSpinStore.selectedRoundOnPopup;
-        const completedRounds = totalRounds - this.flashSpinStore.roundsHyperSpin;
+        const completedRounds = totalRounds - this.flashSpinStore.remainingRound;
 
         return {
             totalRounds,
             completedRounds,
-            roundsRemaining: this.flashSpinStore.roundsHyperSpin,
+            roundsRemaining: this.flashSpinStore.remainingRound,
             totalBet: batchData.summary.totalBet,
             totalWin: batchData.summary.totalWin,
             currentProfit: this.calculateCurrentProfit(),
@@ -400,22 +400,22 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
 
         this.clearAllPendingTimeouts();
 
-        if (this.hyperSpinBatchStartTime > 0 && this.hyperSpinBatchEndTime === 0) {
-            this.hyperSpinBatchEndTime = Date.now();
+        if (this.batchStartTime > 0 && this.batchEndTime === 0) {
+            this.batchEndTime = Date.now();
         }
 
-        this.flashSpinStore.setHyperSpinActive(false);
+        this.flashSpinStore.setFlashSpinActive(false);
 
         this.updateHyperSpinRounds(0);
 
         if (this.flashSpinStore.spinBatchData) {
-            this.flashSpinStore.spinBatchData.summary.hyperSpinStatus = "Cancel";
+            this.flashSpinStore.spinBatchData.summary.status = "Cancel";
         } else {
             this.flashSpinStore.clearBatchData();
         }
 
-        this.hyperSpinBatchStartTime = 0;
-        this.hyperSpinBatchEndTime = 0;
+        this.batchStartTime = 0;
+        this.batchEndTime = 0;
 
     }
 

@@ -3,7 +3,7 @@ import { _decorator, instantiate, Label, Node, Prefab } from "cc";
 import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
 import Observer from "observer";
 
-import { DetailRecord, HyperSpinBatchData, HyperSpinSingleSpinData } from "../flash-spin-definitions";
+import { DetailRecord, FlashSpinBatchData, FlashSpinSingleSpinData } from "../flash-spin-definitions";
 import { FlashSpinStore } from "../handlers/flash-spin-store";
 import FlashSpinRecordBodyItem from "./flash-spin-record-body-item";
 
@@ -38,7 +38,7 @@ export class FlashSpinBetRecords extends ObserverComponent {
 
     currentRecordItem: FlashSpinRecordBodyItem = null;
 
-    private initHyperSpinRecords(spins: HyperSpinBatchData['spins']) {
+    private initHyperSpinRecords(spins: FlashSpinBatchData['spins']) {
         if (!spins || spins.length === 0) {
             return;
         }
@@ -54,7 +54,7 @@ export class FlashSpinBetRecords extends ObserverComponent {
         });
     }
 
-    private renderSpinRecord(spin: HyperSpinSingleSpinData) {
+    private renderSpinRecord(spin: FlashSpinSingleSpinData) {
         if (!this.currentRecordItem || this.currentRecordItem.spinId !== spin.spinId) {
             this.currentRecordItem?.setCurrentActive(false);
             this.currentRecordItem = this.createNewRecordItem();
@@ -77,7 +77,7 @@ export class FlashSpinBetRecords extends ObserverComponent {
     }
 
     @render(FlashSpinStore, (store) => store.singleSpinData)
-    private renderSingleSpinRecord(spin: HyperSpinSingleSpinData) {
+    private renderSingleSpinRecord(spin: FlashSpinSingleSpinData) {
         if (!spin) {
             return;
         }
@@ -85,7 +85,7 @@ export class FlashSpinBetRecords extends ObserverComponent {
     }
 
     @render(FlashSpinStore, (store) => store.spinBatchData)
-    private renderHyperSpinRecords(data: HyperSpinBatchData) {
+    private renderHyperSpinRecords(data: FlashSpinBatchData) {
         if (!data) {
             return;
         }
@@ -139,7 +139,7 @@ export class FlashSpinBetRecords extends ObserverComponent {
     @render(FlashSpinStore, (store) => ({
         batchEndBalance: store.spinBatchData?.summary?.endBalance,
         hasBatchData: !!store.spinBatchData,
-        batchStatus: store.spinBatchData?.summary?.hyperSpinStatus,
+        batchStatus: store.spinBatchData?.summary?.status,
         userBalance: store.userBalance
     }))
     private updateEndBalanceLabel(data: { batchEndBalance: string; hasBatchData: boolean; batchStatus: string, userBalance: number }) {
@@ -157,7 +157,7 @@ export class FlashSpinBetRecords extends ObserverComponent {
         }
     }
 
-    @render(FlashSpinStore, (store) => store.spinBatchData?.summary?.hyperSpinStatus)
+    @render(FlashSpinStore, (store) => store.spinBatchData?.summary?.status)
     private updateHyperSpinStatusLabel(hyperSpinStatus: string) {
         if (this.lblHyperSpinStatus) {
             const displayValue = hyperSpinStatus?.toUpperCase() || "";
@@ -166,7 +166,7 @@ export class FlashSpinBetRecords extends ObserverComponent {
     }
 
     @render(FlashSpinStore, (store) => ({
-        batchStatus: store.spinBatchData?.summary?.hyperSpinStatus,
+        batchStatus: store.spinBatchData?.summary?.status,
         batchEndBalance: store.spinBatchData?.summary?.endBalance,
         hasBatchData: !!store.spinBatchData
     }))

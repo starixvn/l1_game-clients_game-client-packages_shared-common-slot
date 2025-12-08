@@ -7,7 +7,7 @@ const { render } = Observer;
 @ccclass("FlashSpinContainer")
 export class FlashSpinContainer extends LazyloadNodeContainer {
 
-    @render(FlashSpinStore, (store) => store.isOpenHyperSpinBetControlPopup)
+    @render(FlashSpinStore, (store) => store.isOpenBetControlPopup)
     private setIsOpenHyperSpinBetControlPopup(isOpenHyperSpinBetControlPopup: boolean) {
         if (!isOpenHyperSpinBetControlPopup) {
             return;

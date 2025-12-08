@@ -55,7 +55,7 @@ export class FlashSpinBetControl extends ObserverComponent {
 
     @render(FlashSpinStore, (store) => ({
         isHyperSpin: store.isActiveFlashSpin,
-        isPaused: store.spinBatchData?.summary.hyperSpinStatus === "Paused"
+        isPaused: store.spinBatchData?.summary.status === "Paused"
     }))
     updatePlayHyperSpinButton(data: { isHyperSpin: boolean; isPaused: boolean }) {
         const { isHyperSpin, isPaused } = data;
@@ -74,7 +74,7 @@ export class FlashSpinBetControl extends ObserverComponent {
 
     @render(FlashSpinStore, (store) => ({
         isSettingsOpen: store.isSettingsOpen,
-        hyperSpinStatus: store.spinBatchData?.summary.hyperSpinStatus
+        hyperSpinStatus: store.spinBatchData?.summary.status
     }))
     updateSettingsButton(data: { isSettingsOpen: boolean; hyperSpinStatus: string }) {
         const { isSettingsOpen, hyperSpinStatus } = data;
@@ -121,7 +121,7 @@ export class FlashSpinBetControl extends ObserverComponent {
         return gc.Audios.AudioIds.CLICK;
     }
 
-    @render(FlashSpinStore, (store) => ({ selectedRoundOnPopup: store.selectedRoundOnPopup, isHyperSpin: store.isActiveFlashSpin, roundsHyperSpin: store.roundsHyperSpin }))
+    @render(FlashSpinStore, (store) => ({ selectedRoundOnPopup: store.selectedRoundOnPopup, isHyperSpin: store.isActiveFlashSpin, roundsHyperSpin: store.remainingRound }))
     updateHyperSpinRoundsLabel(data: { selectedRoundOnPopup: number; isHyperSpin: boolean; roundsHyperSpin: number }) {
         if (this.hyperSpinRoundsLabel) {
             this.hyperSpinRoundsLabel.node.active = data.isHyperSpin;

@@ -1,7 +1,7 @@
 import gc from "@sg/game-client-base";
 import inversify from "inversify";
 import mobx from "mobx";
-import { HyperSpinBatchData, HyperSpinSingleSpinData, SettlementInfo, WinTag } from "../flash-spin-definitions";
+import { FlashSpinBatchData, FlashSpinSingleSpinData, SettlementInfo, WinTag } from "../flash-spin-definitions";
 const { injectable, inject } = inversify;
 const { FormatUtils } = gc;
 
@@ -93,11 +93,12 @@ export class FlashSpinStore {
     event: any = null;
 
     // UI state
-    isOpenHyperSpinBetControlPopup = false;
-    roundsList = [10, 50, 100, 500, 1000];
+    isOpenBetControlPopup = false;
     isOpenHyperSpinPopup = false;
+
+    roundsList = [10, 50, 100, 500, 1000];
     selectedRoundOnPopup = this.roundsList[2]; // Default to 100
-    roundsHyperSpin = 0;
+    remainingRound = 0;
     isActiveFlashSpin = false;
     winLevelConfig = [2, 5, 10];
 
@@ -116,10 +117,9 @@ export class FlashSpinStore {
     private _previousMaxStopOnProfit = 0;
     private _previousMaxStopOnLoss = 0;
 
-    // Hyper-spin session tracking
-    private _hyperSpinInitialBalance = 0;
-    private _hyperSpinCurrentProfit = 0;
-    private _hyperSpinCurrentLoss = 0;
+    private _initialBalance = 0;
+    private _currentProfit = 0;
+    private _currentLoss = 0;
 
     public totalBet = 0;
     public totalBetSliderProgress = 0;
@@ -130,8 +130,8 @@ export class FlashSpinStore {
     public disabledFlashSpin = false;
     public interactableTotalBet = { increase: true, decrease: true };
 
-    get hyperSpinInitialBalance(): number {
-        return this._hyperSpinInitialBalance;
+    get initialBalance(): number {
+        return this._initialBalance;
     }
 
     get maxStopOnProfit() {
@@ -234,50 +234,49 @@ export class FlashSpinStore {
         return max > min ? Math.max(0, Math.min(1, (this.stopOnLoss - min) / (max - min))) : 0;
     }
 
-    startHyperSpinSessionTracking() {
-        this._hyperSpinInitialBalance = this.userBalance;
-        this._hyperSpinCurrentProfit = 0;
-        this._hyperSpinCurrentLoss = 0;
+    startSessionTracking() {
+        this._initialBalance = this.userBalance;
+        this._currentProfit = 0;
+        this._currentLoss = 0;
     }
 
-    stopHyperSpinSessionTracking() {
-        this._hyperSpinInitialBalance = 0;
-        this._hyperSpinCurrentProfit = 0;
-        this._hyperSpinCurrentLoss = 0;
+    stopSessionTracking() {
+        this._initialBalance = 0;
+        this._currentProfit = 0;
+        this._currentLoss = 0;
     }
 
-    updateHyperSpinProfitLoss() {
-        if (this._hyperSpinInitialBalance === 0) {
+    updateProfitLoss() {
+        if (this._initialBalance === 0) {
             return;
         }
 
         const currentBalance = this.userBalance;
-        const balanceChange = currentBalance - this._hyperSpinInitialBalance;
+        const balanceChange = currentBalance - this._initialBalance;
 
         if (balanceChange > 0) {
-            this._hyperSpinCurrentProfit = balanceChange;
-            this._hyperSpinCurrentLoss = 0;
+            this._currentProfit = balanceChange;
+            this._currentLoss = 0;
         } else if (balanceChange < 0) {
-            this._hyperSpinCurrentProfit = 0;
-            this._hyperSpinCurrentLoss = Math.abs(balanceChange);
+            this._currentProfit = 0;
+            this._currentLoss = Math.abs(balanceChange);
         } else {
-            this._hyperSpinCurrentProfit = 0;
-            this._hyperSpinCurrentLoss = 0;
+            this._currentProfit = 0;
+            this._currentLoss = 0;
         }
     }
 
-    getCurrentHyperSpinProfit(): number {
-        return this._hyperSpinCurrentProfit;
+    getCurrentProfit(): number {
+        return this._currentProfit;
     }
 
-    getCurrentHyperSpinLoss(): number {
-        return this._hyperSpinCurrentLoss;
+    getCurrentLoss(): number {
+        return this._currentLoss;
     }
 
-    setHyperSpinActive(active: boolean) {
+    setFlashSpinActive(active: boolean) {
         this.isActiveFlashSpin = active;
 
-        // Collapse settings when hyper-spin batch play starts
         if (active) {
             this.isSettingsOpen = false;
         }
@@ -285,14 +284,13 @@ export class FlashSpinStore {
 
 
     // Batch data tracking
-    private _spinBatchData: HyperSpinBatchData | null = null;
-    private _hyperSpinRoundCounter = 0; // Hyper-spin rounds (excludes free spins)
-    private _freeSpinCounter = 0; // Free spin counter
+    private _spinBatchData: FlashSpinBatchData | null = null;
+    private _normalSpinCounter = 0;
+    private _freeSpinCounter = 0;
 
-    // Cascade tracking for hyper-spin mode
-    private _singleSpinData: HyperSpinSingleSpinData = null;
+    private _singleSpinData: FlashSpinSingleSpinData = null;
 
-    get spinBatchData(): HyperSpinBatchData {
+    get spinBatchData(): FlashSpinBatchData {
         return this._spinBatchData;
     }
 
@@ -301,13 +299,13 @@ export class FlashSpinStore {
         return this._spinBatchData?.spins?.length || 0;
     }
 
-    initializeHyperSpinBatch() {
+    initializeBatch() {
         const startingBalanceRaw = this.userBalance;
 
         this._spinBatchData = {
             summary: {
                 totalBet: 0,
-                hyperSpinStatus: "Ready",
+                status: "Ready",
                 totalWin: 0,
                 startingBalance: startingBalanceRaw,
                 endBalance: 0
@@ -315,34 +313,34 @@ export class FlashSpinStore {
             spins: []
         };
 
-        this._hyperSpinRoundCounter = 0;
+        this._normalSpinCounter = 0;
         this._freeSpinCounter = 0;
     }
 
-    startHyperSpinBatch() {
+    startBatch() {
         if (!this._spinBatchData) {
-            this.initializeHyperSpinBatch();
+            this.initializeBatch();
         }
         if (this._spinBatchData) {
-            this._spinBatchData.summary.hyperSpinStatus = "Playing";
-        }
-    }
-
-    pauseHyperSpinBatch() {
-        if (this._spinBatchData) {
-            this._spinBatchData.summary.hyperSpinStatus = "Paused";
+            this._spinBatchData.summary.status = "Playing";
         }
     }
 
-    resumeHyperSpinBatch() {
+    pauseBatch() {
         if (this._spinBatchData) {
-            this._spinBatchData.summary.hyperSpinStatus = "Playing";
+            this._spinBatchData.summary.status = "Paused";
         }
     }
 
-    completeHyperSpinBatch() {
+    resumeBatch() {
         if (this._spinBatchData) {
-            this._spinBatchData.summary.hyperSpinStatus = "Ready";
+            this._spinBatchData.summary.status = "Playing";
+        }
+    }
+
+    completeBatch() {
+        if (this._spinBatchData) {
+            this._spinBatchData.summary.status = "Ready";
 
             const endBalanceRaw = this.userBalance ?? 0;
             this._spinBatchData.summary.endBalance = endBalanceRaw;
@@ -358,15 +356,6 @@ export class FlashSpinStore {
             this._spinBatchData.summary.totalBet += spinData.bet;
             this._spinBatchData.summary.totalWin += spinData.totalWin;
         }
-    }
-
-    private formatNumber(value: number, decimals = 2): string {
-        return FormatUtils.numberWithCommas(value, decimals, true);
-    }
-
-    formatMultiplier(multiplier: number): string {
-        const formatted = FormatUtils.numberWithCommas(multiplier, 2, true);
-        return `${formatted}x`;
     }
 
     determineWinTag(
@@ -392,9 +381,9 @@ export class FlashSpinStore {
         return null;
     }
 
-    getNextHyperSpinId(): number {
-        this._hyperSpinRoundCounter++;
-        return this._hyperSpinRoundCounter;
+    getNextNormalSpinId(): number {
+        this._normalSpinCounter++;
+        return this._normalSpinCounter;
     }
 
     getNextFreeSpinId(): number {
@@ -403,7 +392,7 @@ export class FlashSpinStore {
     }
 
     resetBatchCounters() {
-        this._hyperSpinRoundCounter = 0;
+        this._normalSpinCounter = 0;
         this._freeSpinCounter = 0;
     }
 
@@ -413,22 +402,13 @@ export class FlashSpinStore {
     }
 
     recoverInterruptedBatch(): boolean {
-        if (!this._spinBatchData || this._spinBatchData.summary.hyperSpinStatus !== "Interrupted") {
+        if (!this._spinBatchData || this._spinBatchData.summary.status !== "Interrupted") {
             return false;
         }
 
-        this._spinBatchData.summary.hyperSpinStatus = "Playing";
-        this.setHyperSpinActive(true);
+        this._spinBatchData.summary.status = "Playing";
+        this.setFlashSpinActive(true);
         return true;
-    }
-
-    // Cascade tracking methods for hyper-spin mode
-    startCascadeTracking(spinId: string | number, isFreeSpin: boolean, stake: number) {
-        if (!this.isActiveFlashSpin) {
-            return; // Only track cascades in hyper-spin mode
-        }
-
-
     }
 
     initNewSingleSpinData(info: { isFreeSpin: boolean, bet: number, balance: number }) {
@@ -436,7 +416,7 @@ export class FlashSpinStore {
         if (info.isFreeSpin) {
             spinId = this.getNextFreeSpinId();
         } else {
-            spinId = this.getNextHyperSpinId();
+            spinId = this.getNextNormalSpinId();
         }
 
         this._singleSpinData = {
@@ -449,7 +429,7 @@ export class FlashSpinStore {
     }
 
     decreaseSpinRound() {
-        this.roundsHyperSpin--;
+        this.remainingRound--;
     }
 
     updateSettlementSingleSpin(info: SettlementInfo) {

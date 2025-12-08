@@ -2,7 +2,7 @@ import gc from "@sg/game-client-base";
 import { _decorator, Component, instantiate, Label, Layout, Node, Widget } from "cc";
 import { AudioUtils } from "db://shared-components/game/audios/utils";
 import { AnimationUtils, ComponentUtils } from "db://shared-components/shared/utils";
-import { DetailRecord, HyperSpinSingleSpinData, STEP_DURATION } from "../flash-spin-definitions";
+import { DetailRecord, FlashSpinSingleSpinData, STEP_DURATION } from "../flash-spin-definitions";
 import FlashSpinDetailItem from "./flash-spin-detail-item";
 import FlashSpinId from "./flash-spin-id";
 import FlashSpinMultiplierView from "./flash-spin-multiplier-view";
@@ -71,7 +71,7 @@ export default class FlashSpinRecordBodyItem extends Component {
         });
     }
 
-    setSpinData(spinData: HyperSpinSingleSpinData) {
+    setSpinData(spinData: FlashSpinSingleSpinData) {
         this.spinId = spinData.spinId;
 
         this.spinIdView.setId(spinData.spinId);

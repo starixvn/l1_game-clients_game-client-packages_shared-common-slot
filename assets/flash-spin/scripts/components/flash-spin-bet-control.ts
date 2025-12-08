@@ -3,6 +3,7 @@ import { _decorator, Button, Label, Node, Slider, Sprite } from "cc";
 import { ObserverComponent } from "db://shared-components/shared/common-components/observer-component/scripts/observer-component";
 import Observer from "observer";
 
+import { AudioUtils } from "db://shared-components/game/audios/utils";
 import { FlashSpinHandler } from "../handlers/flash-spin-handler";
 import { FlashSpinStore } from "../handlers/flash-spin-store";
 
@@ -45,12 +46,12 @@ export class FlashSpinBetControl extends ObserverComponent {
 
     @handle(FlashSpinHandler, (handle) => handle.onClickPlayButton())
     onClickPlayButton() {
-        this.playSoundClick();
+        AudioUtils.playClick();
     }
 
     @handle(FlashSpinHandler, (handle) => handle.pauseHyperSpinBatch())
     onClickPauseButton() {
-        this.playSoundClick();
+        AudioUtils.playClick();
     }
 
     @render(FlashSpinStore, (store) => ({
@@ -106,19 +107,13 @@ export class FlashSpinBetControl extends ObserverComponent {
 
     @handle(FlashSpinHandler, (handle) => handle.closeHyperSpinBetControl())
     onCloseHyperSpinBetControl() {
-        this.playSoundClick();
+        AudioUtils.playClick();
         this.node.destroy();
     }
 
     @handle(FlashSpinHandler, (handle) => handle.toggleSettings())
     onClickControlToggle() {
-        this.playSoundClick();
-    }
-
-
-    @handle(gc.Audios.AudioHandler, (handle, id: string) => handle.playSFX(id))
-    playSoundClick() {
-        return gc.Audios.AudioIds.CLICK;
+        AudioUtils.playClick();
     }
 
     @render(FlashSpinStore, (store) => ({ selectedRoundOnPopup: store.selectedRoundOnPopup, isHyperSpin: store.isActiveFlashSpin, roundsHyperSpin: store.remainingRound }))
@@ -165,5 +160,15 @@ export class FlashSpinBetControl extends ObserverComponent {
 
         const formattedBalance = gc.FormatUtils.truncateFixedDecimals(value, 2).toString();
         this.balanceLabel && (this.balanceLabel.string = formattedBalance);
+    }
+
+    @handle(FlashSpinHandler, (handle) => handle.changeTotalBet(false))
+    onClickDecreaseTotalBet() {
+        AudioUtils.playClick();
+    }
+
+    @handle(FlashSpinHandler, (handle) => handle.changeTotalBet(true))
+    onClickIncreaseTotalBet() {
+        AudioUtils.playClick();
     }
 }

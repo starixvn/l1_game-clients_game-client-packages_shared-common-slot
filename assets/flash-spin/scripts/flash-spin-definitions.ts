@@ -43,7 +43,7 @@ export interface FlashSpinBatchSummary {
     status: FlashSpinStatus; // Current batch status
     totalWin: number;
     startingBalance: number;
-    endBalance: number;
+    endBalance?: number;
 }
 
 export interface FlashSpinBatchData {

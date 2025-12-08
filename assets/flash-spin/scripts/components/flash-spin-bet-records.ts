@@ -16,13 +16,7 @@ export class FlashSpinBetRecords extends ObserverComponent {
     prfHyperSpinRecordBodyItem: Prefab = null;
 
     @property(Node)
-    hyperSpinRecordBodyContentNode: Node = null;
-
-    @property(Label)
-    startingBalanceLabel: Label = null;
-
-    @property(Label)
-    endBalanceLabel: Label = null;
+    scrollContent: Node = null;
 
     @property(Label)
     hyperTotalWinValue: Label = null;
@@ -34,17 +28,23 @@ export class FlashSpinBetRecords extends ObserverComponent {
     lblHyperSpinStatus: Label = null;
 
     @property(Node)
-    endBalanceNode: Node = null;
+    startRow: Node = null;
+
+    @property(Node)
+    endRow: Node = null;
 
     currentRecordItem: FlashSpinRecordBodyItem = null;
+
+    onLoad() {
+        this.startRow.active = false;
+        this.endRow.active = false;
+        super.onLoad();
+    }
 
     private initHyperSpinRecords(spins: FlashSpinBatchData['spins']) {
         if (!spins || spins.length === 0) {
             return;
         }
-
-        console.trace('initHyperSpinRecords');
-        this.hyperSpinRecordBodyContentNode.destroyAllChildren();
 
         // For decreasing sort order, render cascade records first, then main records
         // This ensures cascade records appear below their parent when sorted in reverse
@@ -69,7 +69,7 @@ export class FlashSpinBetRecords extends ObserverComponent {
     private createNewRecordItem() {
         const node = instantiate(this.prfHyperSpinRecordBodyItem);
         const recordBodyItem = node.getComponent(FlashSpinRecordBodyItem);
-        this.hyperSpinRecordBodyContentNode.addChild(node);
+        this.scrollContent.addChild(node);
         return recordBodyItem;
     }
 
@@ -107,7 +107,6 @@ export class FlashSpinBetRecords extends ObserverComponent {
         }
     }
 
-
     @render(FlashSpinStore, (store) => store.spinBatchData?.summary?.totalBet)
     private updateLblTotalBetValue(totalBet: number) {
         if (this.lblTotalBetValue) {
@@ -116,45 +115,26 @@ export class FlashSpinBetRecords extends ObserverComponent {
         }
     }
 
-    @render(FlashSpinStore, (store) => ({
-        batchStartingBalance: store.spinBatchData?.summary?.startingBalance,
-        hasBatchData: !!store.spinBatchData,
-        userBalance: store.userBalance
-    }))
-    private updateStartingBalanceLabel(data: { batchStartingBalance: string; hasBatchData: boolean, userBalance: number }) {
-        if (this.startingBalanceLabel) {
-            let displayValue: string;
+    @render(FlashSpinStore, (store) => store.spinBatchData?.summary?.startingBalance)
+    private updateStartingBalanceLabel(startingBalance: number) {
+        if (startingBalance > 0) {
+            const value = gc.FormatUtils.numberWithCommas(startingBalance, 2, true);
+            this.scrollContent.destroyAllChildren();
 
-            if (data.hasBatchData && data.batchStartingBalance) {
-                displayValue = data.batchStartingBalance;
-            } else {
-                const currentBalance = data.userBalance ?? 0;
-                displayValue = gc.FormatUtils.numberWithCommas(currentBalance, 2, true);
-            }
-
-            this.startingBalanceLabel.string = displayValue;
+            const node = instantiate(this.startRow);
+            node.active = true;
+            this.scrollContent.addChild(node);
+            node.getChildByName("value").getComponent(Label).string = value;
         }
     }
 
-    @render(FlashSpinStore, (store) => ({
-        batchEndBalance: store.spinBatchData?.summary?.endBalance,
-        hasBatchData: !!store.spinBatchData,
-        batchStatus: store.spinBatchData?.summary?.status,
-        userBalance: store.userBalance
-    }))
-    private updateEndBalanceLabel(data: { batchEndBalance: string; hasBatchData: boolean; batchStatus: string, userBalance: number }) {
-        if (this.endBalanceLabel) {
-            let displayValue: string;
-
-            if (data.hasBatchData && data.batchStatus === "Ready" && data.batchEndBalance && data.batchEndBalance !== "0.00") {
-                displayValue = data.batchEndBalance;
-            } else {
-                const currentBalance = data.userBalance ?? 0;
-                displayValue = gc.FormatUtils.numberWithCommas(currentBalance, 2, true);
-            }
-
-            this.endBalanceLabel.string = displayValue;
-        }
+    @render(FlashSpinStore, (store) => store.spinBatchData?.summary?.endBalance)
+    private updateEndBalanceLabel(endBalance: number) {
+        const value = gc.FormatUtils.numberWithCommas(endBalance, 2, true);
+        const node = instantiate(this.endRow);
+        node.active = true;
+        this.scrollContent.addChild(node);
+        node.getChildByName("value").getComponent(Label).string = value;
     }
 
     @render(FlashSpinStore, (store) => store.spinBatchData?.summary?.status)
@@ -162,22 +142,6 @@ export class FlashSpinBetRecords extends ObserverComponent {
         if (this.lblHyperSpinStatus) {
             const displayValue = hyperSpinStatus?.toUpperCase() || "";
             this.lblHyperSpinStatus.string = displayValue;
-        }
-    }
-
-    @render(FlashSpinStore, (store) => ({
-        batchStatus: store.spinBatchData?.summary?.status,
-        batchEndBalance: store.spinBatchData?.summary?.endBalance,
-        hasBatchData: !!store.spinBatchData
-    }))
-    private updateEndBalanceNodeVisibility(data: { batchStatus: string; batchEndBalance: string; hasBatchData: boolean }) {
-        if (this.endBalanceNode) {
-            // Show endBalanceNode only when batch is completed (Ready status) and endBalance is set
-            const shouldShow = data.hasBatchData &&
-                data.batchStatus === "Ready" &&
-                data.batchEndBalance &&
-                data.batchEndBalance !== "0.00";
-            this.endBalanceNode.active = shouldShow;
         }
     }
 

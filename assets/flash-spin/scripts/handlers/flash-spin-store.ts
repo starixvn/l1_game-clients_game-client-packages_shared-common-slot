@@ -295,15 +295,12 @@ export class FlashSpinStore {
     }
 
     initializeBatch() {
-        const startingBalanceRaw = this.userBalance;
-
         this._spinBatchData = {
             summary: {
                 totalBet: 0,
                 status: "Ready",
                 totalWin: 0,
-                startingBalance: startingBalanceRaw,
-                endBalance: 0
+                startingBalance: this.userBalance,
             },
             spins: []
         };
@@ -337,8 +334,7 @@ export class FlashSpinStore {
         if (this._spinBatchData) {
             this._spinBatchData.summary.status = "Ready";
 
-            const endBalanceRaw = this.userBalance ?? 0;
-            this._spinBatchData.summary.endBalance = endBalanceRaw;
+            this._spinBatchData.summary.endBalance = this.userBalance;
         }
     }
 

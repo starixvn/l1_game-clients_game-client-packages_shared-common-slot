@@ -5,12 +5,11 @@ import Observer from "observer";
 
 import { FlashSpinHandler } from "../handlers/flash-spin-handler";
 
-const { Connection } = gc;
 const { ccclass, property } = _decorator;
 const { observer, render, handle } = Observer;
 
 @ccclass
-export default class HyperSpinRoundNumber extends ObserverComponent {
+export default class FlashSpinRoundNumber extends ObserverComponent {
     @property(Label)
     lblNoOfRound: Label = null;
 

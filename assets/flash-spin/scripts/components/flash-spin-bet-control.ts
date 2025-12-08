@@ -13,9 +13,8 @@ type SliderEventType = Slider | Event | any;
 
 export type TotalBetType = { coin: number; level: number; totalBet: number; increase: boolean; decrease: boolean };
 
-@ccclass("HyperSpinBetControl")
-@menu('UI/HyperSpinBetControl')
-export class HyperSpinBetControl extends ObserverComponent {
+@ccclass("FlashSpinBetControl")
+export class FlashSpinBetControl extends ObserverComponent {
     @property(Label)
     hyperSpinRoundsLabel: Label = null;
 
@@ -55,7 +54,7 @@ export class HyperSpinBetControl extends ObserverComponent {
     }
 
     @render(FlashSpinStore, (store) => ({
-        isHyperSpin: store.isActiveHyperSpin,
+        isHyperSpin: store.isActiveFlashSpin,
         isPaused: store.spinBatchData?.summary.hyperSpinStatus === "Paused"
     }))
     updatePlayHyperSpinButton(data: { isHyperSpin: boolean; isPaused: boolean }) {
@@ -122,7 +121,7 @@ export class HyperSpinBetControl extends ObserverComponent {
         return gc.Audios.AudioIds.CLICK;
     }
 
-    @render(FlashSpinStore, (store) => ({ selectedRoundOnPopup: store.selectedRoundOnPopup, isHyperSpin: store.isActiveHyperSpin, roundsHyperSpin: store.roundsHyperSpin }))
+    @render(FlashSpinStore, (store) => ({ selectedRoundOnPopup: store.selectedRoundOnPopup, isHyperSpin: store.isActiveFlashSpin, roundsHyperSpin: store.roundsHyperSpin }))
     updateHyperSpinRoundsLabel(data: { selectedRoundOnPopup: number; isHyperSpin: boolean; roundsHyperSpin: number }) {
         if (this.hyperSpinRoundsLabel) {
             this.hyperSpinRoundsLabel.node.active = data.isHyperSpin;

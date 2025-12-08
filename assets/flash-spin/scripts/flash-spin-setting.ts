@@ -1,6 +1,6 @@
 import gc from '@sg/game-client-base';
 import { _decorator, instantiate, Node, Prefab, Slider } from 'cc';
-import HyperSpinRoundNumber from 'db://shared-common-slot/flash-spin/scripts/components/hyper-spin-round-number';
+import FlashSpinRoundNumber from 'db://shared-common-slot/flash-spin/scripts/components/flash-spin-round-number';
 import { AudioUtils } from 'db://shared-components/game/audios/utils';
 import { ObserverComponent } from 'db://shared-components/shared/common-components/observer-component/scripts/observer-component';
 import Observer from "observer";
@@ -42,7 +42,7 @@ export class FlashSpinSetting extends ObserverComponent {
 
         roundsList.forEach((round) => {
             const node = instantiate(this.numberItemPrefab);
-            const roundNumber = node.getComponent(HyperSpinRoundNumber);
+            const roundNumber = node.getComponent(FlashSpinRoundNumber);
             if (roundNumber) {
                 roundNumber.setValue(round);
             }
@@ -55,7 +55,7 @@ export class FlashSpinSetting extends ObserverComponent {
     @render(FlashSpinStore, (store) => store.selectedRoundOnPopup)
     renderSelectedRounds(noOfRounds: number) {
         this.numberContainer.children.forEach((child) => {
-            const roundNumber = child.getComponent(HyperSpinRoundNumber);
+            const roundNumber = child.getComponent(FlashSpinRoundNumber);
             if (!roundNumber) {
                 return;
             }

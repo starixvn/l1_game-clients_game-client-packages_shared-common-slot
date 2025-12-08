@@ -9,7 +9,7 @@ import FlashSpinMultiplierView from "./flash-spin-multiplier-view";
 const { ccclass, property } = _decorator;
 
 @ccclass
-export default class HyperSpinRecordBodyItem extends Component {
+export default class FlashSpinRecordBodyItem extends Component {
     @property(FlashSpinId)
     spinIdView: FlashSpinId = null;
 

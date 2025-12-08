@@ -98,11 +98,11 @@ export class FlashSpinStore {
     isOpenHyperSpinPopup = false;
     selectedRoundOnPopup = this.roundsList[2]; // Default to 100
     roundsHyperSpin = 0;
-    isActiveHyperSpin = false;
+    isActiveFlashSpin = false;
     winLevelConfig = [2, 5, 10];
 
     get isTurnOnHyperSpin() {
-        return this.isOpenHyperSpinPopup || this.isActiveHyperSpin;
+        return this.isOpenHyperSpinPopup || this.isActiveFlashSpin;
     }
 
     // Stop conditions
@@ -127,7 +127,7 @@ export class FlashSpinStore {
     public freeSpinsTotal = 0;
     public maxWinPerRound = 0;
     public disabledChangeBet = false;
-    public disabledHyperSpin = false;
+    public disabledFlashSpin = false;
     public interactableTotalBet = { increase: true, decrease: true };
 
     get hyperSpinInitialBalance(): number {
@@ -275,7 +275,7 @@ export class FlashSpinStore {
     }
 
     setHyperSpinActive(active: boolean) {
-        this.isActiveHyperSpin = active;
+        this.isActiveFlashSpin = active;
 
         // Collapse settings when hyper-spin batch play starts
         if (active) {
@@ -424,7 +424,7 @@ export class FlashSpinStore {
 
     // Cascade tracking methods for hyper-spin mode
     startCascadeTracking(spinId: string | number, isFreeSpin: boolean, stake: number) {
-        if (!this.isActiveHyperSpin) {
+        if (!this.isActiveFlashSpin) {
             return; // Only track cascades in hyper-spin mode
         }
 

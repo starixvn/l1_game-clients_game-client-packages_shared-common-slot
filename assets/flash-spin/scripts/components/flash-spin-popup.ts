@@ -5,14 +5,14 @@ import Observer from "observer";
 
 import { FlashSpinHandler } from "../handlers/flash-spin-handler";
 import { FlashSpinStore } from "../handlers/flash-spin-store";
-import HyperSpinRoundNumber from "./hyper-spin-round-number";
+import FlashSpinRoundNumber from "./flash-spin-round-number";
 
 const { Connection } = gc;
 const { ccclass, property } = _decorator;
 const { observer, render, handle } = Observer;
 
 @ccclass
-export default class HyperSpinPopup extends ObserverComponent {
+export default class FlashSpinPopup extends ObserverComponent {
     @property(Node)
     nodeContent: Node = null;
 
@@ -25,7 +25,7 @@ export default class HyperSpinPopup extends ObserverComponent {
 
         roundsList.forEach((round, index) => {
             const node = instantiate(this.prfNoOfRound);
-            const roundNumber = node.getComponent(HyperSpinRoundNumber);
+            const roundNumber = node.getComponent(FlashSpinRoundNumber);
             roundNumber?.setValue(round);
             this.nodeContent.addChild(node);
         });
@@ -35,7 +35,7 @@ export default class HyperSpinPopup extends ObserverComponent {
     @render(FlashSpinStore, (store) => store.selectedRoundOnPopup)
     renderSelectedRounds(noOfRounds: number) {
         this.nodeContent.children.forEach((child, index) => {
-            const roundNumber = child.getComponent(HyperSpinRoundNumber);
+            const roundNumber = child.getComponent(FlashSpinRoundNumber);
             const selectedBg = roundNumber.value === noOfRounds;
             roundNumber.setSelectedRound(selectedBg);
         });

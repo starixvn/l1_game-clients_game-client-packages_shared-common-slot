@@ -5,14 +5,13 @@ import Observer from "observer";
 
 import { DetailRecord, HyperSpinBatchData, HyperSpinSingleSpinData } from "../flash-spin-definitions";
 import { FlashSpinStore } from "../handlers/flash-spin-store";
-import HyperSpinRecordBodyItem from "./hyper-spin-record-body-item";
+import FlashSpinRecordBodyItem from "./flash-spin-record-body-item";
 
 const { ccclass, menu, property } = _decorator;
 const { render } = Observer;
 
-@ccclass("HyperSpinBetRecords")
-@menu('UI/HyperSpinBetRecords')
-export class HyperSpinBetRecords extends ObserverComponent {
+@ccclass("FlashSpinBetRecords")
+export class FlashSpinBetRecords extends ObserverComponent {
     @property(Prefab)
     prfHyperSpinRecordBodyItem: Prefab = null;
 
@@ -37,7 +36,7 @@ export class HyperSpinBetRecords extends ObserverComponent {
     @property(Node)
     endBalanceNode: Node = null;
 
-    currentRecordItem: HyperSpinRecordBodyItem = null;
+    currentRecordItem: FlashSpinRecordBodyItem = null;
 
     private initHyperSpinRecords(spins: HyperSpinBatchData['spins']) {
         if (!spins || spins.length === 0) {
@@ -69,7 +68,7 @@ export class HyperSpinBetRecords extends ObserverComponent {
 
     private createNewRecordItem() {
         const node = instantiate(this.prfHyperSpinRecordBodyItem);
-        const recordBodyItem = node.getComponent(HyperSpinRecordBodyItem);
+        const recordBodyItem = node.getComponent(FlashSpinRecordBodyItem);
         this.hyperSpinRecordBodyContentNode.addChild(node);
         return recordBodyItem;
     }

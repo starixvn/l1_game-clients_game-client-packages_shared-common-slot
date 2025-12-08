@@ -10,7 +10,7 @@ const { ccclass, property } = _decorator;
 const { render, handle } = Observer;
 
 @ccclass
-export default class HyperSpinButton extends ObserverComponent {
+export default class FlashSpinButton extends ObserverComponent {
     @property(Node)
     nodeDisabled: Node = null;
 
@@ -22,7 +22,7 @@ export default class HyperSpinButton extends ObserverComponent {
     @handle(FlashSpinHandler, (handle) => handle.clickHyperSpin())
     triggerHyperSpinHandler() { }
 
-    @render(FlashSpinStore, (store) => store.disabledHyperSpin)
+    @render(FlashSpinStore, (store) => store.disabledFlashSpin)
     disabledHyperSpin(disabledHyperSpin: boolean) {
         this.nodeDisabled.active = disabledHyperSpin;
     }

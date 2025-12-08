@@ -70,7 +70,7 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
             this.flashSpinStore.selectedRoundOnPopup = this.flashSpinStore.roundsList[2];
         }
 
-        if (this.isCancelled && !this.flashSpinStore.isActiveHyperSpin) {
+        if (this.isCancelled && !this.flashSpinStore.isActiveFlashSpin) {
             this.isCancelled = false;
         }
 
@@ -78,7 +78,7 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
             this.flashSpinStore.clearBatchData();
         }
 
-        if (!this.flashSpinStore.isActiveHyperSpin) {
+        if (!this.flashSpinStore.isActiveFlashSpin) {
             this.flashSpinStore.setHyperSpinActive(false);
         }
     }
@@ -86,7 +86,7 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
     closeHyperSpinBetControl() {
         this.flashSpinStore.isOpenHyperSpinBetControlPopup = false;
 
-        if (this.flashSpinStore.isActiveHyperSpin) {
+        if (this.flashSpinStore.isActiveFlashSpin) {
             this.cancelHyperSpin();
         }
     }
@@ -153,7 +153,7 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
     onClickPlayButton() {
         const isPaused = this.flashSpinStore.spinBatchData?.summary.hyperSpinStatus === "Paused";
 
-        if (this.flashSpinStore.isActiveHyperSpin) {
+        if (this.flashSpinStore.isActiveFlashSpin) {
             if (isPaused) {
                 this.resumeHyperSpinBatch();
             }
@@ -341,7 +341,7 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
             return false;
         }
 
-        if (!this.flashSpinStore.isActiveHyperSpin) {
+        if (!this.flashSpinStore.isActiveFlashSpin) {
             return false;
         }
 

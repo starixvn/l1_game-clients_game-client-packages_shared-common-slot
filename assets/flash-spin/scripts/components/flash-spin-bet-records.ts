@@ -124,7 +124,10 @@ export class FlashSpinBetRecords extends ObserverComponent {
             const node = instantiate(this.startRow);
             node.active = true;
             this.scrollContent.addChild(node);
-            node.getChildByName("value").getComponent(Label).string = value;
+            const label = node.getComponentsInChildren(Label).find(child => child.node.name === "value");
+            if (label) {
+                label.string = value;
+            }
         }
     }
 
@@ -134,7 +137,10 @@ export class FlashSpinBetRecords extends ObserverComponent {
         const node = instantiate(this.endRow);
         node.active = true;
         this.scrollContent.addChild(node);
-        node.getChildByName("value").getComponent(Label).string = value;
+        const label = node.getComponentsInChildren(Label).find(child => child.node.name === "value");
+        if (label) {
+            label.string = value;
+        }
     }
 
     @render(FlashSpinStore, (store) => store.spinBatchData?.summary?.status)

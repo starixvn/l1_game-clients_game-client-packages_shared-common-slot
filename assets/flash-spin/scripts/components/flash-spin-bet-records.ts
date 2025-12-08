@@ -133,6 +133,9 @@ export class FlashSpinBetRecords extends ObserverComponent {
 
     @render(FlashSpinStore, (store) => store.spinBatchData?.summary?.endBalance)
     private updateEndBalanceLabel(endBalance: number) {
+        if (endBalance === undefined) {
+            return;
+        }
         const value = gc.FormatUtils.numberWithCommas(endBalance, 2, true);
         const node = instantiate(this.endRow);
         node.active = true;

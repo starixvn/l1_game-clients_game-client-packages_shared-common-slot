@@ -31,11 +31,6 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
         this.flashSpinStore.event = { action: "openDialog", name }
     }
 
-    openHyperSpinPopup() {
-        this.flashSpinStore.isOpenHyperSpinPopup = true;
-        this.flashSpinStore.selectedRoundOnPopup = this.flashSpinStore.roundsList[2];
-    }
-
     updateHyperSpinRounds(rounds: number) {
         this.flashSpinStore.selectedRoundOnPopup = rounds;
     }
@@ -50,17 +45,6 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
         } else if (!increase && currentIndex > 0) {
             this.updateHyperSpinRounds(roundsList[currentIndex - 1]);
         }
-    }
-
-    confirmHyperSpinRoundsAndStart() {
-        this.flashSpinStore.remainingRound = this.flashSpinStore.selectedRoundOnPopup;
-        this.flashSpinStore.isOpenHyperSpinPopup = false;
-
-        this.startHyperSpinWithRounds();
-    }
-
-    private startHyperSpinWithRounds() {
-        this.flashSpinStore.setFlashSpinActive(true);
     }
 
     showHyperSpinBetControl() {
@@ -143,11 +127,6 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
         }
 
         this.flashSpinStore.isSettingsOpen = !this.flashSpinStore.isSettingsOpen;
-    }
-
-    closeHyperSpinPopup() {
-        this.flashSpinStore.isOpenHyperSpinPopup = false;
-        this.cancelHyperSpin();
     }
 
     onClickPlayButton() {
@@ -268,8 +247,6 @@ export class FlashSpinHandler implements gc.Shared.IHandler<number> {
         this.flashSpinStore.setFlashSpinActive(false);
         this.flashSpinStore.stopSessionTracking();
         this.flashSpinStore.completeBatch();
-
-        this.flashSpinStore.isOpenHyperSpinPopup = false;
 
         this.batchStartTime = 0;
         this.batchEndTime = 0;

@@ -94,17 +94,12 @@ export class FlashSpinStore {
 
     // UI state
     isOpenBetControlPopup = false;
-    isOpenHyperSpinPopup = false;
 
     roundsList = [10, 50, 100, 500, 1000];
     selectedRoundOnPopup = this.roundsList[2]; // Default to 100
     remainingRound = 0;
     isActiveFlashSpin = false;
     winLevelConfig = [2, 5, 10];
-
-    get isTurnOnHyperSpin() {
-        return this.isOpenHyperSpinPopup || this.isActiveFlashSpin;
-    }
 
     // Stop conditions
     stopOnProfit = 0;
